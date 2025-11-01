@@ -60,9 +60,9 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(255, 255, 255, 0.5);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background: rgba(255, 255, 255, 0.85); /* Modificado: 0.5 a 0.85 */
+    /* backdrop-filter: blur(4px); - Eliminado por rendimiento */
+    /* -webkit-backdrop-filter: blur(4px); - Eliminado por rendimiento */
     z-index: 998;
     opacity: 0;
     visibility: hidden;
@@ -588,7 +588,7 @@ body {
     padding: 10px;
 }
 
-.student-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(8px); z-index: 1002; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
+.student-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.85); /* backdrop-filter: blur(8px); - Eliminado por rendimiento */ z-index: 1002; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
 .student-modal.active { display: flex; opacity: 1; visibility: visible; align-items: center; justify-content: center; }
 .student-modal-content { background: var(--card-bg); padding: 1.5rem; border-radius: 12px; width: 90%; max-width: 420px; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); transform: translateY(-20px); opacity: 0; transition: transform 0.3s ease, opacity 0.3s ease; border: 1px solid var(--border-color); }
 .student-modal.active .student-modal-content { transform: translateY(0); opacity: 1; }
@@ -613,8 +613,8 @@ body {
 .student-info-value.position-5 { background: var(--gold-opaque-4-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; color: #DAA520; }
 .student-info-value.position-6 { background: var(--gold-opaque-5-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; color: #B8860B; }
 .student-info-value.accent { color: var(--text-primary); }
-
-.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(8px); z-index: 1001; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
+        
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.85); /* backdrop-filter: blur(8px); - Eliminado por rendimiento */ z-index: 1001; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
 .modal.active { display: flex; opacity: 1; visibility: visible; align-items: center; justify-content: center; }
 .modal-content { background: var(--card-bg); padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); transform: translateY(-20px); opacity: 0; transition: transform 0.3s ease, opacity 0.3s ease; }
 .modal.active .modal-content { transform: translateY(0); opacity: 1; }
@@ -748,3 +748,4 @@ body {
     .student-modal-content { width: 95%; max-width: 350px; padding: 1rem; }
     .student-info-grid { grid-template-columns: 1fr; gap: 0.5rem; }
 }
+
