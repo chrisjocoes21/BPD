@@ -101,10 +101,8 @@ async function cargarDatos() {
         const datosNuevos = JSON.stringify(gruposOrdenados);
         if (datosNuevos !== JSON.stringify(datosActuales)) {
             datosActuales = gruposOrdenados;
-            const container = document.getElementById('grupos-container');
-            const openCard = container.querySelector('.grupo-container.expandido .grupo-nombre span');
-            const openGroupName = openCard ? openCard.textContent.trim() : null;
-            await mostrarDatos(gruposOrdenados, openGroupName);
+            // Se elimina la lógica de openGroupName de aquí, se manejará dentro de mostrarDatos
+            await mostrarDatos(gruposOrdenados);
             updateConnectionStatus('online', 'Datos actualizados');
         } else {
             updateConnectionStatus('online', 'Datos sin cambios');
@@ -126,7 +124,10 @@ async function cargarDatos() {
             setTimeout(cargarDatos, nextDelay);
         } else if (isCacheValid()) {
             updateConnectionStatus('error', 'Mostrando datos en caché.', true);
-            await mostrarDatos(cachedData);
+            // Aseguramos que los datos en caché se muestren con la nueva lógica si es necesario
+            if (!datosActuales) {
+                await mostrarDatos(cachedData);
+            }
         } else {
             updateConnectionStatus('error', 'Sin datos disponibles.');
         }
@@ -135,77 +136,293 @@ async function cargarDatos() {
     }
 }
 
-function mostrarDatos(gruposOrdenados, openGroupName = null) {
-    return new Promise((resolve) => {
-        const container = document.getElementById('grupos-container');
-        const fragmento = document.createDocumentFragment();
-        
-        const ciclaIndex = gruposOrdenados.findIndex(g => g.nombre === "Cicla");
-        let ciclaGroup = ciclaIndex !== -1 ? gruposOrdenados.splice(ciclaIndex, 1)[0] : null;
-        
-        const setInicial = ['Cuarto', 'Quinto', 'Sexto', 'Primero', 'Segundo', 'Tercero'];
-        setInicial.forEach(nombre => {
-            if (!gruposOrdenados.some(g => g.nombre.trim().toLowerCase() === nombre.toLowerCase())) {
-                gruposOrdenados.push({ nombre, total: 0, usuarios: [] });
-            }
-        });
-        const principales = gruposOrdenados.filter(g => setInicial.some(n => n.toLowerCase() === g.nombre.trim().toLowerCase()));
-        const extras = gruposOrdenados.filter(g => !setInicial.some(n => n.toLowerCase() === g.nombre.trim().toLowerCase()));
-        let principalesOrdenados = principales.some(g => g.total > 0) ? [...principales].sort((a, b) => b.total - a.total) : setInicial.map(nombre => principales.find(g => g.nombre.trim().toLowerCase() === nombre.toLowerCase()));
-        extras.sort((a, b) => b.total - a.total);
-        const gruposParaMostrar = [...principalesOrdenados, ...extras];
-        if (ciclaGroup && ciclaGroup.usuarios && ciclaGroup.usuarios.length > 0) {
-            gruposParaMostrar.push(ciclaGroup);
-        }
+/**
+ * Crea un elemento HTML para un usuario.
+ * @param {object} usuario - El objeto de usuario.
+ * @param {number} uIndex - El índice de ranking del usuario.
+ * @param {object} grupo - El objeto del grupo al que pertenece.
+ * @param {number} posGrupo - El índice de ranking del grupo.
+ * @returns {HTMLElement} El elemento HTML del item de usuario.
+ */
+function crearUsuarioItem(usuario, uIndex, grupo, posGrupo) {
+    const usuarioItem = document.createElement('div');
+    const isCiclaSpecial = grupo.nombre === "Cicla" && usuario.pinceles < -5000;
+    usuarioItem.className = `usuario-item${isCiclaSpecial ? ' cicla-special-condition' : ''}`;
+    // Usamos el nombre como identificador único
+    usuarioItem.dataset.userName = usuario.nombre; 
+    usuarioItem.style.order = uIndex;
 
-        const gruposActivos = gruposParaMostrar.filter(g => g.total !== 0 || g.nombre === "Cicla");
+    const trendingIcon = usuario.trending ? `<span class="trending-icon" title="En racha">🔥</span>` : '';
+    const isCiclaHighlight = grupo.nombre === "Cicla" && usuario.pinceles > 5000;
+    const pincelesClasses = `pinceles-count${usuario.pinceles < 0 ? ' negative' : ''}${isCiclaHighlight ? ' cicla-highlight' : ''}`;
+    
+    usuarioItem.innerHTML = `
+        ${getRankIndicator(uIndex + 1, usuario.pinceles < 0)}
+        <span class="usuario-nombre" data-usuario='${JSON.stringify(usuario)}' data-grupo='${JSON.stringify(grupo)}' data-posicion-grupo='${posGrupo}' data-posicion-individual='${uIndex + 1}'>
+            ${usuario.nombre}${trendingIcon}
+        </span>
+        <span class="${pincelesClasses}">${formatNumber(usuario.pinceles)}</span>`;
+    
+    return usuarioItem;
+}
 
-        gruposActivos.forEach((grupo, index) => {
-            if (grupo.nombre === "Cicla" && (!grupo.usuarios || grupo.usuarios.length === 0)) return;
+/**
+ * Actualiza un elemento HTML de usuario existente.
+ * @param {HTMLElement} usuarioItem - El elemento a actualizar.
+ * @param {object} usuario - El nuevo objeto de usuario.
+ * @param {number} uIndex - El nuevo índice de ranking.
+ * @param {object} grupo - El objeto del grupo.
+ * @param {number} posGrupo - El nuevo índice de ranking del grupo.
+ */
+function actualizarUsuarioItem(usuarioItem, usuario, uIndex, grupo, posGrupo) {
+    usuarioItem.style.order = uIndex;
+    
+    // Actualizar clases de condición especial
+    const isCiclaSpecial = grupo.nombre === "Cicla" && usuario.pinceles < -5000;
+    usuarioItem.classList.toggle('cicla-special-condition', isCiclaSpecial);
 
-            const grupoElement = document.createElement('div');
-            const isNegativeGroup = grupo.nombre === "Cicla";
-            let topClass = !isNegativeGroup && index < 6 ? ` top-${index + 1}` : '';
-            grupoElement.className = `grupo-container${topClass}${isNegativeGroup ? ' negative' : ''}`;
-            
-            const grupoHeader = document.createElement('div');
-            grupoHeader.className = 'grupo-header';
-            grupoHeader.innerHTML = `<div class="grupo-nombre"><span>${grupo.nombre}</span>${getRankIndicator(index + 1, isNegativeGroup)}</div><div class="grupo-total">${formatNumber(grupo.total)}<span>pinceles</span></div>`;
+    const trendingIcon = usuario.trending ? `<span class="trending-icon" title="En racha">🔥</span>` : '';
+    const isCiclaHighlight = grupo.nombre === "Cicla" && usuario.pinceles > 5000;
+    const pincelesClasses = `pinceles-count${usuario.pinceles < 0 ? ' negative' : ''}${isCiclaHighlight ? ' cicla-highlight' : ''}`;
 
-            const usuariosLista = document.createElement('div');
-            usuariosLista.className = 'usuarios-lista';
-            
-            if (grupo.usuarios && grupo.usuarios.length > 0) {
-                [...grupo.usuarios].sort((a, b) => b.pinceles - a.pinceles).forEach((usuario, uIndex) => {
-                    const usuarioItem = document.createElement('div');
-                    const isCiclaSpecial = grupo.nombre === "Cicla" && usuario.pinceles < -5000;
-                    usuarioItem.className = `usuario-item${isCiclaSpecial ? ' cicla-special-condition' : ''}`;
-                    
-                    const trendingIcon = usuario.trending ? `<span class="trending-icon" title="En racha">🔥</span>` : '';
-                    const isCiclaHighlight = grupo.nombre === "Cicla" && usuario.pinceles > 5000;
-                    const pincelesClasses = `pinceles-count${usuario.pinceles < 0 ? ' negative' : ''}${isCiclaHighlight ? ' cicla-highlight' : ''}`;
-                    
-                    usuarioItem.innerHTML = `${getRankIndicator(uIndex + 1, usuario.pinceles < 0)}<span class="usuario-nombre" data-usuario='${JSON.stringify(usuario)}' data-grupo='${JSON.stringify(grupo)}' data-posicion-grupo='${index + 1}' data-posicion-individual='${uIndex + 1}'>${usuario.nombre}${trendingIcon}</span><span class="${pincelesClasses}">${formatNumber(usuario.pinceles)}</span>`;
-                    usuariosLista.appendChild(usuarioItem);
-                });
-            } else {
-                usuariosLista.innerHTML = `<div class="usuario-item"><span class="usuario-nombre">Sin registros</span></div>`;
-            }
-            grupoElement.appendChild(grupoHeader);
-            grupoElement.appendChild(usuariosLista);
-            grupoHeader.addEventListener('click', () => toggleGrupo(grupoElement));
-            fragmento.appendChild(grupoElement);
-        });
+    // Actualizar solo las partes que cambian
+    const rankIndicator = usuarioItem.querySelector('.rank-indicator');
+    if (rankIndicator) {
+        rankIndicator.outerHTML = getRankIndicator(uIndex + 1, usuario.pinceles < 0);
+    }
 
-        container.innerHTML = '';
-        container.appendChild(fragmento);
-        
-        if (openGroupName) {
-            const groupToReopen = Array.from(container.querySelectorAll('.grupo-container')).find(g => g.querySelector('.grupo-nombre span').textContent.trim() === openGroupName);
-            if (groupToReopen) toggleGrupo(groupToReopen, true);
-        }
-        resolve();
+    const nombreSpan = usuarioItem.querySelector('.usuario-nombre');
+    if (nombreSpan) {
+        nombreSpan.innerHTML = `${usuario.nombre}${trendingIcon}`;
+        // Actualizar los datasets para el modal
+        nombreSpan.dataset.usuario = JSON.stringify(usuario);
+        nombreSpan.dataset.grupo = JSON.stringify(grupo);
+        nombreSpan.dataset.posicionGrupo = posGrupo;
+        nombreSpan.dataset.posicionIndividual = uIndex + 1;
+    }
+
+    const pincelesSpan = usuarioItem.querySelector('.pinceles-count');
+    if (pincelesSpan) {
+        pincelesSpan.className = pincelesClasses;
+        pincelesSpan.textContent = formatNumber(usuario.pinceles);
+    }
+}
+
+/**
+ * Reconcilia la lista de usuarios dentro de un grupo.
+ * @param {HTMLElement} usuariosListaEl - El elemento <ul> o <div> que contiene a los usuarios.
+ * @param {Array<object>} usuariosNuevos - La nueva lista de usuarios.
+ * @param {object} grupo - El objeto del grupo padre.
+ * @param {number} posGrupo - El ranking del grupo padre.
+ */
+function actualizarUsuariosLista(usuariosListaEl, usuariosNuevos, grupo, posGrupo) {
+    // 1. Ordenar nuevos usuarios
+    const usuariosOrdenados = [...usuariosNuevos].sort((a, b) => b.pinceles - a.pinceles);
+    
+    // 2. Crear mapa de usuarios existentes
+    const existingUsersMap = new Map();
+    usuariosListaEl.querySelectorAll('.usuario-item').forEach(item => {
+        existingUsersMap.set(item.dataset.userName, item);
     });
+
+    const newUsersSet = new Set(usuariosOrdenados.map(u => u.nombre));
+
+    // 3. Eliminar usuarios antiguos
+    for (const [userName, item] of existingUsersMap.entries()) {
+        if (!newUsersSet.has(userName)) {
+            item.remove();
+            existingUsersMap.delete(userName);
+        }
+    }
+
+    // 4. Actualizar/Añadir usuarios
+    usuariosOrdenados.forEach((usuario, uIndex) => {
+        const existingItem = existingUsersMap.get(usuario.nombre);
+        if (existingItem) {
+            // Actualizar
+            actualizarUsuarioItem(existingItem, usuario, uIndex, grupo, posGrupo);
+        } else {
+            // Añadir
+            const newItem = crearUsuarioItem(usuario, uIndex, grupo, posGrupo);
+            usuariosListaEl.appendChild(newItem);
+        }
+    });
+
+    // 5. Manejar lista vacía
+    if (usuariosOrdenados.length === 0 && usuariosListaEl.children.length === 0) {
+        usuariosListaEl.innerHTML = `<div class="usuario-item"><span class="usuario-nombre">Sin registros</span></div>`;
+    } else if (usuariosOrdenados.length > 0) {
+        // Quitar el mensaje "Sin registros" si existe
+        const noRegistros = usuariosListaEl.querySelector('.usuario-item:only-child .usuario-nombre');
+        if (noRegistros && noRegistros.textContent === 'Sin registros') {
+            noRegistros.parentElement.remove();
+        }
+    }
+}
+
+/**
+ * Crea un elemento de grupo completo.
+ * @param {object} grupo - El objeto de grupo.
+ * @param {number} index - El índice de ranking del grupo.
+ * @returns {HTMLElement} El elemento HTML del grupo.
+ */
+function crearGrupoElement(grupo, index) {
+    const isNegativeGroup = grupo.nombre === "Cicla";
+    let topClass = !isNegativeGroup && index < 6 ? ` top-${index + 1}` : '';
+    
+    const grupoElement = document.createElement('div');
+    grupoElement.className = `grupo-container${topClass}${isNegativeGroup ? ' negative' : ''}`;
+    grupoElement.dataset.groupName = grupo.nombre;
+    grupoElement.style.order = index;
+
+    const grupoHeader = document.createElement('div');
+    grupoHeader.className = 'grupo-header';
+    grupoHeader.innerHTML = `
+        <div class="grupo-nombre">
+            <span>${grupo.nombre}</span>
+            ${getRankIndicator(index + 1, isNegativeGroup)}
+        </div>
+        <div class="grupo-total">
+            ${formatNumber(grupo.total)}<span>pinceles</span>
+        </div>`;
+
+    const usuariosLista = document.createElement('div');
+    usuariosLista.className = 'usuarios-lista';
+
+    // Llenar la lista de usuarios
+    actualizarUsuariosLista(usuariosLista, grupo.usuarios || [], grupo, index + 1);
+
+    grupoElement.appendChild(grupoHeader);
+    grupoElement.appendChild(usuariosLista);
+    grupoHeader.addEventListener('click', () => toggleGrupo(grupoElement));
+    
+    return grupoElement;
+}
+
+/**
+ * Actualiza el encabezado de un grupo existente.
+ * @param {HTMLElement} grupoElement - El elemento del grupo a actualizar.
+ * @param {object} grupo - El nuevo objeto de grupo.
+ * @param {number} index - El nuevo índice de ranking.
+ */
+function actualizarGrupoHeader(grupoElement, grupo, index) {
+    const isNegativeGroup = grupo.nombre === "Cicla";
+    
+    // 1. Actualizar clases de ranking
+    let topClass = !isNegativeGroup && index < 6 ? ` top-${index + 1}` : '';
+    grupoElement.className = `grupo-container${topClass}${isNegativeGroup ? ' negative' : ''}`;
+    
+    // 2. Actualizar orden visual
+    grupoElement.style.order = index;
+
+    // 3. Actualizar contenido del header
+    const nombreEl = grupoElement.querySelector('.grupo-nombre');
+    if (nombreEl) {
+        nombreEl.innerHTML = `<span>${grupo.nombre}</span>${getRankIndicator(index + 1, isNegativeGroup)}`;
+    }
+    
+    const totalEl = grupoElement.querySelector('.grupo-total');
+    if (totalEl) {
+        totalEl.innerHTML = `${formatNumber(grupo.total)}<span>pinceles</span>`;
+    }
+}
+
+/**
+ * Muestra y reconcilia los datos de los grupos en el DOM.
+ * @param {Array<object>} gruposOrdenados - La lista completa de grupos.
+ */
+async function mostrarDatos(gruposOrdenados) {
+    const container = document.getElementById('grupos-container');
+
+    // --- Lógica de filtrado y ordenamiento ---
+    const ciclaIndex = gruposOrdenados.findIndex(g => g.nombre === "Cicla");
+    let ciclaGroup = ciclaIndex !== -1 ? gruposOrdenados.splice(ciclaIndex, 1)[0] : null;
+    
+    const setInicial = ['Cuarto', 'Quinto', 'Sexto', 'Primero', 'Segundo', 'Tercero'];
+    setInicial.forEach(nombre => {
+        if (!gruposOrdenados.some(g => g.nombre.trim().toLowerCase() === nombre.toLowerCase())) {
+            gruposOrdenados.push({ nombre, total: 0, usuarios: [] });
+        }
+    });
+    
+    const principales = gruposOrdenados.filter(g => setInicial.some(n => n.toLowerCase() === g.nombre.trim().toLowerCase()));
+    const extras = gruposOrdenados.filter(g => !setInicial.some(n => n.toLowerCase() === g.nombre.trim().toLowerCase()));
+    
+    let principalesOrdenados = principales.some(g => g.total > 0) 
+        ? [...principales].sort((a, b) => b.total - a.total) 
+        : setInicial.map(nombre => principales.find(g => g.nombre.trim().toLowerCase() === nombre.toLowerCase()));
+    
+    extras.sort((a, b) => b.total - a.total);
+    
+    const gruposParaMostrar = [...principalesOrdenados, ...extras];
+    if (ciclaGroup && ciclaGroup.usuarios && ciclaGroup.usuarios.length > 0) {
+        gruposParaMostrar.push(ciclaGroup);
+    }
+
+    const gruposActivos = gruposParaMostrar.filter(g => g.total !== 0 || g.nombre === "Cicla" || setInicial.includes(g.nombre));
+    // --- Fin lógica de filtrado ---
+
+    // --- Lógica de Reconciliación ---
+
+    // 1. Guardar el estado de expansión
+    const openCardEl = container.querySelector('.grupo-container.expandido .grupo-nombre span');
+    const openGroupName = openCardEl ? openCardEl.textContent.trim() : null;
+
+    // 2. Crear mapa de grupos existentes en el DOM
+    const existingGroupsMap = new Map();
+    container.querySelectorAll('.grupo-container').forEach(el => {
+        existingGroupsMap.set(el.dataset.groupName, el);
+    });
+
+    const newGroupsSet = new Set(gruposActivos.map(g => g.nombre));
+
+    // 3. Eliminar grupos que ya no existen
+    for (const [groupName, element] of existingGroupsMap.entries()) {
+        if (!newGroupsSet.has(groupName)) {
+            element.remove();
+            existingGroupsMap.delete(groupName);
+        }
+    }
+
+    // 4. Actualizar y añadir grupos
+    gruposActivos.forEach((grupo, index) => {
+        if (grupo.nombre === "Cicla" && (!grupo.usuarios || grupo.usuarios.length === 0)) {
+            // Si el grupo Cicla existe pero está vacío, eliminarlo
+            const ciclaEl = existingGroupsMap.get("Cicla");
+            if (ciclaEl) {
+                ciclaEl.remove();
+            }
+            return; // No mostrar grupo Cicla vacío
+        }
+
+        const existingElement = existingGroupsMap.get(grupo.nombre);
+
+        if (existingElement) {
+            // --- Actualizar Grupo Existente ---
+            actualizarGrupoHeader(existingElement, grupo, index);
+            const usuariosListaEl = existingElement.querySelector('.usuarios-lista');
+            if (usuariosListaEl) {
+                // Actualizar la lista de usuarios
+                actualizarUsuariosLista(usuariosListaEl, grupo.usuarios || [], grupo, index + 1);
+            }
+        } else {
+            // --- Añadir Nuevo Grupo ---
+            const newGrupoElement = crearGrupoElement(grupo, index);
+            container.appendChild(newGrupoElement);
+        }
+    });
+
+    // 5. Restaurar el estado de expansión si es necesario
+    if (openGroupName) {
+        const groupToReopen = Array.from(container.querySelectorAll('.grupo-container')).find(g => g.dataset.groupName === openGroupName);
+        if (groupToReopen && !groupToReopen.classList.contains('expandido')) {
+            // Usamos forceOpen=true para asegurar que se abra
+            toggleGrupo(groupToReopen, true); 
+        } else if (!groupToReopen) {
+            // El grupo que estaba abierto ya no existe, cerrar el overlay
+            closeExpandedGroup();
+        }
+    }
 }
 
 function toggleGrupo(grupoElement, forceOpen = false) {
@@ -435,3 +652,4 @@ function initializeApp() {
 }
 
 document.addEventListener('DOMContentLoaded', initializeApp);
+
