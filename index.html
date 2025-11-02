@@ -60,85 +60,19 @@
                     <!-- Contenido neutral o tabla de grupo irá aquí -->
                 </div>
 
-                <!-- Contenedor de Resumen Compacto (Solo en Home) -->
-                <div id="home-stats-container" class="mb-6 hidden">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Resumen del Banco</h3>
-                    <div id="home-stats-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <!-- Las 4 tarjetas (Bóveda + Top 3) se insertarán aquí -->
-                    </div>
-                </div>
-                
-                <!-- MÓDULOS DE HOME (grid-cols-3) -->
-                <div id="home-modules-grid" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                    
-                    <!-- Panel de "Alumnos en Riesgo" (col-span-1) -->
-                    <div id="riesgo-container" class="bg-white rounded-lg shadow-md lg:col-span-1">
-                        <h3 class="text-lg font-semibold text-gray-800 p-4 border-b border-gray-200">Alumnos en Riesgo</h3>
-                        <!-- CAMBIO: Eliminada altura fija y overflow, añadido p-4 space-y-3 -->
-                        <ul id="riesgo-lista" class="p-4 space-y-3">
-                            <!-- Items de alumnos en riesgo se insertarán aquí -->
-                            <li class="p-4 text-sm text-gray-500 text-center">Calculando...</li>
-                        </ul>
-                    </div>
-
-                    <!-- Tablón de Anuncios (col-span-2) -->
-                    <div id="anuncios-container" class="bg-white rounded-lg shadow-md lg:col-span-2">
-                        <h3 class="text-lg font-semibold text-gray-800 p-4 border-b border-gray-200">Tablón de Anuncios</h3>
-                        <!-- CAMBIO: Eliminada altura fija y overflow -->
-                        <ul id="anuncios-lista" class="divide-y divide-gray-100 p-4 space-y-3">
-                            <!-- Anuncios dinámicos se insertarán aquí -->
-                        </ul>
-                    </div>
-                </div>
-                
-                <!-- Centro de Acceso Rápido (Título H3 eliminado, flex-nowrap) -->
-                <div id="acceso-rapido-container" class="hidden bg-white rounded-lg shadow-md p-4">
-                    <div class="flex flex-nowrap items-center justify-between gap-4">
-                        
-                        <!-- Timer Horizontal Compacto -->
-                        <div id="countdown-timer" class="flex-shrink-0 text-sm font-medium text-gray-700 flex items-baseline gap-2">
-                            <span id="days" class="text-xl font-bold text-blue-600">00</span>
-                            <span class="text-xs text-gray-500 uppercase">Días</span>
-                            
-                            <span id="hours" class="text-xl font-bold text-blue-600">00</span>
-                            <span class="text-xs text-gray-500 uppercase">Horas</span>
-                            
-                            <span id="minutes" class="text-xl font-bold text-blue-600">00</span>
-                            <span class="text-xs text-gray-500 uppercase">Minutos</span>
-                            
-                            <span id="seconds" class="text-xl font-bold text-blue-600">00</span>
-                            <span class="text-xs text-gray-500 uppercase">Segundos</span>
-                        </div>
-
-                        <!-- Mensaje de Subasta -->
-                        <div id="auction-message" class="hidden w-full text-center text-green-600 font-semibold">
-                            ¡Hoy es el día de la Subasta!
-                        </div>
-                        <!-- Botones de Acceso -->
-                        <div class="flex gap-3 flex-shrink-0">
-                            <button id="reglas-btn" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
-                                Ver Reglas
-                            </button>
-                            <a href="https://pinceladaschristopher-cloud.github.io/BPD-SUBASTAS/" target="_blank" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
-                                Subasta
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-            </main>
-
-            <!-- Copyright (Anclado al fondo del contenedor principal) -->
-            <p id="copyright-footer" class="flex-shrink-0 bg-gray-100 p-4 text-xs text-gray-400 text-center">
-                © 2025 Banco del Pincel Dorado | Desarrollado por Didac-Click Group.
-            </p>
-        </div>
-    </div>
-
-    <!-- Overlay de Carga (ICONO ELIMINADO) -->
+    <!-- Overlay de Carga (Rediseñado con Puntos Pulsantes) -->
     <div id="loading-overlay" class="fixed inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-[10000] transition-opacity duration-300">
-        <div class="flex items-center gap-3 text-lg font-medium text-gray-700">
-            <span>Cargando datos...</span>
+        <div class="flex flex-col items-center gap-4 text-center px-4">
+            <!-- Título (Logo) - CAMBIO: Aún más grande (text-5xl) -->
+            <h2 class="text-5xl font-bold text-blue-600">Banco del Pincel Dorado</h2>
+            <!-- Subtítulo - CAMBIO: Entre comillas -->
+            <p class="text-base text-gray-600">"Donde el esfuerzo académico tiene su recompensa"</p>
+            <!-- Animación de Puntos Pulsantes -->
+            <div class="flex gap-2 pt-2">
+                <span class="pulsing-dot" style="animation-delay: 0s;"></span>
+                <span class="pulsing-dot" style="animation-delay: 0.2s;"></span>
+                <span class="pulsing-dot" style="animation-delay: 0.4s;"></span>
+            </div>
         </div>
     </div>
 
@@ -207,4 +141,3 @@
     <script src="script.js" type="module" defer></script>
 </body>
 </html>
-
