@@ -528,12 +528,13 @@ const AppUI = {
     },
     // --- FIN CAMBIO DE LÓGICA ---
     
-    // --- CAMBIO: Función para Anuncios Dinámicos (Nuevo orden y categoría) ---
+    // --- INICIO CAMBIO: Función para Anuncios Dinámicos (Uso de flexbox para mejor distribución horizontal) ---
     actualizarAnuncios: function() {
         const lista = document.getElementById('anuncios-lista');
         
         const getRandomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
+        // Nota: Mantenemos 4 elementos en la lista (AVISO, NUEVO, CONSEJO, ALERTA)
         const anuncios = [
             { tipo: 'AVISO', texto: getRandomItem(AnunciosDB['AVISO']), bg: 'bg-gray-100', text: 'text-gray-700' },
             { tipo: 'NUEVO', texto: getRandomItem(AnunciosDB['NUEVO']), bg: 'bg-blue-100', text: 'text-blue-700' },
@@ -541,13 +542,15 @@ const AppUI = {
             { tipo: 'ALERTA', texto: getRandomItem(AnunciosDB['ALERTA']), bg: 'bg-red-100', text: 'text-red-700' }
         ];
 
+        // Usamos una estructura más clara y compacta para el elemento de lista
         lista.innerHTML = anuncios.map(anuncio => `
-            <li class="flex items-start">
-                <span class="text-xs font-bold ${anuncio.bg} ${anuncio.text} rounded-full w-20 text-center py-0.5 mr-3 mt-1 flex-shrink-0">${anuncio.tipo}</span>
-                <span class="text-sm text-gray-700">${anuncio.texto}</span>
+            <li class="flex items-start p-2 hover:bg-gray-50 rounded-lg transition-colors"> 
+                <span class="text-xs font-bold ${anuncio.bg} ${anuncio.text} rounded-full w-20 text-center py-0.5 mr-3 flex-shrink-0 mt-1">${anuncio.tipo}</span>
+                <span class="text-sm text-gray-700 flex-1">${anuncio.texto}</span>
             </li>
         `).join('');
     },
+    // --- FIN CAMBIO ---
 
     // --- MODAL DE ALUMNO ---
     showStudentModal: function(nombreGrupo, nombreUsuario, rank) {
