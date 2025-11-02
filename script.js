@@ -493,22 +493,28 @@ const AppUI = {
         document.getElementById('acceso-rapido-container').classList.add('hidden');
     },
 
-    // --- CAMBIO: Función de Alumnos en Riesgo (Estilo simétrico) ---
+    // --- INICIO CAMBIO DE LÓGICA: Función de Alumnos en Riesgo (Incluye cero pinceles y muestra Top 4) ---
     actualizarAlumnosEnRiesgo: function() {
         const lista = document.getElementById('riesgo-lista');
         if (!lista) return;
 
         const allStudents = (AppState.datosActuales || []).flatMap(g => g.usuarios);
-        const positiveStudents = allStudents.filter(s => s.pinceles > 0);
-        const enRiesgo = positiveStudents.sort((a, b) => a.pinceles - b.pinceles);
-        const top3Riesgo = enRiesgo.slice(0, 3);
+        
+        // 1. Filtra estudiantes con pinceles >= 0 (incluye cero, que están en riesgo)
+        const possibleRiesgoStudents = allStudents.filter(s => s.pinceles >= 0);
+        
+        // 2. Ordena ascendente por pinceles (los más cercanos a la cicla primero)
+        const enRiesgo = possibleRiesgoStudents.sort((a, b) => a.pinceles - b.pinceles);
+        
+        // 3. Muestra los top 4 alumnos en riesgo
+        const top4Riesgo = enRiesgo.slice(0, 4); 
 
-        if (top3Riesgo.length === 0) {
+        if (top4Riesgo.length === 0) {
             lista.innerHTML = `<li class="p-4 text-sm text-gray-500 text-center">No hay alumnos en riesgo por el momento.</li>`;
             return;
         }
 
-        lista.innerHTML = top3Riesgo.map((student, index) => {
+        lista.innerHTML = top4Riesgo.map((student, index) => {
             const grupoNombre = student.grupoOriginal || student.grupoNombre || 'N/A';
             return `
                 <li class="flex items-start">
@@ -520,6 +526,7 @@ const AppUI = {
             `;
         }).join('');
     },
+    // --- FIN CAMBIO DE LÓGICA ---
     
     // --- CAMBIO: Función para Anuncios Dinámicos (Nuevo orden y categoría) ---
     actualizarAnuncios: function() {
