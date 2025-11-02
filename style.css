@@ -1,52 +1,52 @@
 /* Estilo base para que Inter sea la fuente por defecto */
 body {
-    font-family: 'Inter', sans-serif;
+font-family: 'Inter', sans-serif;
 }
 
 /* Animación de Shake para el modal de clave */
 @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
-    20%, 40%, 60%, 80% { transform: translateX(10px); }
+0%, 100% { transform: translateX(0); }
+10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+20%, 40%, 60%, 80% { transform: translateX(10px); }
 }
 .shake {
-    animation: shake 0.5s;
+animation: shake 0.5s;
 }
 
 /* NUEVO: Animación de puntos de carga (movida desde index.html) */
 @keyframes pulse-dot-animation {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+0%, 100% {
+opacity: 1;
+}
+50% {
+opacity: 0.5;
+}
 }
 .animate-pulse-dot {
-  animation: pulse-dot-animation 1.4s infinite ease-in-out;
+animation: pulse-dot-animation 1.4s infinite ease-in-out;
 }
 
-/* Estilos para el scrollbar (opcional pero le da un toque moderno) */
+/* Estilos para el scrollbar (opcional pero le da un toque moderno) /
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+width: 6px;
+height: 6px;
 }
 ::-webkit-scrollbar-thumb {
-    background: #cbd5e1; /* gris de tailwind */
-    border-radius: 3px;
+background: #cbd5e1; / gris de tailwind /
+border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8; /* gris más oscuro */
+background: #94a3b8; / gris más oscuro /
 }
 ::-webkit-scrollbar-track {
-    background: #f1f5f9; /* gris claro */
+background: #f1f5f9; / gris claro */
 }
 
-/* Ocultar scrollbar */
+/* Ocultar scrollbar /
 .no-scrollbar::-webkit-scrollbar {
-    display: none;
+display: none;
 }
 .no-scrollbar {
-    -ms-overflow-style: none;  /* IE y Edge */
-    scrollbar-width: none;  /* Firefox */
+-ms-overflow-style: none;  / IE y Edge /
+scrollbar-width: none;  / Firefox */
 }
