@@ -81,7 +81,7 @@ const AppTransacciones = {
         try {
             const payload = {
                 grupo: grupo,
-                alumno: alumno,
+                nombre: alumno, // <-- CAMBIO: "alumno" se cambió a "nombre" para coincidir con la API
                 pinceles: pinceles,
                 clave: AppConfig.CLAVE_MAESTRA // <-- CAMBIO: Añadida la clave maestra al payload
             };
@@ -991,4 +991,5 @@ window.onload = function() {
     console.log("window.onload disparado. El DOM está listo. Iniciando AppUI...");
     AppUI.init();
 };
+
 
