@@ -3,33 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- CAMBIO: Título de la pestaña actualizado -->
     <title>BPD</title>
     <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Carga de Fuente Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- CAMBIO: Favicon temático de pincel (debería funcionar ahora que la caché está limpia) -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🖌️</text></svg>">
 
     <!-- Archivo de estilos personalizados (cache buster añadido) -->
     <link rel="stylesheet" href="style.css?v=2">
 
-    <!-- FIX: Añadida la animación de los puntos de carga que faltaba -->
-    <style>
-        @keyframes pulse-dot-animation {
-          0%, 100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.5;
-          }
-        }
-        .animate-pulse-dot {
-          animation: pulse-dot-animation 1.4s infinite ease-in-out;
-        }
-    </style>
+    <!-- CAMBIO: La animación de los puntos de carga se movió a style.css -->
 </head>
 <body class="h-full">
     <div id="app-container" class="flex h-screen">
@@ -65,6 +50,21 @@
                 <h1 id="main-header-title" class="text-lg font-semibold text-gray-900 truncate">
                     Cargando...
                 </h1>
+
+                <!-- NUEVO: Indicador de Estado (Nube) en el extremo derecho -->
+                <div id="status-indicator" class="ml-auto flex items-center pr-2" title="Estado de la conexión">
+                    <!-- Estado 1: Conectado (Nube normal) -->
+                    <svg id="status-ok" class="w-6 h-6 text-gray-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15C3 12.2386 5.23858 10 8 10C9.69577 10 11.2033 10.8953 12 12.247M15 15.5C15.2959 15.1841 15.5 14.793 15.5 14.3636C15.5 13.3985 14.7015 12.6 13.7364 12.6C13.5269 12.6 13.3264 12.633 13.1384 12.6946M12 21C16.4183 21 20 17.4183 20 13C20 9.04381 17.1524 5.92289 13.4188 5.54181C12.3686 3.09074 9.87038 1.5 7 1.5C3.68629 1.5 1 4.18629 1 7.5C1 10.4907 3.12423 12.936 5.99896 13.3719"></path></svg>
+                    
+                    <!-- Estado 2: Cargando (Spinner) -->
+                    <svg id="status-loading" class="w-6 h-6 text-blue-500 animate-spin hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    
+                    <!-- Estado 3: Error/Sin Conexión (Nube tachada) -->
+                    <svg id="status-error" class="w-6 h-6 text-gray-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-12.728 12.728M12 21C16.4183 21 20 17.4183 20 13C20 9.04381 17.1524 5.92289 13.4188 5.54181C12.3686 3.09074 9.87038 1.5 7 1.5C3.68629 1.5 1 4.18629 1 7.5C1 10.4907 3.12423 12.936 5.99896 13.3719"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15C3 12.2386 5.23858 10 8 10C9.69577 10 11.2033 10.8953 12 12.247M15 15.5C15.2959 15.1841 15.5 14.793 15.5 14.3636C15.5 13.3985 14.7015 12.6 13.7364 12.6C13.5269 12.6 13.3264 12.633 13.1384 12.6946"></path></svg>
+                </div>
             </header>
             
             <!-- Contenido (scrollable) -->
@@ -87,8 +87,8 @@
                     </div>
                 </div>
                 
-                <!-- MÓDULOS DE HOME (grid-cols-3) -->
-                <div id="home-modules-grid" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- CAMBIO: MÓDULOS DE HOME (grid-cols-4) -->
+                <div id="home-modules-grid" class="hidden grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
                     
                     <!-- Panel de "Alumnos en Riesgo" (col-span-1) -->
                     <div id="riesgo-container" class="bg-white rounded-lg shadow-md lg:col-span-1">
@@ -114,10 +114,22 @@
                         </div>
                     </div>
 
+                    <!-- NUEVO: Panel de "Estadísticas Rápidas" (col-span-1) -->
+                    <div id="quick-stats-container" class="bg-white rounded-lg shadow-md lg:col-span-1">
+                        <h3 class="text-lg font-semibold text-gray-800 p-4 border-b border-gray-200">Estadísticas</h3>
+                        <div id="quick-stats-list" class="p-4 space-y-3">
+                            <!-- Stats will be injected here -->
+                            <div class="text-center p-4 text-sm text-gray-500">Calculando...</div>
+                        </div>
+                    </div>
+
                     <!-- Tablón de Anuncios (col-span-2) -->
                     <div id="anuncios-container" class="bg-white rounded-lg shadow-md lg:col-span-2">
-                        <h3 class="text-lg font-semibold text-gray-800 p-4 border-b border-gray-200">Tablón de Anuncios</h3>
-                        <!-- CAMBIO: Eliminada altura fija y overflow, padding aumentado -->
+                        <!-- CAMBIO: Añadido botón de modal -->
+                        <div class="flex justify-between items-center p-4 border-b border-gray-200">
+                            <h3 class="text-lg font-semibold text-gray-800">Tablón de Anuncios</h3>
+                            <button id="anuncios-modal-btn" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Ver Todos</button>
+                        </div>
                         <ul id="anuncios-lista" class="divide-y divide-gray-100 p-4 space-y-1">
                             <!-- Anuncios dinámicos se insertarán aquí -->
                         </ul>
@@ -235,8 +247,25 @@
                         <h4 class="font-semibold text-gray-800">Saldos Negativos (Cicla)</h4>
                         <p class="mt-1 text-sm text-gray-600">
                             Un saldo de -1 ℙ o menos mueve al alumno a Cicla. Para salir, se debe completar un "desafío de recuperación".
-                        </A>
+                        </p>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NUEVO: Modal de Todos los Anuncios -->
+    <div id="anuncios-modal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl transform scale-95 transition-transform duration-300">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Todos los Anuncios</h2>
+                    <button id="anuncios-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                </div>
+                <!-- Contenido de todos los anuncios -->
+                <div id="anuncios-modal-lista" class="max-h-[60vh] overflow-y-auto space-y-4 pr-2">
+                    <!-- Los anuncios se poblarán aquí desde JS -->
+                    <p class="text-gray-500 text-center">Cargando anuncios...</p>
                 </div>
             </div>
         </div>
