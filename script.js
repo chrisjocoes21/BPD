@@ -1,9 +1,11 @@
 // --- CONFIGURACIÓN ---
 const AppConfig = {
     API_URL: 'https://script.google.com/macros/s/AKfycbzFNGHqiOlKDq5AAGhuDEDweEGgqNoJZFsGrkD3r4aGetrMYLOJtieNK1tVz9iqjvHHNg/exec',
+    // NUEVA API PARA TRANSACCIONES
+    TRANSACCION_API_URL: 'https://script.google.com/macros/s/AKfycbyhPHZuRmC7_t9z20W4h-VPqVFk0z6qKFG_W-YXMgnth4BMRgi8ibAfjeOtIeR5OrFPXw/exec',
     CLAVE_MAESTRA: 'PinceladasM25-26',
+    // URL DE GOOGLE SHEETS (YA NO SE USA EN EL BOTÓN, PERO SE MANTIENE POR SI ACASO)
     SPREADSHEET_URL: 'https://docs.google.com/spreadsheets/d/1GArB7I19uGum6awiRN6qK8HtmTWGcaPGWhOzGCdhbcs/edit',
-    // CAMBIO: Eliminada la lógica de "trending" (fuego)
     INITIAL_RETRY_DELAY: 1000,
     MAX_RETRY_DELAY: 30000,
     MAX_RETRIES: 5,
@@ -13,15 +15,15 @@ const AppConfig = {
 // --- ESTADO DE LA APLICACIÓN ---
 const AppState = {
     datosActuales: null,
-    historialUsuarios: {}, // CAMBIO: Ya no almacena cambios recientes
+    historialUsuarios: {}, 
     actualizacionEnProceso: false,
     retryCount: 0,
     retryDelay: AppConfig.INITIAL_RETRY_DELAY,
     cachedData: null,
     lastCacheTime: null,
     isOffline: false,
-    selectedGrupo: null, // Para rastrear el grupo seleccionado
-    isSidebarOpen: false, // Inicia oculta por defecto
+    selectedGrupo: null, 
+    isSidebarOpen: false, 
 };
 
 // --- AUTENTICACIÓN ---
@@ -29,8 +31,11 @@ const AppAuth = {
     verificarClave: function() {
         const claveInput = document.getElementById('clave-input');
         if (claveInput.value === AppConfig.CLAVE_MAESTRA) {
-            window.open(AppConfig.SPREADSHEET_URL, '_blank');
+            
+            // CAMBIO: En lugar de abrir la URL, mostramos el nuevo modal de transacciones
             AppUI.hideModal('gestion-modal');
+            AppUI.showTransaccionModal(); // <-- NUEVA FUNCIÓN
+            
             claveInput.value = '';
             claveInput.classList.remove('shake', 'border-red-500');
         } else {
@@ -43,7 +48,89 @@ const AppAuth = {
     }
 };
 
-// --- CAMBIO: Base de Datos de Anuncios (Textos más largos) ---
+// --- NUEVO: Objeto para manejar transacciones ---
+const AppTransacciones = {
+    realizarTransaccion: async function() {
+        const grupoSelect = document.getElementById('transaccion-grupo-select');
+        const usuarioSelect = document.getElementById('transaccion-usuario-select');
+        const cantidadInput = document.getElementById('transaccion-cantidad-input');
+        const statusMsg = document.getElementById('transaccion-status-msg');
+        const submitBtn = document.getElementById('transaccion-submit-btn');
+
+        const grupo = grupoSelect.value;
+        const alumno = usuarioSelect.value; // La API probablemente espera "alumno"
+        const pinceles = parseInt(cantidadInput.value, 10);
+
+        // Validación
+        if (!grupo || !alumno) {
+            statusMsg.textContent = "Debe seleccionar un grupo y un usuario.";
+            statusMsg.className = "text-sm text-center font-medium text-red-600 h-4";
+            return;
+        }
+        if (isNaN(pinceles) || pinceles === 0) {
+            statusMsg.textContent = "La cantidad debe ser un número distinto de cero.";
+            statusMsg.className = "text-sm text-center font-medium text-red-600 h-4";
+            return;
+        }
+
+        // Estado de carga
+        statusMsg.textContent = "Procesando...";
+        statusMsg.className = "text-sm text-center font-medium text-blue-600 h-4";
+        submitBtn.disabled = true;
+
+        try {
+            const payload = {
+                grupo: grupo,
+                alumno: alumno,
+                pinceles: pinceles
+            };
+
+            const response = await fetch(AppConfig.TRANSACCION_API_URL, {
+                method: 'POST',
+                // Google Apps Script a veces prefiere 'text/plain' para JSON
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+                redirect: 'follow', // Importante para Google Apps Script
+            });
+
+            const result = await response.json();
+
+            if (result.status === "success") {
+                statusMsg.textContent = "¡Transacción exitosa!";
+                statusMsg.className = "text-sm text-center font-medium text-green-600 h-4";
+                
+                // Limpiar formulario y recargar datos
+                grupoSelect.value = "";
+                usuarioSelect.innerHTML = '<option value="">Seleccione un usuario...</option>';
+                usuarioSelect.disabled = true;
+                cantidadInput.value = "";
+                
+                // Forzar recarga de datos para ver el cambio
+                AppData.cargarDatos(false); 
+
+                // Cerrar modal después de un momento
+                setTimeout(() => {
+                    AppUI.hideModal('transaccion-modal');
+                }, 1500);
+
+            } else {
+                throw new Error(result.message || "Error desconocido de la API.");
+            }
+
+        } catch (error) {
+            console.error("Error en la transacción:", error);
+            statusMsg.textContent = `Error: ${error.message}`;
+            statusMsg.className = "text-sm text-center font-medium text-red-600 h-4";
+        } finally {
+            submitBtn.disabled = false;
+        }
+    }
+};
+
+
+// --- Base de Datos de Anuncios (Textos más largos) ---
 const AnunciosDB = {
     'AVISO': [
         "La subasta de fin de mes es el último Jueves de cada mes. ¡Preparen sus pinceles!",
@@ -216,7 +303,7 @@ const AppUI = {
     init: function() {
         console.log("AppUI.init() comenzando.");
         
-        // Listeners Modales
+        // Listeners Modales de Gestión (Clave)
         console.log("Buscando 'gestion-btn'...");
         const gestionBtn = document.getElementById('gestion-btn');
         console.log("Buscando 'gestion-btn':", gestionBtn);
@@ -235,6 +322,18 @@ const AppUI = {
         document.getElementById('student-modal').addEventListener('click', (e) => {
             if (e.target.id === 'student-modal') AppUI.hideModal('student-modal');
         });
+
+        // NUEVO: Listeners para Modal de Transacciones
+        document.getElementById('transaccion-modal-close').addEventListener('click', () => AppUI.hideModal('transaccion-modal'));
+        document.getElementById('transaccion-cancel-btn').addEventListener('click', () => AppUI.hideModal('transaccion-modal'));
+        document.getElementById('transaccion-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'transaccion-modal') AppUI.hideModal('transaccion-modal');
+        });
+        // Listener para el <select> de grupos
+        document.getElementById('transaccion-grupo-select').addEventListener('change', AppUI.populateUsuariosTransaccion);
+        // Listener para el botón de enviar transacción
+        document.getElementById('transaccion-submit-btn').addEventListener('click', AppTransacciones.realizarTransaccion);
+
 
         // Listeners Modal Reglas
         console.log("Buscando 'reglas-btn'...");
@@ -284,7 +383,82 @@ const AppUI = {
         if (!modal) return;
         modal.classList.add('opacity-0', 'pointer-events-none');
         modal.querySelector('[class*="transform"]').classList.add('scale-95');
+
+        // NUEVO: Limpiar campos si se cierra el modal de transacciones
+        if (modalId === 'transaccion-modal') {
+            document.getElementById('transaccion-grupo-select').value = "";
+            const usuarioSelect = document.getElementById('transaccion-usuario-select');
+            usuarioSelect.innerHTML = '<option value="">Seleccione un usuario...</option>';
+            usuarioSelect.disabled = true;
+            document.getElementById('transaccion-cantidad-input').value = "";
+            document.getElementById('transaccion-status-msg').textContent = "";
+            document.getElementById('transaccion-submit-btn').disabled = false;
+        }
+        
+        // NUEVO: Limpiar campo de clave si se cierra el modal de gestión
+        if (modalId === 'gestion-modal') {
+             document.getElementById('clave-input').value = "";
+             document.getElementById('clave-input').classList.remove('shake', 'border-red-500');
+        }
     },
+
+    // --- NUEVAS FUNCIONES PARA EL MODAL DE TRANSACCIONES ---
+    showTransaccionModal: function() {
+        if (!AppState.datosActuales) {
+            alert("Los datos de los grupos aún no se han cargado. Intente de nuevo en un momento.");
+            return;
+        }
+        
+        const grupoSelect = document.getElementById('transaccion-grupo-select');
+        grupoSelect.innerHTML = '<option value="">Seleccione un grupo...</option>'; // Resetear
+
+        // Poblar el dropdown de grupos
+        AppState.datosActuales.forEach(grupo => {
+            // Permitir transacciones a todos los grupos, incluida Cicla
+            const option = document.createElement('option');
+            option.value = grupo.nombre;
+            option.textContent = grupo.nombre;
+            grupoSelect.appendChild(option);
+        });
+
+        AppUI.showModal('transaccion-modal');
+    },
+
+    populateUsuariosTransaccion: function() {
+        const grupoSelect = document.getElementById('transaccion-grupo-select');
+        const usuarioSelect = document.getElementById('transaccion-usuario-select');
+        const selectedGrupoNombre = grupoSelect.value;
+
+        usuarioSelect.innerHTML = '<option value="">Cargando...</option>'; // Placeholder
+
+        if (!selectedGrupoNombre) {
+            usuarioSelect.innerHTML = '<option value="">Seleccione un usuario...</option>';
+            usuarioSelect.disabled = true;
+            return;
+        }
+
+        const grupo = AppState.datosActuales.find(g => g.nombre === selectedGrupoNombre);
+
+        if (grupo && grupo.usuarios) {
+            usuarioSelect.innerHTML = '<option value="">Seleccione un usuario...</option>';
+            
+            // Ordenar usuarios alfabéticamente para facilitar la búsqueda
+            const usuariosOrdenados = [...grupo.usuarios].sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+            usuariosOrdenados.forEach(usuario => {
+                const option = document.createElement('option');
+                option.value = usuario.nombre;
+                option.textContent = usuario.nombre;
+                usuarioSelect.appendChild(option);
+            });
+            usuarioSelect.disabled = false;
+        } else {
+            usuarioSelect.innerHTML = '<option value="">No hay usuarios en este grupo</option>';
+            usuarioSelect.disabled = true;
+        }
+    },
+    // --- FIN DE NUEVAS FUNCIONES ---
+
 
     showLoading: function() {
         document.getElementById('loading-overlay').classList.remove('opacity-0', 'pointer-events-none');
