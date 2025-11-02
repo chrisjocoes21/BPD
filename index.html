@@ -92,62 +92,70 @@
                 </div>
 
                 <!-- Contenedor de Resumen Compacto (Solo en Home) -->
-                <!-- CAMBIO v0.2.6: Reestructurado con Flexbox para alineación perfecta y eliminar scroll -->
+                <!-- CAMBIO v0.3.5: Reestructurado a un grid 2x2 para alineación -->
                 <div id="home-stats-container" class="mb-6 hidden">
+    
+                    <!-- Títulos -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-2">
+                        <h3 class="text-lg font-semibold text-gray-800">Resumen del Banco</h3>
+                        <h3 class="text-lg font-semibold text-gray-800">Alumnos Destacados</h3>
+                    </div>
                     
-                    <div class="flex flex-col lg:flex-row gap-6 lg:items-start"> 
-                        
-                        <!-- Columna 1: Resumen del Banco (Bóveda + Tesorería) -->
-                        <div class="lg:w-1/4 flex-shrink-0">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Resumen del Banco</h3>
-                            <!-- CAMBIO v0.3.3: Vuelve a tener space-y-3 para las dos tarjetas compactas -->
-                            <div id="boveda-card-container" class="space-y-3">
-                                <!-- Tarjetas Bóveda y Tesorería (Compactas) se inyectarán aquí desde script.js -->
+                    <!-- 
+                      Grid 2x2. 
+                      En 'lg', las 2 columnas se alinean.
+                      El 'gap-6' principal maneja el espacio de columnas.
+                      El 'gap-6' anidado maneja el espacio de filas.
+                    -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                    
+                        <!-- Columna 1: Banco -->
+                        <div class="flex flex-col gap-6">
+                            <!-- Fila 1, Col 1: Bóveda -->
+                            <div id="boveda-card-container">
+                                <!-- Bóveda Card Injected here -->
+                            </div>
+                            <!-- Fila 2, Col 1: Tesorería -->
+                            <div id="tesoreria-card-container">
+                                <!-- Tesorería Card Injected here -->
                             </div>
                         </div>
                         
-                        <!-- Columna 2: Alumnos Destacados Y CONTADOR -->
-                        <div class="lg:w-3/4">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Alumnos Destacados</h3>
-                            <div id="top-3-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <!-- Las 3 tarjetas de alumnos (Compactas) se insertarán here -->
+                        <!-- Columna 2: Alumnos + Timer -->
+                        <div class="flex flex-col gap-6">
+                            
+                            <!-- Fila 1, Col 2: Top 3 Grid -->
+                            <!-- h-full (en JS) hará que las tarjetas coincidan con la altura de Bóveda -->
+                            <div id="top-3-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4 h-full">
+                                <!-- Top 3 cards Injected here -->
                             </div>
                             
-                            <!-- CAMBIO v0.3.4: Contador movido aquí (sin caja blanca) y botón de Tienda -->
-                            <div class="flex flex-wrap items-center justify-between gap-4 mt-4 px-3">
-                                
-                                <!-- Timer Horizontal Compacto -->
+                            <!-- Fila 2, Col 2: Contador/Botones -->
+                            <!-- h-full hará que esta tarjeta coincida con la altura de Tesorería -->
+                            <div class="flex flex-wrap items-center justify-between gap-4 px-3 bg-white rounded-lg shadow-md p-3 h-full">
+                                <!-- Timer -->
                                 <div id="countdown-timer" class="flex-shrink-0 text-sm font-medium text-gray-700 flex items-baseline gap-2">
-                                    <!-- CAMBIO v0.2.4: Ancho fijo (w-8) y alineación (text-right) para evitar "baile" -->
-                                    <span id="days" class="text-xl font-bold text-blue-600 w-8 text-right">00</span>
-                                    <span class="text-xs text-gray-500 uppercase -ml-1">Días</span>
-                                    
-                                    <span id="hours" class="text-xl font-bold text-blue-600 w-8 text-right">00</span>
-                                    <span class="text-xs text-gray-500 uppercase -ml-1">Horas</span>
-                                    
-                                    <span id="minutes" class="text-xl font-bold text-blue-600 w-8 text-right">00</span>
-                                    <span class="text-xs text-gray-500 uppercase -ml-1">Minutos</span>
-                                    
-                                    <span id="seconds" class="text-xl font-bold text-blue-600 w-8 text-right">00</span>
-                                    <span class="text-xs text-gray-500 uppercase -ml-1">Segundos</span>
+                                    <span id="days" class="text-xl font-bold text-blue-600 w-8 text-right">00</span><span class="text-xs text-gray-500 uppercase -ml-1">Días</span>
+                                    <span id="hours" class="text-xl font-bold text-blue-600 w-8 text-right">00</span><span class="text-xs text-gray-500 uppercase -ml-1">Horas</span>
+                                    <span id="minutes" class="text-xl font-bold text-blue-600 w-8 text-right">00</span><span class="text-xs text-gray-500 uppercase -ml-1">Minutos</span>
+                                    <span id="seconds" class="text-xl font-bold text-blue-600 w-8 text-right">00</span><span class="text-xs text-gray-500 uppercase -ml-1">Segundos</span>
                                 </div>
-
-                                <!-- Mensaje de Subasta -->
+                                <!-- Mensaje -->
                                 <div id="auction-message" class="hidden w-full text-center text-green-600 font-semibold">
                                     ¡Hoy es el día de la Subasta!
                                 </div>
-                                <!-- Botones de Acceso -->
+                                <!-- Botones -->
                                 <div class="flex gap-3 flex-shrink-0">
                                     <button id="reglas-btn" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
                                         Ver Reglas
                                     </button>
-                                    <!-- CAMBIO v0.3.4: Botón de Tienda (reemplaza Subasta) -->
                                     <button id="tienda-btn" disabled class="px-4 py-2 bg-gray-400 text-white text-sm font-medium rounded-lg transition-colors shadow-sm cursor-not-allowed">
                                         Tienda
                                     </button>
                                 </div>
                             </div>
                         </div>
+                    
                     </div>
                 </div>
                 
@@ -498,8 +506,8 @@
                     <button id="reglas-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
                 </div>
                 <!-- 
-                  CAMBIO v0.3.3: 
-                  - Texto completamente reescrito para mayor coherencia y sin asteriscos.
+                  CAMBIO v0.3.5: 
+                  - Texto de reglas limpiado (sin asteriscos).
                   - Añadida la clase "no-scrollbar" para ocultar el scroll.
                 -->
                 <div class="space-y-6 max-h-[70vh] overflow-y-auto pr-2 text-gray-600 no-scrollbar">
@@ -514,7 +522,6 @@
                                 <ul class="list-[circle] pl-4">
                                     <li>Impuesto Pasivo Diario (0.05% a saldos > 100 ℙ).</li>
                                     <li>Comisión por Transferencia P2P (10%).</li>
-                                    <!-- CAMBIO v12.3: Actualizado -->
                                     <li>Cobro de cuotas e intereses (regulares y por mora) de préstamos.</li>
                                     <li>Multas (retiros de pinceles) impuestas por el administrador.</li>
                                     <li>Ingreso Pasivo Diario (simulación de crecimiento económico).</li>
@@ -526,13 +533,12 @@
                     <!-- Sección 2: Préstamos (Admin) -->
                     <div>
                         <h4 class="font-semibold text-gray-800">Préstamos Bancarios (Admin)</h4>
-                        <!-- ***** CAMBIO v12.3: Actualización a cobro diario + interés por mora ***** -->
                         <ul class="mt-1 text-sm list-disc pl-5 space-y-1">
                             <li>El préstamo se paga automáticamente en <strong>7 cuotas diarias</strong>. Cada día, el sistema intentará cobrar la cuota diaria calculada de la cuenta del alumno.</li>
                             <li><strong>Si no hay fondos:</strong> Si un alumno no tiene saldo suficiente para la cuota, el pago de ese día se omite (no se acumula interés *durante* los 7 días de plazo).</li>
                             <li class="text-red-700 font-semibold"><strong>¡Penalización por Mora (Vencimiento)!</strong></li>
                             <ul class="list-[circle] pl-4 space-y-1">
-                                <li>Si el préstamo vence (Día 8+) y aún tiene un `MontoPendiente`:
+                                <li>Si el préstamo vence (Día 8+) y aún tiene un monto pendiente:
                                     <br>1. La deuda **aumentará un 1% CADA DÍA** (interés por mora).
                                     <br>2. El sistema intentará cobrar un **20% del saldo actual** del alumno (no de la deuda) como pago parcial.
                                 </li>
@@ -601,8 +607,7 @@
 
 
     <!-- Lógica de la Aplicación -->
-    <!-- CAMBIO v0.3.0: Versión actualizada -->
-    <script src="script.js?v=0.3.0" type="module" defer></script>
+    <!-- CAMBIO v0.3.5: Versión actualizada -->
+    <script src="script.js?v=0.3.5" type="module" defer></script>
 </body>
 </html>
-
