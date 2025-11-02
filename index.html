@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Pinceles</title>
+    <!-- CAMBIO: Título de la pestaña actualizado -->
+    <title>BPD</title>
     <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Carga de Fuente Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- FIX: Añadido Favicon para eliminar error 404 -->
+    <!-- CAMBIO: Favicon temático de pincel (debería funcionar ahora que la caché está limpia) -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🖌️</text></svg>">
 
-    <!-- Archivo de estilos personalizados -->
-    <link rel="stylesheet" href="style.css">
+    <!-- Archivo de estilos personalizados (cache buster añadido) -->
+    <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body class="h-full">
     <div id="app-container" class="flex h-screen">
@@ -225,3 +226,4 @@
     <script src="script.js?v=2" type="module" defer></script>
 </body>
 </html>
+
