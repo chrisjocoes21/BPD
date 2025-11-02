@@ -10,9 +10,9 @@ const AppConfig = {
     MAX_RETRIES: 5,
     CACHE_DURATION: 300000,
     
-    // CAMBIO v0.3.0: Versión y Estado de la Aplicación (Nueva función P2P)
+    // CAMBIO v0.3.1: Versión y Estado de la Aplicación
     APP_STATUS: 'Pre-Alfa', 
-    APP_VERSION: 'v0.3.0', 
+    APP_VERSION: 'v0.3.1', 
     
     // CAMBIO v0.3.0: Impuesto P2P (debe coincidir con el Backend)
     IMPUESTO_P2P_TASA: 0.10, // 10%
@@ -938,10 +938,10 @@ const AppUI = {
         // Tarjeta de Tesorería (NUEVA)
         const tesoreriaSaldo = AppState.datosAdicionales.saldoTesoreria;
         
-        // CAMBIO v0.2.7: Compactado (p-3, mb-1, text-base, text-xl)
+        // CAMBIO v0.3.1: Reestructurado a DOS tarjetas separadas para alineación vertical.
         bovedaHtml = `
-            <!-- Total en Cuentas -->
-            <div class="p-3 border-b border-gray-100">
+            <!-- Tarjeta 1: Total en Cuentas -->
+            <div class="bg-white rounded-lg shadow-md p-3">
                 <div class="flex items-center justify-between mb-1">
                     <span class="text-sm font-medium text-gray-500 truncate">Total en Cuentas</span>
                     <span class="text-xs font-bold bg-green-100 text-green-700 rounded-full px-2 py-0.5">BÓVEDA</span>
@@ -950,8 +950,8 @@ const AppUI = {
                 <p class="text-xl font-bold text-green-600 text-right">${AppFormat.formatNumber(totalGeneral)} ℙ</p>
             </div>
             
-            <!-- Capital Operativo -->
-            <div class="p-3">
+            <!-- Tarjeta 2: Capital Operativo -->
+            <div class="bg-white rounded-lg shadow-md p-3">
                 <div class="flex items-center justify-between mb-1">
                     <span class="text-sm font-medium text-gray-500 truncate">Capital Operativo</span>
                     <span class="text-xs font-bold bg-blue-100 text-blue-700 rounded-full px-2 py-0.5">TESORERÍA</span>
