@@ -12,7 +12,8 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🖌️</text></svg>">
 
     <!-- Archivo de estilos personalizados (cache buster añadido) -->
-    <link rel="stylesheet" href="style.css?v=2">
+    <!-- CAMBIO: v=4 para reflejar los cambios de JS -->
+    <link rel="stylesheet" href="style.css?v=4">
 
     <!-- CAMBIO: La animación de los puntos de carga se movió a style.css -->
 </head>
@@ -51,24 +52,9 @@
                     Cargando...
                 </h1>
 
-                <!-- CAMBIO: Iconos de Nube actualizados -->
+                <!-- CAMBIO: Iconos de Nube eliminados por un indicador de texto -->
                 <div id="status-indicator" class="ml-auto flex items-center pr-2" title="Estado de la conexión">
-                    <!-- Estado 1: Conectado (Nube normal) -->
-                    <svg id="status-ok" class="w-6 h-6 text-gray-400 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4C9.11 4 6.6 5.64 5.35 8.04C2.34 8.36 0 10.91 0 14C0 17.31 2.69 20 6 20H19C21.76 20 24 17.76 24 15C24 12.36 21.95 10.22 19.35 10.04Z"/>
-                    </svg>
-                    
-                    <!-- Estado 2: Cargando (Spinner) -->
-                    <svg id="status-loading" class="w-6 h-6 text-blue-500 animate-spin hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    
-                    <!-- Estado 3: Error/Sin Conexión (Nube tachada) -->
-                    <svg id="status-error" class="w-6 h-6 text-gray-400 hidden" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4C9.11 4 6.6 5.64 5.35 8.04C2.34 8.36 0 10.91 0 14C0 17.31 2.69 20 6 20H19C21.76 20 24 17.76 24 15C24 12.36 21.95 10.22 19.35 10.04ZM19 18H6C3.79 18 2 16.21 2 14C2 11.95 3.53 10.24 5.56 10.03L6.63 9.92L7.13 8.97C8.08 7.14 9.94 6 12 6C14.62 6 16.88 7.86 17.39 10.43L17.69 11.93L19.22 12.01C20.78 12.09 22 13.4 22 15C22 16.65 20.65 18 19 18Z"/>
-                        <path d="M4.7 4.7L19.3 19.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
+                    <span id="status-text" class="text-sm font-medium text-gray-500"></span>
                 </div>
             </header>
             
@@ -240,48 +226,6 @@
             </div>
         </div>
     </div>
-
-    <!-- NUEVO: Modal de Transacciones -->
-    <div id="transaccion-modal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[1002] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform scale-95 transition-transform duration-300">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold text-gray-900">Panel de Transacciones</h2>
-                    <button id="transaccion-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
-                </div>
-                
-                <div class="space-y-4">
-                    <div>
-                        <label for="transaccion-grupo-select" class="block text-sm font-medium text-gray-700 mb-1">Grupo</label>
-                        <select id="transaccion-grupo-select" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="">Seleccione un grupo...</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="transaccion-usuario-select" class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
-                        <select id="transaccion-usuario-select" class_or_assign="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" disabled>
-                            <option value="">Seleccione un usuario...</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="transaccion-cantidad-input" class="block text-sm font-medium text-gray-700 mb-1">Cantidad (Positivo o Negativo)</label>
-                        <input type="number" id="transaccion-cantidad-input" placeholder="Ej: 100 o -50" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-
-                    <!-- Mensaje de estado para la transacción -->
-                    <div id="transaccion-status-msg" class="text-sm text-center font-medium h-4"></div>
-
-                </div>
-
-                <div class="flex justify-end gap-3 mt-6">
-                    <button id="transaccion-cancel-btn" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">Cancelar</button>
-                    <button id="transaccion-submit-btn" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">Realizar Transacción</button>
-                </div>
-            </div>
-        </div>
-    </div>
     
     <!-- Modal de Reglas (Estética mejorada) -->
     <div id="reglas-modal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
@@ -344,8 +288,75 @@
     </div>
 
 
+    <!-- =================================================================== -->
+    <!-- NUEVO: Modal de Transacciones (Oculto) -->
+    <!-- CAMBIO: Mejorado visualmente con encabezado, ícono y spinner -->
+    <!-- =================================================================== -->
+    <div id="transaccion-modal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform scale-95 transition-transform duration-300 overflow-hidden"> <!-- AÑADIDO: overflow-hidden -->
+            
+            <!-- Encabezado Mejorado -->
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <!-- CAMBIO: Icono SVG eliminado -->
+                    <div class="flex items-center">
+                        <h2 class="text-lg font-semibold text-gray-900">Panel de Transacciones</h2>
+                    </div>
+                    <button id="transaccion-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                </div>
+            </div>
+
+            <!-- Contenido del formulario (con padding) -->
+            <div class="p-6"> 
+                <!-- Formulario -->
+                <div class="space-y-4">
+                    <div>
+                        <label for="transaccion-grupo-select" class="block text-sm font-medium text-gray-700 mb-1">Grupo</label>
+                        <!-- CAMBIO: Añadido bg-gray-50 -->
+                        <select id="transaccion-grupo-select" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Seleccione un grupo...</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="transaccion-usuario-select" class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
+                        <!-- CAMBIO: Añadido bg-gray-50 y estilos disabled -->
+                        <select id="transaccion-usuario-select" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-200 disabled:opacity-70 disabled:cursor-not-allowed" disabled>
+                            <option value="">Seleccione un usuario...</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="transaccion-cantidad-input" class="block text-sm font-medium text-gray-700 mb-1">Cantidad (Positivo o Negativo)</label>
+                        <!-- CAMBIO: Añadido bg-gray-50 -->
+                        <input type="number" id="transaccion-cantidad-input" placeholder="Ej: 50 o -10" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <!-- Mensaje de Estado -->
+                <div id="transaccion-status-msg" class="text-sm text-center font-medium text-red-600 h-4 mt-4 mb-2"></div>
+
+                <!-- Botones de Acción (con padding) -->
+                <div class="flex justify-end gap-3 mt-6">
+                    <button id="transaccion-cancel-btn" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">Cancelar</button>
+                    
+                    <!-- CAMBIO: Botón con Spinner ELIMINADO. Ahora solo cambia el texto. -->
+                    <button id="transaccion-submit-btn" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm w-44 disabled:bg-blue-400 disabled:cursor-wait">
+                        <!-- Texto del Botón -->
+                        <span id="transaccion-btn-text" class="block">Realizar Transacción</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- =================================================================== -->
+    <!-- Fin Modal de Transacciones -->
+    <!-- =================================================================== -->
+
+
     <!-- Lógica de la Aplicación -->
-    <!-- CAMBIO: Añadido ?v=3 para forzar la recarga de caché del script -->
-    <script src="script.js?v=3" type="module" defer></script>
+    <!-- CAMBIO: Añadido ?v=4 para forzar la recarga de caché del script -->
+    <script src="script.js?v=4" type="module" defer></script>
 </body>
 </html>
+
