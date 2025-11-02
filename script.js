@@ -128,6 +128,7 @@ const AppData = {
                 }
                 
                 const data = await response.json();
+                console.log('DATOS RECIBIDOS DESDE APPSCRIPT:', JSON.stringify(data)); // <--- ¡CAMBIO AÑADIDO!
                 if (data && data.error) {
                     throw new Error(`Error de API: ${data.message}`);
                 }
@@ -1406,3 +1407,4 @@ window.onload = function() {
     console.log("window.onload disparado. Iniciando AppUI...");
     AppUI.init();
 };
+
