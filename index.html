@@ -514,7 +514,8 @@
                                 <ul class="list-[circle] pl-4">
                                     <li>Impuesto Pasivo Diario (0.05% a saldos > 100 ℙ).</li>
                                     <li>Comisión por Transferencia P2P (10%).</li>
-                                    <li>Cobro de intereses de préstamos vencidos.</li>
+                                    <!-- CAMBIO v12.3: Actualizado -->
+                                    <li>Cobro de cuotas e intereses (regulares y por mora) de préstamos.</li>
                                     <li>Multas (retiros de pinceles) impuestas por el administrador.</li>
                                     <li>Ingreso Pasivo Diario (simulación de crecimiento económico).</li>
                                 </ul>
@@ -525,14 +526,22 @@
                     <!-- Sección 2: Préstamos (Admin) -->
                     <div>
                         <h4 class="font-semibold text-gray-800">Préstamos Bancarios (Admin)</h4>
+                        <!-- ***** CAMBIO v12.3: Actualización a cobro diario + interés por mora ***** -->
                         <ul class="mt-1 text-sm list-disc pl-5 space-y-1">
-                            <li>El plazo de pago para todos los préstamos es de <strong>7 días</strong>.</li>
-                            <li><strong>Requisito General:</strong> Un alumno no puede solicitar un préstamo si ya tiene uno activo.</li>
+                            <li>El préstamo se paga automáticamente en <strong>7 cuotas diarias</strong>. Cada día, el sistema intentará cobrar la cuota diaria calculada de la cuenta del alumno.</li>
+                            <li><strong>Si no hay fondos:</strong> Si un alumno no tiene saldo suficiente para la cuota, el pago de ese día se omite (no se acumula interés *durante* los 7 días de plazo).</li>
+                            <li class="text-red-700 font-semibold"><strong>¡Penalización por Mora (Vencimiento)!</strong></li>
+                            <ul class="list-[circle] pl-4 space-y-1">
+                                <li>Si el préstamo vence (Día 8+) y aún tiene un `MontoPendiente`:
+                                    <br>1. La deuda **aumentará un 1% CADA DÍA** (interés por mora).
+                                    <br>2. El sistema intentará cobrar un **20% del saldo actual** del alumno (no de la deuda) como pago parcial.
+                                </li>
+                            </ul>
+                            <li><strong>Requisito General:</strong> Un alumno no puede solicitar un préstamo si ya tiene uno 'Activo' o 'Vencido'.</li>
                             <li><strong>Paquete Rescate:</strong> Es universal. Está disponible para cualquier alumno (con saldo positivo, cero o negativo), siempre que no tenga un préstamo activo.
                                 <br><span class="text-xs text-gray-500">(Excepción: No se puede solicitar si la deuda actual es mayor al monto del rescate).</span>
                             </li>
                             <li><strong>Paquetes Estándar e Inversión:</strong>
-                                <!-- CAMBIO v0.3.4: Corrección de redacción -->
                                 <br> - Están reservados para alumnos con saldo 0 ℙ o más (no negativo).
                                 <br> - El monto del préstamo solicitado no puede superar el 50% del saldo actual del alumno.
                             </li>
@@ -596,3 +605,4 @@
     <script src="script.js?v=0.3.0" type="module" defer></script>
 </body>
 </html>
+
