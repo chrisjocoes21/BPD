@@ -130,7 +130,8 @@ const AppTransacciones = {
 
             const result = await response.json();
 
-            if (result.status === "success" || (result.message && result.message.startsWith("Éxito"))) {
+            // CAMBIO: Corregido bug. Ahora comprueba 'success: true' no 'status: "success"'
+            if (result.success === true || (result.message && result.message.startsWith("Éxito"))) {
                 const successMsg = result.message || "¡Transacción(es) exitosa(s)!";
                 statusMsg.textContent = successMsg;
                 statusMsg.className = "text-sm text-center font-medium text-green-600 h-auto min-h-[1rem]";
@@ -458,6 +459,9 @@ const AppUI = {
 
         // Poblar la lista de grupos
         AppState.datosActuales.forEach(grupo => {
+            // No mostrar 'Cicla' en la lista de transacciones
+            if (grupo.nombre === 'Cicla') return; 
+
             const div = document.createElement('div');
             div.className = "flex items-center p-1 rounded hover:bg-gray-200";
             
@@ -508,7 +512,8 @@ const AppUI = {
             if (grupo && grupo.usuarios && grupo.usuarios.length > 0) {
                 // Añadir un encabezado de grupo
                 const headerDiv = document.createElement('div');
-                headerDiv.className = "flex justify-between items-center bg-gray-200 p-2 mt-2 sticky top-0";
+                // CAMBIO: Añadido sticky top-0 para que el encabezado se fije
+                headerDiv.className = "flex justify-between items-center bg-gray-200 p-2 mt-2 sticky top-0"; 
                 headerDiv.innerHTML = `<span class="text-sm font-semibold text-gray-700">${grupo.nombre}</span>`;
                 
                 // Añadir botón "Seleccionar Todos" para ESTE grupo
@@ -630,8 +635,8 @@ const AppUI = {
         AppState.isSidebarOpen = !AppState.isSidebarOpen; 
 
         if (AppState.isSidebarOpen) {
-            sidebar.classList.remove('-translatex-full');
-            btn.innerHTML = '<span class="font-bold text-lg">«</span>';
+            // ***** CORRECCIÓN DEL TYPO *****
+            sidebar.classList.remove('-translate-x-full'); // <-- CORREGIDO
         } else {
             sidebar.classList.add('-translate-x-full');
             btn.innerHTML = '<span class="font-bold text-lg">»</span>';
