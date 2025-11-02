@@ -12,7 +12,7 @@ const AppConfig = {
     
     // CAMBIO v0.3.0: Versión y Estado de la Aplicación (Nueva función P2P)
     APP_STATUS: 'Pre-Alfa', 
-    APP_VERSION: 'v0.3.2', // CAMBIO v0.3.2: Ajuste de layout y reglas
+    APP_VERSION: 'v0.3.3', // CAMBIO v0.3.3: Ajuste final de layout
     
     // CAMBIO v0.3.0: Impuesto P2P (debe coincidir con el Backend)
     IMPUESTO_P2P_TASA: 0.10, // 10%
@@ -1000,28 +1000,24 @@ const AppUI = {
         // CAMBIO V0.2.2: Tarjeta de Tesorería (NUEVA)
         const tesoreriaSaldo = AppState.datosAdicionales.saldoTesoreria;
         
-        // CAMBIO v0.3.2: Reestructurado a UNA sola tarjeta compacta.
+        // CAMBIO v0.3.3: Vuelve a DOS tarjetas separadas, pero hiper-compactas para alineación
         bovedaHtml = `
-            <div class="bg-white rounded-lg shadow-md p-3">
-                <!-- Sección Bóveda -->
-                <div class="pb-2">
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-sm font-medium text-gray-500 truncate">Total en Cuentas</span>
-                        <span class="text-xs font-bold bg-green-100 text-green-700 rounded-full px-2 py-0.5">BÓVEDA</span>
-                    </div>
-                    <p class="text-base font-semibold text-gray-900 truncate">Pinceles Totales</p>
-                    <p class="text-xl font-bold text-green-600 text-right">${AppFormat.formatNumber(totalGeneral)} ℙ</p>
+            <div class="bg-white rounded-lg shadow-md p-2">
+                <div class="flex items-center justify-between mb-0.5">
+                    <span class="text-xs font-medium text-gray-500 truncate">Total en Cuentas</span>
+                    <span class="text-xs font-bold bg-green-100 text-green-700 rounded-full px-2 py-0.5">BÓVEDA</span>
                 </div>
-                
-                <!-- Sección Tesorería -->
-                <div class="border-t border-gray-200 pt-2">
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-sm font-medium text-gray-500 truncate">Capital Operativo</span>
-                        <span class="text-xs font-bold bg-blue-100 text-blue-700 rounded-full px-2 py-0.5">TESORERÍA</span>
-                    </div>
-                    <p class="text-base font-semibold text-gray-900 truncate">Fondo del Banco</p>
-                    <p class="text-xl font-bold text-blue-600 text-right">${AppFormat.formatNumber(tesoreriaSaldo)} ℙ</p>
+                <p class="text-sm font-semibold text-gray-900 truncate">Pinceles Totales</p>
+                <p class="text-lg font-bold text-green-600 text-right">${AppFormat.formatNumber(totalGeneral)} ℙ</p>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-2">
+                <div class="flex items-center justify-between mb-0.5">
+                    <span class="text-xs font-medium text-gray-500 truncate">Capital Operativo</span>
+                    <span class="text-xs font-bold bg-blue-100 text-blue-700 rounded-full px-2 py-0.5">TESORERÍA</span>
                 </div>
+                <p class="text-sm font-semibold text-gray-900 truncate">Fondo del Banco</p>
+                <p class="text-lg font-bold text-blue-600 text-right">${AppFormat.formatNumber(tesoreriaSaldo)} ℙ</p>
             </div>
         `;
         
