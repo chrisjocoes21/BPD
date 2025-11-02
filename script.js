@@ -413,12 +413,16 @@ const AppUI = {
 
         // 1. MOSTRAR RESUMEN COMPACTO (4 TARJETAS)
         const homeStatsContainer = document.getElementById('home-stats-container');
-        const homeStatsGrid = document.getElementById('home-stats-grid');
-        let cardsHtml = '';
+        // CAMBIO: Contenedores separados para Bóveda y Top 3
+        const bovedaContainer = document.getElementById('boveda-card-container');
+        const top3Grid = document.getElementById('top-3-grid');
+        
+        let bovedaHtml = '';
+        let top3Html = '';
 
         // Tarjeta de Bóveda
         const totalGeneral = grupos.reduce((acc, g) => acc + g.total, 0);
-        cardsHtml += `
+        bovedaHtml = `
             <div class="bg-white rounded-lg shadow-md p-4">
                 <div class="flex items-center justify-between mb-2">
                     <span class="text-sm font-medium text-gray-500 truncate">Total en Bóveda</span>
@@ -434,7 +438,7 @@ const AppUI = {
         const top3 = allStudents.sort((a, b) => b.pinceles - a.pinceles).slice(0, 3);
 
         if (top3.length > 0) {
-            cardsHtml += top3.map((student, index) => {
+            top3Html = top3.map((student, index) => {
                 let rankColor = 'bg-blue-100 text-blue-700';
                 if (index === 0) rankColor = 'bg-yellow-100 text-yellow-700';
                 if (index === 1) rankColor = 'bg-gray-100 text-gray-700';
@@ -455,7 +459,7 @@ const AppUI = {
         }
         // Placeholders
         for (let i = top3.length; i < 3; i++) {
-            cardsHtml += `
+            top3Html += `
                 <div class="bg-white rounded-lg shadow-md p-4 opacity-50">
                     <div class="flex items-center justify-between mb-2"><span class="text-sm font-medium text-gray-400">-</span><span class="text-xs font-bold bg-gray-100 text-gray-400 rounded-full px-2 py-0.5">${i + 1}º</span></div>
                     <p class="text-lg font-semibold text-gray-400 truncate">-</p>
@@ -464,7 +468,10 @@ const AppUI = {
             `;
         }
 
-        homeStatsGrid.innerHTML = cardsHtml;
+        // CAMBIO: Inyectar HTML en los contenedores separados
+        bovedaContainer.innerHTML = bovedaHtml;
+        top3Grid.innerHTML = top3Html;
+        
         homeStatsContainer.classList.remove('hidden');
         
         // 2. MOSTRAR MÓDULOS (Idea 1 & 2)
@@ -561,15 +568,15 @@ const AppUI = {
         // 2. Ordena ascendente por pinceles (los más cercanos a la cicla primero)
         const enRiesgo = possibleRiesgoStudents.sort((a, b) => a.pinceles - b.pinceles);
         
-        // 3. Muestra los top 6 alumnos en riesgo (CAMBIO AQUÍ: antes 4, ahora 6)
-        const top6Riesgo = enRiesgo.slice(0, 6); 
+        // CAMBIO: Mostrar Top 7 en lugar de Top 6
+        const top7Riesgo = enRiesgo.slice(0, 7); 
 
-        if (top6Riesgo.length === 0) {
+        if (top7Riesgo.length === 0) {
             lista.innerHTML = `<tr><td colspan="3" class="p-4 text-sm text-gray-500 text-center">No hay alumnos en riesgo por el momento.</td></tr>`;
             return;
         }
 
-        lista.innerHTML = top6Riesgo.map((student, index) => {
+        lista.innerHTML = top7Riesgo.map((student, index) => {
             const grupoNombre = student.grupoOriginal || student.grupoNombre || 'N/A';
             const pinceles = AppData.formatNumber(student.pinceles);
             // Definir color de pinceles para la tabla
@@ -783,4 +790,3 @@ window.onload = function() {
     console.log("window.onload disparado. El DOM está listo. Iniciando AppUI...");
     AppUI.init();
 };
-
