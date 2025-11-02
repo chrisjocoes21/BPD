@@ -9,34 +9,43 @@
     <!-- Carga de Fuente Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🖌️</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏦</text></svg>">
 
-    <!-- Archivo de estilos personalizados -->
-    <!-- CAMBIO: v=7.3 para reflejar los cambios de JS -->
-    <link rel="stylesheet" href="style.css?v=7.3">
-
+    <!-- Archivo de estilos personalizados (cache buster añadido) -->
+    <link rel="stylesheet" href="style.css?v=0.2.2">
 </head>
 <body class="h-full">
     <div id="app-container" class="flex h-screen">
         <!-- 1. Barra Lateral de Navegación (Fija y Ocultable) -->
-        <!-- CAMBIO: Color de fondo cambiado a bg-gray-50 -->
+        <!-- CAMBIO V0.2.2: Rediseño visual -->
         <nav id="sidebar" class="fixed top-0 left-0 h-full z-30 flex flex-col bg-gray-50 w-64 border-r border-gray-200 flex-shrink-0 transition-transform duration-300 transform -translate-x-full">
             
+            <!-- Encabezado de la Sidebar -->
+            <div class="p-4 border-b border-gray-200 flex items-center justify-center bg-white">
+                <span class="text-xl font-extrabold text-blue-600">BPD</span>
+            </div>
+
             <!-- Contenedor de Grupos (se llenará dinámicamente) -->
             <div id="sidebar-nav" class="flex-1 overflow-y-auto p-2 space-y-1 pt-4">
                 <!-- Links de "Inicio" y grupos se insertarán aquí -->
-                <div class="text-center p-4 text-gray-500">
+                <div class="text-center p-4 text-gray-500 text-sm">
                     Cargando grupos...
                 </div>
             </div>
             
-            <!-- CAMBIO: El footer de la Sidebar (Botón Admin) se elimina de aquí -->
-            
-            <!-- NUEVO: Contenedor de Versión (Fijo al fondo) -->
-            <div id="app-version-container" class="p-3 border-t border-gray-200">
-                <p class="text-xs text-gray-500 text-center">
-                    Cargando versión...
-                </p>
+            <!-- Footer de la Sidebar (Botón Admin y Versión) -->
+            <div class="p-2 border-t border-gray-200 bg-white flex-shrink-0">
+                <!-- V0.2.2: Contenedor de la Versión -->
+                <div id="app-version-container" class="text-center py-1 text-xs text-gray-400">
+                    <!-- Versión se inyecta aquí -->
+                </div>
+                <!-- Botón de Gestión -->
+                <button id="gestion-btn" class="flex items-center justify-center w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                    <span>Administración</span>
+                </button>
             </div>
         </nav>
 
@@ -54,12 +63,9 @@
                     Cargando...
                 </h1>
 
-                <!-- CAMBIO: Indicador de estado modernizado (solo punto) -->
-                <div id="status-indicator" class="ml-auto flex items-center pr-2" title="Estado: Cargando...">
-                    <!-- NUEVO: Indicador de punto -->
-                    <span id="status-dot" class="w-3 h-3 rounded-full bg-blue-500 animate-pulse-dot"></span>
-                    <!-- CAMBIO: Ocultado el texto -->
-                    <span id="status-text" class="hidden">Cargando...</span> 
+                <!-- CAMBIO V0.2.2: Indicador de Estado (Punto sin texto) -->
+                <div id="status-indicator" class="ml-auto flex items-center pr-2" title="Estado de la conexión">
+                    <div id="status-dot" class="w-3 h-3 rounded-full"></div>
                 </div>
             </header>
             
@@ -78,14 +84,14 @@
                 <!-- Contenedor de Resumen Compacto (Solo en Home) -->
                 <div id="home-stats-container" class="mb-6 hidden">
                     
-                    <!-- Reestructurado para permitir títulos separados -->
+                    <!-- CAMBIO V0.2.2: Reestructurado para 4 columnas con Tesorería -->
                     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6"> 
                         
-                        <!-- Columna 1: Bóveda -->
+                        <!-- Columna 1: Resumen del Banco (Bóveda + Tesorería) -->
                         <div>
                             <h3 class="text-lg font-semibold text-gray-800 mb-4">Resumen del Banco</h3>
-                            <div id="boveda-card-container">
-                                <!-- Tarjeta Bóveda se inyectará aquí -->
+                            <div id="boveda-card-container" class="space-y-4">
+                                <!-- Tarjeta Bóveda y Tarjeta Tesorería se inyectarán aquí -->
                             </div>
                         </div>
                         
@@ -107,7 +113,6 @@
                     <div id="riesgo-container" class="bg-white rounded-lg shadow-md lg:col-span-1">
                         <h3 class="text-lg font-semibold text-gray-800 p-4 border-b border-gray-200">Alumnos en Riesgo</h3>
                         
-                        <!-- Convertido de lista a tabla para organización lineal -->
                         <div class="overflow-x-auto">
                             <table class="min-w-full">
                                 <thead class="bg-gray-50">
@@ -120,7 +125,6 @@
                                 <tbody id="riesgo-lista" class="bg-white divide-y divide-gray-200">
                                     <!-- Items de alumnos en riesgo se insertarán aquí -->
                                     <tr>
-                                        <!-- CAMBIO: Mensaje de carga inicial actualizado -->
                                         <td colspan="3" class="p-4 text-sm text-gray-500 text-center">Cargando datos...</td>
                                     </tr>
                                 </tbody>
@@ -128,19 +132,17 @@
                         </div>
                     </div>
 
-                    <!-- NUEVO: Panel de "Estadísticas Rápidas" (col-span-1) -->
+                    <!-- Panel de "Estadísticas Rápidas" (col-span-1) -->
                     <div id="quick-stats-container" class="bg-white rounded-lg shadow-md lg:col-span-1">
                         <h3 class="text-lg font-semibold text-gray-800 p-4 border-b border-gray-200">Estadísticas</h3>
                         <div id="quick-stats-list" class="p-4 space-y-3">
                             <!-- Stats will be injected here -->
-                            <!-- CAMBIO: Mensaje de carga inicial actualizado -->
                             <div class="text-center p-4 text-sm text-gray-500">Cargando datos...</div>
                         </div>
                     </div>
 
                     <!-- Tablón de Anuncios (col-span-2) -->
                     <div id="anuncios-container" class="bg-white rounded-lg shadow-md lg:col-span-2">
-                        <!-- Añadido botón de modal -->
                         <div class="flex justify-between items-center p-4 border-b border-gray-200">
                             <h3 class="text-lg font-semibold text-gray-800">Tablón de Anuncios</h3>
                             <button id="anuncios-modal-btn" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Ver Todos</button>
@@ -151,7 +153,7 @@
                     </div>
                 </div>
                 
-                <!-- Centro de Acceso Rápido (Título H3 eliminado, flex-nowrap) -->
+                <!-- Centro de Acceso Rápido -->
                 <div id="acceso-rapido-container" class="hidden bg-white rounded-lg shadow-md p-4">
                     <div class="flex flex-nowrap items-center justify-between gap-4">
                         
@@ -216,7 +218,7 @@
         </div>
     </div>
 
-    <!-- Modal de Acceso (Rediseñado) -->
+    <!-- Modal de Acceso (Clave) -->
     <div id="gestion-modal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform scale-95 transition-transform duration-300">
             <div class="p-6">
@@ -234,75 +236,160 @@
     </div>
     
     <!-- =================================================================== -->
-    <!-- Modal de Transacciones -->
+    <!-- CAMBIO V0.2.2: MODAL DE ADMINISTRACIÓN COMPLETO CON PESTAÑAS -->
     <!-- =================================================================== -->
     <div id="transaccion-modal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <!-- Aumentado el ancho a max-w-lg -->
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg transform scale-95 transition-transform duration-300 overflow-hidden"> 
+        <div id="transaccion-modal-dialog" class="bg-white rounded-lg shadow-xl w-full max-w-lg transform scale-95 transition-transform duration-300 overflow-hidden"> 
             
-            <!-- Encabezado Mejorado -->
-            <div class="bg-gray-50 p-4 border-b border-gray-200 flex justify-between items-center">
-                <h2 class="text-lg font-semibold text-gray-900">
-                    Realizar Transacción Múltiple
-                </h2>
-                <button id="transaccion-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
-            </div>
-
-            <!-- Contenido del formulario (con padding) -->
-            <div class="p-6"> 
-                <!-- Formulario -->
-                <!-- layout de 2 columnas para grupos y usuarios -->
-                <div class="grid grid-cols-2 gap-4">
-                    
-                    <!-- Columna de Grupos -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Grupos</label>
-                        <!-- <select> reemplazado por <div> de checkboxes -->
-                        <div id="transaccion-lista-grupos-container" class="w-full h-48 overflow-y-auto bg-gray-50 border border-gray-300 rounded-lg p-2 space-y-1">
-                            <!-- Los checkboxes de GRUPO se insertarán aquí -->
-                            <span class="text-sm text-gray-500 p-2">Cargando grupos...</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Columna de Usuarios -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Usuarios</label>
-                        <!-- Eliminado el botón "Seleccionar Todos" global. -->
-                        <div id="transaccion-lista-usuarios-container" class="w-full h-48 overflow-y-auto bg-gray-50 border border-gray-300 rounded-lg p-2 space-y-1">
-                            <!-- Los checkboxes de usuario se insertarán aquí -->
-                            <span class="text-sm text-gray-500 p-2">Seleccione un grupo...</span>
-                        </div>
-                    </div>
-
+            <!-- Encabezado con TABS -->
+            <div class="bg-gray-50 border-b border-gray-200">
+                <div class="flex justify-between items-center p-4">
+                    <h2 class="text-lg font-semibold text-gray-900">
+                        Panel de Administración
+                    </h2>
+                    <button id="transaccion-modal-close-btn" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
                 </div>
-
-                <!-- Campo de Cantidad (fuera del grid) -->
-                <div class="mt-4">
-                    <label id="transaccion-cantidad-label" for="transaccion-cantidad-input" class="block text-sm font-medium text-gray-700 mb-1">Cantidad (para cada usuario seleccionado)</label>
-                    <input type="number" id="transaccion-cantidad-input" placeholder="Ej: 100 o -50" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                
+                <!-- PESTAÑAS -->
+                <div class="flex border-b border-gray-200 px-4">
+                    <button data-tab="transaccion" class="tab-btn active-tab px-4 py-2 text-sm font-medium border-b-2 border-blue-600 text-blue-600 transition-colors hover:bg-gray-100">
+                        Transacción Múltiple
+                    </button>
+                    <button data-tab="prestamos" class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-600 transition-colors hover:bg-gray-100">
+                        Préstamos
+                    </button>
+                    <button data-tab="depositos" class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-600 transition-colors hover:bg-gray-100">
+                        Depósitos
+                    </button>
                 </div>
             </div>
 
-            <!-- Mensaje de Estado (centrado) -->
-            <div id="transaccion-status-msg" class="text-sm text-center font-medium text-red-600 px-6 pb-4 h-auto min-h-[1rem]">
-                <!-- Mensajes de éxito o error irán aquí -->
+            <!-- CONTENEDORES DE CONTENIDO (Tab-Content) -->
+            <div class="p-6 max-h-[70vh] overflow-y-auto">
+                
+                <!-- 1. CONTENIDO DE TRANSACCIÓN MÚLTIPLE (Default) -->
+                <div id="tab-transaccion" class="tab-content active"> 
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        
+                        <!-- Columna de Grupos -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Grupos</label>
+                            <div id="transaccion-lista-grupos-container" class="w-full h-48 overflow-y-auto bg-gray-50 border border-gray-300 rounded-lg p-2 space-y-1">
+                                <span class="text-sm text-gray-500 p-2">Cargando grupos...</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Columna de Usuarios -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Usuarios</label>
+                            <div id="transaccion-lista-usuarios-container" class="w-full h-48 overflow-y-auto bg-gray-50 border border-gray-300 rounded-lg p-2 space-y-1">
+                                <span class="text-sm text-gray-500 p-2">Seleccione un grupo...</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Campo de Cantidad (con saldo de Tesorería) -->
+                    <div class="mt-4">
+                        <label for="transaccion-cantidad-input" class="block text-sm font-medium text-gray-700 mb-1">
+                            Cantidad (para cada usuario seleccionado)
+                            <span id="tesoreria-saldo-transaccion" class="text-xs text-blue-600 ml-2 font-normal">
+                                <!-- Saldo de Tesorería se inyecta aquí -->
+                            </span>
+                        </label>
+                        <input type="number" id="transaccion-cantidad-input" placeholder="Ej: 100 o -50" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <!-- Botón y Status de Transacción -->
+                    <div class="mt-6 flex justify-end">
+                        <button id="transaccion-submit-btn" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm w-full md:w-auto">
+                            <span id="transaccion-btn-text">Realizar Transacción</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. CONTENIDO DE PRÉSTAMOS -->
+                <div id="tab-prestamos" class="tab-content hidden">
+                    
+                    <div class="mb-4">
+                        <label for="prestamo-alumno-select" class="block text-sm font-medium text-gray-700 mb-1">
+                            Seleccionar Alumno
+                            <span id="prestamo-alumno-saldo" class="text-xs text-gray-500 ml-2 font-normal"></span>
+                        </label>
+                        <select id="prestamo-alumno-select" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="" disabled selected>Seleccione un alumno...</option>
+                            <!-- Opciones se insertan aquí -->
+                        </select>
+                    </div>
+
+                    <div class="mt-4 p-4 border border-blue-200 rounded-lg bg-blue-50">
+                        <h4 class="text-base font-semibold text-blue-800 mb-3">
+                            Paquetes de Préstamo
+                            <span id="tesoreria-saldo-prestamo" class="text-sm text-blue-600 ml-2 font-normal float-right">
+                                <!-- Saldo de Tesorería se inyecta aquí -->
+                            </span>
+                        </h4>
+                        
+                        <div id="prestamo-paquetes-container" class="space-y-3">
+                            <div class="text-sm text-gray-500">Seleccione un alumno para ver las opciones de préstamo.</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <!-- Botón Submit para Préstamos se crea dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- 3. CONTENIDO DE DEPÓSITOS -->
+                <div id="tab-depositos" class="tab-content hidden">
+                    
+                    <div class="mb-4">
+                        <label for="deposito-alumno-select" class="block text-sm font-medium text-gray-700 mb-1">
+                            Seleccionar Alumno
+                            <span id="deposito-alumno-saldo" class="text-xs text-gray-500 ml-2 font-normal"></span>
+                        </label>
+                        <select id="deposito-alumno-select" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="" disabled selected>Seleccione un alumno...</option>
+                            <!-- Opciones se insertan aquí -->
+                        </select>
+                    </div>
+                    
+                    <div class="mt-4 p-4 border border-green-200 rounded-lg bg-green-50">
+                        <h4 class="text-base font-semibold text-green-800 mb-3">
+                            Certificados de Depósito a Plazo
+                            <span id="deposito-info-tesoreria" class="text-sm text-green-600 ml-2 font-normal float-right">
+                                <!-- Info de Tesorería se inyecta aquí -->
+                            </span>
+                        </h4>
+                        
+                        <div id="deposito-paquetes-container" class="space-y-3">
+                            <div class="text-sm text-gray-500">Seleccione un alumno para ver las opciones de depósito.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end">
+                        <!-- Botón Submit para Depósitos se crea dinámicamente -->
+                    </div>
+                </div>
+                
+                <!-- Status y Error General (Visible en todas las pestañas) -->
+                <div id="transaccion-status-msg" class="text-sm text-center font-medium px-6 pt-4 h-auto min-h-[1rem]">
+                    <!-- Mensajes de éxito o error irán aquí -->
+                </div>
             </div>
 
             <!-- Footer con Botones -->
-            <!-- CAMBIO: Añadido justify-between y el nuevo botón de "Ver Base de Datos" -->
-            <div class="bg-gray-50 p-4 border-t border-gray-200 flex justify-between items-center gap-3">
-                <!-- NUEVO: Botón de Base de Datos (alineado a la izquierda) -->
-                <a href="https://docs.google.com/spreadsheets/d/1GArB7I19uGum6awiRN6qK8HtmTWGcaPGWhOzGCdhbcs/edit?usp=sharing" target="_blank" rel="noopener noreferrer" class="px-4 py-2 bg-green-100 text-green-700 text-sm font-medium rounded-lg hover:bg-green-200 transition-colors">
+            <div class="bg-gray-50 p-4 border-t border-gray-200 flex justify-between gap-3 flex-shrink-0">
+                <!-- Botón de Base de Datos -->
+                <a id="db-link-btn" href="https://docs.google.com/spreadsheets/d/1GArB7I19uGum6awiRN6qK8HtmTWGcaPGWhOzGCdhbcs/edit?usp=sharing" target="_blank" class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-1">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3-3m0 0-3-3m-1.5 1.5H19.5" />
+                    </svg>
                     Ver Base de Datos
                 </a>
                 
-                <!-- Botones existentes (alineados a la derecha) -->
-                <div class="flex gap-3"> <!-- Wrapper div -->
-                    <button id="transaccion-cancel-btn" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">Cancelar</button>
-                    <button id="transaccion-submit-btn" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm w-40 text-center">
-                        <span id="transaccion-btn-text">Realizar Transacción</span>
-                    </button>
-                </div>
+                <button id="transaccion-cancel-btn" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">Cerrar</button>
             </div>
         </div>
     </div>
@@ -313,32 +400,52 @@
         <div class="bg-white rounded-lg shadow-xl w-full max-w-lg transform scale-95 transition-transform duration-300">
             <div class="p-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold text-gray-900">Reglas del Banco</h2>
+                    <h2 class="text-lg font-semibold text-gray-900">Reglas y Economía del Banco</h2>
                     <button id="reglas-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
                 </div>
-                <!-- Contenido rediseñado -->
-                <div class="space-y-4 max-w-none text-gray-600">
-                    <!-- Sección 1 (Texto actualizado) -->
+                <!-- Contenido rediseñado con nuevas reglas económicas -->
+                <div class="space-y-6 max-h-[70vh] overflow-y-auto pr-2 text-gray-600">
+                    
+                    <!-- Sección 1: Tesorería y Anti-Inflación -->
+                    <div class="p-3 bg-blue-50 border-l-4 border-blue-400 rounded-lg">
+                        <h4 class="font-bold text-blue-800">Tesorería y Economía Cerrada</h4>
+                        <ul class="mt-1 text-sm list-disc pl-5 space-y-1 text-gray-700">
+                            <li>El Banco (Tesorería) es la única fuente de dinero para depósitos a alumnos.</li>
+                            <li>Las acciones del administrador (dar pinceles, préstamos) están limitadas al saldo de la Tesorería (regla anti-inflación).</li>
+                            <li>La Tesorería obtiene ingresos de Impuestos, Multas y un Ingreso Pasivo Diario.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Sección 2: Préstamos (V9) -->
                     <div>
-                        <h4 class="font-semibold text-gray-800">Asignación de Pinceles</h4>
-                        <p class="mt-1 text-sm text-gray-600">
-                            Se dan pinceles por la excelencia en la realización de las actividades académicas. Las tareas especiales y proyectos finales otorgan bonificaciones.
-                        </p>
+                        <h4 class="font-semibold text-gray-800">Préstamos Bancarios</h4>
+                        <ul class="mt-1 text-sm list-disc pl-5 space-y-1">
+                            <li>El plazo de pago es fijo: **7 días** para todos los préstamos.</li>
+                            <li>**Elegibilidad:** Un alumno solo puede solicitar un préstamo si no tiene uno activo.</li>
+                            <li>**Alumnos con Saldo Positivo:** Solo son elegibles para préstamos cuyo monto sea $\le$ 50% de su saldo actual.</li>
+                            <li>**Alumnos en Cicla:** Solo son elegibles para el préstamo 'Rescate' si el monto les permite salir del saldo negativo.</li>
+                        </ul>
                     </div>
-                    <!-- Sección 2 -->
+                    
+                    <!-- Sección 3: Depósitos a Plazo (V11) -->
                     <div class="pt-4 border-t border-gray-100">
-                        <h4 class="font-semibold text-gray-800">Subastas</h4>
-                        <p class="mt-1 text-sm text-gray-600">
-                            Se realizan el último jueves de cada mes. Se requiere un saldo positivo para participar. Los alumnos en "Cicla" no pueden participar.
-                        </p>
+                        <h4 class="font-semibold text-gray-800">Depósitos a Plazo (Inversión)</h4>
+                        <ul class="mt-1 text-sm list-disc pl-5 space-y-1">
+                            <li>Permite a los alumnos ganar intereses fijos por depositar capital en la Tesorería (el banco lo usa como préstamo).</li>
+                            <li>**Requisito:** No debe tener préstamos activos con el banco para poder invertir.</li>
+                            <li>Al vencer el plazo, la Tesorería paga el monto original MÁS el interés. Si la Tesorería está insolvente, el pago se reintenta diariamente.</li>
+                        </ul>
                     </div>
-                    <!-- Sección 3 -->
+                    
+                    <!-- Sección 4: Impuestos y Multas (V6) -->
                     <div class="pt-4 border-t border-gray-100">
-                        <h4 class="font-semibold text-gray-800">Saldos Negativos (Cicla)</h4>
-                        <p class="mt-1 text-sm text-gray-600">
-                            Un saldo de -1 ℙ o menos mueve al alumno a Cicla. Para salir, se debe completar un "desafío de recuperación".
-                        </p>
+                        <h4 class="font-semibold text-gray-800">Impuestos y Multas (Ingreso a Tesorería)</h4>
+                        <ul class="mt-1 text-sm list-disc pl-5 space-y-1">
+                            <li>**Impuesto Diario:** Se cobra un 0.05% diario a saldos $\ge$ 100 ℙ.</li>
+                            <li>**Multas:** Todo dinero retirado de un alumno por el administrador (transacción negativa) ingresa directamente a la Tesorería.</li>
+                        </ul>
                     </div>
+                    
                 </div>
             </div>
         </div>
@@ -354,7 +461,6 @@
                 </div>
                 <!-- Contenido de todos los anuncios -->
                 <div id="anuncios-modal-lista" class="max-h-[60vh] overflow-y-auto space-y-4 pr-2">
-                    <!-- Los anuncios se poblarán aquí desde JS -->
                     <p class="text-gray-500 text-center">Cargando anuncios...</p>
                 </div>
             </div>
@@ -370,8 +476,6 @@
 
 
     <!-- Lógica de la Aplicación -->
-    <!-- CAMBIO: Añadido ?v=7.3 para forzar la recarga de caché del script -->
-    <script src="script.js?v=7.3" type="module" defer></script>
+    <script src="script.js?v=0.2.2" type="module" defer></script>
 </body>
 </html>
-
