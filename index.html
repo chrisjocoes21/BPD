@@ -93,11 +93,25 @@
                     <!-- Panel de "Alumnos en Riesgo" (col-span-1) -->
                     <div id="riesgo-container" class="bg-white rounded-lg shadow-md lg:col-span-1">
                         <h3 class="text-lg font-semibold text-gray-800 p-4 border-b border-gray-200">Alumnos en Riesgo</h3>
-                        <!-- CAMBIO: Eliminada altura fija y overflow, añadido p-4 space-y-3 -->
-                        <ul id="riesgo-lista" class="p-4 space-y-3">
-                            <!-- Items de alumnos en riesgo se insertarán aquí -->
-                            <li class="p-4 text-sm text-gray-500 text-center">Calculando...</li>
-                        </ul>
+                        
+                        <!-- CAMBIO: Convertido de lista a tabla para organización lineal -->
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grupo</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Pinceles</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="riesgo-lista" class="bg-white divide-y divide-gray-200">
+                                    <!-- Items de alumnos en riesgo se insertarán aquí -->
+                                    <tr>
+                                        <td colspan="3" class="p-4 text-sm text-gray-500 text-center">Calculando...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                     <!-- Tablón de Anuncios (col-span-2) -->
