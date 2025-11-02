@@ -55,10 +55,15 @@ const AppTransacciones = {
         const usuarioSelect = document.getElementById('transaccion-usuario-select');
         const cantidadInput = document.getElementById('transaccion-cantidad-input');
         const statusMsg = document.getElementById('transaccion-status-msg');
+        
+        // CAMBIO: IDs para controlar el spinner del botón
         const submitBtn = document.getElementById('transaccion-submit-btn');
+        const btnText = document.getElementById('transaccion-btn-text');
+        // CAMBIO: Spinner ya no existe
+        // const btnSpinner = document.getElementById('transaccion-btn-spinner');
 
         const grupo = grupoSelect.value;
-        const alumno = usuarioSelect.value; // La API probablemente espera "alumno"
+        const alumno = usuarioSelect.value;
         const pinceles = parseInt(cantidadInput.value, 10);
 
         // Validación
@@ -76,31 +81,31 @@ const AppTransacciones = {
         // Estado de carga
         statusMsg.textContent = "Procesando...";
         statusMsg.className = "text-sm text-center font-medium text-blue-600 h-4";
+        
+        // CAMBIO: Mostrar spinner en el botón
         submitBtn.disabled = true;
+        btnText.textContent = 'Procesando...'; // CAMBIO: Solo cambia el texto
+        // btnSpinner.classList.remove('hidden');
 
         try {
             const payload = {
                 grupo: grupo,
                 nombre: alumno, 
-                cantidad: pinceles, // <-- CAMBIO: "pinceles" se cambió a "cantidad"
+                cantidad: pinceles, 
                 clave: AppConfig.CLAVE_MAESTRA 
             };
 
             const response = await fetch(AppConfig.TRANSACCION_API_URL, {
                 method: 'POST',
-                // CAMBIO: Modificado a 'text/plain' como sugiere el comentario original
-                // Esto es una solución común para Google Apps Script
                 headers: {
                     'Content-Type': 'text/plain', 
                 },
-                body: JSON.stringify(payload), // El script de Google recibirá esto como un string
-                redirect: 'follow', // Importante para Google Apps Script
+                body: JSON.stringify(payload), 
+                redirect: 'follow', 
             });
 
             const result = await response.json();
 
-            // CAMBIO: Se actualiza la condición de éxito.
-            // Ahora acepta 'status: "success"' O un 'message' que comience con "Éxito"
             if (result.status === "success" || (result.message && result.message.startsWith("Éxito"))) {
                 statusMsg.textContent = "¡Transacción exitosa!";
                 statusMsg.className = "text-sm text-center font-medium text-green-600 h-4";
@@ -125,11 +130,13 @@ const AppTransacciones = {
 
         } catch (error) {
             console.error("Error en la transacción:", error);
-            // CAMBIO: Mensaje de error simplificado. El error de la API (ej. "Clave incorrecta") se mostrará.
             statusMsg.textContent = `Error: ${error.message}`;
             statusMsg.className = "text-sm text-center font-medium text-red-600 h-4";
         } finally {
+            // CAMBIO: Ocultar spinner en el botón
             submitBtn.disabled = false;
+            btnText.textContent = 'Realizar Transacción'; // CAMBIO: Resetea el texto
+            // btnSpinner.classList.add('hidden');
         }
     }
 };
@@ -137,7 +144,6 @@ const AppTransacciones = {
 
 // --- Base de Datos de Anuncios (Textos más largos) ---
 const AnunciosDB = {
-// ... (contenido existente omitido por brevedad) ...
     'AVISO': [
         "La subasta de fin de mes es el último Jueves de cada mes. ¡Preparen sus pinceles!",
         "Revisen sus saldos antes del cierre de mes. No se aceptan saldos negativos en la subasta.",
@@ -170,7 +176,6 @@ const AppData = {
     isCacheValid: () => AppState.cachedData && AppState.lastCacheTime && (Date.now() - AppState.lastCacheTime < AppConfig.CACHE_DURATION),
 
     cargarDatos: async function(isRetry = false) {
-// ... (contenido existente omitido por brevedad) ...
         if (AppState.actualizacionEnProceso) return;
         AppState.actualizacionEnProceso = true;
 
@@ -242,7 +247,6 @@ const AppData = {
 
     // CAMBIO: Simplificada la detección de cambios, ya no rastrea "trending"
     detectarCambios: function(nuevosDatos) {
-// ... (contenido existente omitido por brevedad) ...
         if (!AppState.datosActuales) return; 
 
         nuevosDatos.forEach(grupo => {
@@ -259,7 +263,6 @@ const AppData = {
     },
     
     procesarYMostrarDatos: function(data) {
-// ... (contenido existente omitido por brevedad) ...
         let gruposOrdenados = Object.entries(data).map(([nombre, info]) => ({ nombre, total: info.total || 0, usuarios: info.usuarios || [] }));
         const negativeUsers = [];
 
@@ -310,7 +313,6 @@ const AppUI = {
     
     // --- CAMBIO: Añadidos console.log para depurar el error de carga ---
     init: function() {
-// ... (contenido existente omitido por brevedad) ...
         console.log("AppUI.init() comenzando.");
         
         // Listeners Modales de Gestión (Clave)
@@ -382,7 +384,6 @@ const AppUI = {
     },
 
     showModal: function(modalId) {
-// ... (contenido existente omitido por brevedad) ...
         const modal = document.getElementById(modalId);
         if (!modal) return;
         modal.classList.remove('opacity-0', 'pointer-events-none');
@@ -390,7 +391,6 @@ const AppUI = {
     },
 
     hideModal: function(modalId) {
-// ... (contenido existente omitido por brevedad) ...
         const modal = document.getElementById(modalId);
         if (!modal) return;
         modal.classList.add('opacity-0', 'pointer-events-none');
@@ -404,7 +404,11 @@ const AppUI = {
             usuarioSelect.disabled = true;
             document.getElementById('transaccion-cantidad-input').value = "";
             document.getElementById('transaccion-status-msg').textContent = "";
+            
+            // CAMBIO: Resetear el spinner del botón
             document.getElementById('transaccion-submit-btn').disabled = false;
+            document.getElementById('transaccion-btn-text').textContent = 'Realizar Transacción'; // CAMBIO: Resetea el texto
+            // document.getElementById('transaccion-btn-spinner').classList.add('hidden');
         }
         
         // NUEVO: Limpiar campo de clave si se cierra el modal de gestión
@@ -416,7 +420,6 @@ const AppUI = {
 
     // --- NUEVAS FUNCIONES PARA EL MODAL DE TRANSACCIONES ---
     showTransaccionModal: function() {
-// ... (contenido existente omitido por brevedad) ...
         if (!AppState.datosActuales) {
             alert("Los datos de los grupos aún no se han cargado. Intente de nuevo en un momento.");
             return;
@@ -438,7 +441,6 @@ const AppUI = {
     },
 
     populateUsuariosTransaccion: function() {
-// ... (contenido existente omitido por brevedad) ...
         const grupoSelect = document.getElementById('transaccion-grupo-select');
         const usuarioSelect = document.getElementById('transaccion-usuario-select');
         const selectedGrupoNombre = grupoSelect.value;
@@ -475,35 +477,42 @@ const AppUI = {
 
 
     showLoading: function() {
-// ... (contenido existente omitido por brevedad) ...
         document.getElementById('loading-overlay').classList.remove('opacity-0', 'pointer-events-none');
         AppUI.setConnectionStatus('loading'); // NUEVO: Mostrar spinner
     },
 
     hideLoading: function() {
-// ... (contenido existente omitido por brevedad) ...
         document.getElementById('loading-overlay').classList.add('opacity-0', 'pointer-events-none');
         // No cambiar el estado aquí, dejar que cargarDatos lo decida
     },
     
     // NUEVO: Función para controlar el icono de estado
     setConnectionStatus: function(status) {
-// ... (contenido existente omitido por brevedad) ...
         // status puede ser 'ok', 'loading', 'error'
-        const statusOk = document.getElementById('status-ok');
-        const statusLoading = document.getElementById('status-loading');
-        const statusError = document.getElementById('status-error');
+        // CAMBIO: Eliminados los SVGs, ahora usa un <span>
+        const statusText = document.getElementById('status-text');
+        if (!statusText) return;
 
-        if (!statusOk || !statusLoading || !statusError) return;
-
-        statusOk.classList.toggle('hidden', status !== 'ok');
-        statusLoading.classList.toggle('hidden', status !== 'loading');
-        statusError.classList.toggle('hidden', status !== 'error');
+        switch (status) {
+            case 'ok':
+                statusText.textContent = 'Conectado';
+                statusText.className = 'text-sm font-medium text-green-600';
+                break;
+            case 'loading':
+                statusText.textContent = 'Cargando...';
+                statusText.className = 'text-sm font-medium text-blue-600';
+                break;
+            case 'error':
+                statusText.textContent = 'Sin Conexión';
+                statusText.className = 'text-sm font-medium text-red-600';
+                break;
+            default:
+                statusText.textContent = '';
+        }
     },
 
     // --- INICIO CAMBIO: Nueva función hideSidebar ---
     hideSidebar: function() {
-// ... (contenido existente omitido por brevedad) ...
         if (AppState.isSidebarOpen) {
             AppUI.toggleSidebar(); // Llama a toggle para cerrar
         }
@@ -511,7 +520,6 @@ const AppUI = {
     // --- FIN CAMBIO ---
 
     toggleSidebar: function() {
-// ... (contenido existente omitido por brevedad) ...
         const sidebar = document.getElementById('sidebar');
         const btn = document.getElementById('toggle-sidebar-btn');
         
@@ -527,7 +535,6 @@ const AppUI = {
     },
 
     actualizarSidebar: function(grupos) {
-// ... (contenido existente omitido por brevedad) ...
         const nav = document.getElementById('sidebar-nav');
         nav.innerHTML = ''; 
         
@@ -579,7 +586,6 @@ const AppUI = {
     },
 
     actualizarSidebarActivo: function() {
-// ... (contenido existente omitido por brevedad) ...
         const links = document.querySelectorAll('#sidebar-nav .nav-link');
         links.forEach(link => {
             const groupName = link.dataset.groupName;
@@ -599,7 +605,6 @@ const AppUI = {
      * Muestra la vista de "Inicio"
      */
     mostrarPantallaNeutral: function(grupos) {
-// ... (contenido existente omitido por brevedad) ...
         document.getElementById('main-header-title').textContent = "Bienvenido al Banco del Pincel Dorado";
         document.getElementById('page-subtitle').innerHTML = ''; 
 
@@ -684,7 +689,6 @@ const AppUI = {
      * Muestra la tabla de un grupo específico
      */
     mostrarDatosGrupo: function(grupo) {
-// ... (contenido existente omitido por brevedad) ...
         document.getElementById('main-header-title').textContent = grupo.nombre;
         
         let totalColor = "text-gray-700";
@@ -754,7 +758,6 @@ const AppUI = {
 
     // --- INICIO CAMBIO DE LÓGICA: Función de Alumnos en Riesgo (Ahora es una tabla) ---
     actualizarAlumnosEnRiesgo: function() {
-// ... (contenido existente omitido por brevedad) ...
         const lista = document.getElementById('riesgo-lista');
         if (!lista) return;
 
@@ -794,7 +797,6 @@ const AppUI = {
     
     // --- NUEVA FUNCIÓN: Módulo de Estadísticas Rápidas (CAMBIO: Añadidas 2 nuevas stats) ---
     actualizarEstadisticasRapidas: function(grupos) {
-// ... (contenido existente omitido por brevedad) ...
         const statsList = document.getElementById('quick-stats-list');
         if (!statsList) return;
 
@@ -829,7 +831,6 @@ const AppUI = {
 
     // --- INICIO CAMBIO: Función para Anuncios Dinámicos (CAMBIO: Muestra 6 anuncios) ---
     actualizarAnuncios: function() {
-// ... (contenido existente omitido por brevedad) ...
         const lista = document.getElementById('anuncios-lista');
         
         const getRandomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -858,7 +859,6 @@ const AppUI = {
 
     // --- NUEVA FUNCIÓN: Poblar el modal de "Todos los Anuncios" ---
     poblarModalAnuncios: function() {
-// ... (contenido existente omitido por brevedad) ...
         const listaModal = document.getElementById('anuncios-modal-lista');
         if (!listaModal) return;
 
@@ -896,7 +896,6 @@ const AppUI = {
 
     // --- MODAL DE ALUMNO ---
     showStudentModal: function(nombreGrupo, nombreUsuario, rank) {
-// ... (contenido existente omitido por brevedad) ...
         const grupo = AppState.datosActuales.find(g => g.nombre === nombreGrupo);
         const usuario = (grupo.usuarios || []).find(u => u.nombre === nombreUsuario);
         
@@ -939,7 +938,6 @@ const AppUI = {
     
     // --- CONTADOR DE SUBASTA ---
     updateCountdown: function() {
-// ... (contenido existente omitido por brevedad) ...
         const getLastThursday = (year, month) => {
             const lastDayOfMonth = new Date(year, month + 1, 0);
             let lastThursday = new Date(lastDayOfMonth);
@@ -993,5 +991,4 @@ window.onload = function() {
     console.log("window.onload disparado. El DOM está listo. Iniciando AppUI...");
     AppUI.init();
 };
-
 
