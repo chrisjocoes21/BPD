@@ -12,7 +12,8 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏦</text></svg>">
 
     <!-- Archivo de estilos personalizados (cache buster añadido) -->
-    <link rel="stylesheet" href="style.css?v=0.2.2">
+    <!-- CAMBIO: v=0.2.3 -->
+    <link rel="stylesheet" href="style.css?v=0.2.3">
 </head>
 <body class="h-full">
     <div id="app-container" class="flex h-screen">
@@ -90,8 +91,9 @@
                         <!-- Columna 1: Resumen del Banco (Bóveda + Tesorería) -->
                         <div>
                             <h3 class="text-lg font-semibold text-gray-800 mb-4">Resumen del Banco</h3>
-                            <div id="boveda-card-container" class="space-y-4">
-                                <!-- Tarjeta Bóveda y Tarjeta Tesorería se inyectarán aquí -->
+                            <!-- CAMBIO v0.2.3: Se quita 'space-y-4' para la tarjeta compacta -->
+                            <div id="boveda-card-container" class="">
+                                <!-- Tarjeta Bóveda y Tarjeta Tesorería (compactadas) se inyectarán aquí -->
                             </div>
                         </div>
                         
@@ -265,9 +267,11 @@
             </div>
 
             <!-- CONTENEDORES DE CONTENIDO (Tab-Content) -->
+            <!-- CAMBIO v0.2.3: Se quita 'max-h-[70vh]' y se pone 'h-[60vh]' para tamaño fijo, aunque se gestionará por CSS -->
             <div class="p-6 max-h-[70vh] overflow-y-auto">
                 
                 <!-- 1. CONTENIDO DE TRANSACCIÓN MÚLTIPLE (Default) -->
+                <!-- CAMBIO v0.2.3: La altura min se controla por CSS .tab-content -->
                 <div id="tab-transaccion" class="tab-content active"> 
                     
                     <div class="grid grid-cols-2 gap-4 mb-4">
@@ -310,6 +314,7 @@
                 </div>
 
                 <!-- 2. CONTENIDO DE PRÉSTAMOS -->
+                <!-- CAMBIO v0.2.3: La altura min se controla por CSS .tab-content -->
                 <div id="tab-prestamos" class="tab-content hidden">
                     
                     <div class="mb-4">
@@ -342,6 +347,7 @@
                 </div>
 
                 <!-- 3. CONTENIDO DE DEPÓSITOS -->
+                <!-- CAMBIO v0.2.3: La altura min se controla por CSS .tab-content -->
                 <div id="tab-depositos" class="tab-content hidden">
                     
                     <div class="mb-4">
@@ -476,6 +482,7 @@
 
 
     <!-- Lógica de la Aplicación -->
-    <script src="script.js?v=0.2.2" type="module" defer></script>
+    <!-- CAMBIO: v=0.2.3 -->
+    <script src="script.js?v=0.2.3" type="module" defer></script>
 </body>
 </html>
