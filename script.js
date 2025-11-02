@@ -1,5 +1,9 @@
 // --- CONFIGURACIÓN ---
 const AppConfig = {
+    // NUEVO: Estado y Versión de la App
+    APP_STATUS: 'Pre-Alfa', // (Pre-Alfa, Alfa, Beta, Lanzamiento)
+    APP_VERSION: 'v0.2.1',  // (Mayor.Menor.Parche)
+
     API_URL: 'https://script.google.com/macros/s/AKfycbzFNGHqiOlKDq5AAGhuDEDweEGgqNoJZFsGrkD3r4aGetrMYLOJtieNK1tVz9iqjvHHNg/exec',
     // NUEVA API PARA TRANSACCIONES
     TRANSACCION_API_URL: 'https://script.google.com/macros/s/AKfycbyhPHZuRmC7_t9z20W4h-VPqVFk0z6qKFG_W-YXMgnth4BMRgi8ibAfjeOtIeR5OrFPXw/exec',
@@ -405,6 +409,10 @@ const AppUI = {
         
         // NUEVO: Poblar el modal de anuncios una vez
         AppUI.poblarModalAnuncios();
+        
+        // NUEVO: Mostrar la versión de la app
+        AppUI.mostrarVersionApp(); 
+        
         console.log("AppUI.init() completado.");
     },
 
@@ -442,6 +450,21 @@ const AppUI = {
              document.getElementById('clave-input').value = "";
              document.getElementById('clave-input').classList.remove('shake', 'border-red-500');
         }
+    },
+
+    // --- NUEVA FUNCIÓN: Muestra la versión de la app en la sidebar ---
+    mostrarVersionApp: function() {
+        const container = document.getElementById('app-version-container');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <p class="text-xs text-gray-500 text-center" title="Estado del desarrollo">
+                ${AppConfig.APP_STATUS}
+            </p>
+            <p class="text-xs text-gray-500 text-center" title="Versión de la aplicación">
+                ${AppConfig.APP_VERSION}
+            </p>
+        `;
     },
 
     // --- NUEVAS FUNCIONES PARA EL MODAL DE TRANSACCIONES ---
@@ -1135,3 +1158,4 @@ window.onload = function() {
     console.log("window.onload disparado. El DOM está listo. Iniciando AppUI...");
     AppUI.init();
 };
+
