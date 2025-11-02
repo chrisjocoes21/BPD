@@ -493,7 +493,7 @@ const AppUI = {
         document.getElementById('acceso-rapido-container').classList.add('hidden');
     },
 
-    // --- INICIO CAMBIO DE LÓGICA: Función de Alumnos en Riesgo (Incluye cero pinceles y muestra Top 4) ---
+    // --- INICIO CAMBIO DE LÓGICA: Función de Alumnos en Riesgo (Incluye cero pinceles y ahora muestra Top 6) ---
     actualizarAlumnosEnRiesgo: function() {
         const lista = document.getElementById('riesgo-lista');
         if (!lista) return;
@@ -506,15 +506,15 @@ const AppUI = {
         // 2. Ordena ascendente por pinceles (los más cercanos a la cicla primero)
         const enRiesgo = possibleRiesgoStudents.sort((a, b) => a.pinceles - b.pinceles);
         
-        // 3. Muestra los top 4 alumnos en riesgo
-        const top4Riesgo = enRiesgo.slice(0, 4); 
+        // 3. Muestra los top 6 alumnos en riesgo (CAMBIO AQUÍ: antes 4, ahora 6)
+        const top6Riesgo = enRiesgo.slice(0, 6); 
 
-        if (top4Riesgo.length === 0) {
+        if (top6Riesgo.length === 0) {
             lista.innerHTML = `<li class="p-4 text-sm text-gray-500 text-center">No hay alumnos en riesgo por el momento.</li>`;
             return;
         }
 
-        lista.innerHTML = top4Riesgo.map((student, index) => {
+        lista.innerHTML = top6Riesgo.map((student, index) => {
             const grupoNombre = student.grupoOriginal || student.grupoNombre || 'N/A';
             return `
                 <li class="flex items-start">
