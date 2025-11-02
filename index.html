@@ -3,21 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- CAMBIO: Título de la pestaña -->
     <title>BPD</title>
-    
-    <!-- CAMBIO: Favicon SVG (más compatible) -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🖌️</text></svg>">
-    
     <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Carga de Fuente Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Archivo de estilos personalizados (CAMBIO: cache buster) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🖌️</text></svg>">
+
+    <!-- Archivo de estilos personalizados (cache buster añadido) -->
     <link rel="stylesheet" href="style.css?v=2">
 
-    <!-- CAMBIO: Animación de puntos movida a style.css -->
+    <!-- CAMBIO: La animación de los puntos de carga se movió a style.css -->
 </head>
 <body class="h-full">
     <div id="app-container" class="flex h-screen">
@@ -32,13 +29,7 @@
                 </div>
             </div>
             <!-- Footer de la Sidebar (Botón Admin movido aquí) -->
-            <div class="p-2 border-t border-gray-200 space-y-2">
-                
-                <!-- NUEVO: Botón de Transacción -->
-                <button id="transaccion-btn" class="flex items-center justify-center w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
-                    <span>Realizar Transacción</span>
-                </button>
-                
+            <div class="p-2 border-t border-gray-200">
                 <!-- Botón de Gestión (ICONO ELIMINADO) -->
                 <button id="gestion-btn" class="flex items-center justify-center w-full px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
                     <span>Administración</span>
@@ -50,34 +41,33 @@
         <div id="main-content-container" class="flex-1 flex flex-col overflow-hidden ml-0">
             
             <!-- Barra Superior (para Toggle y Título) -->
-            <header class="h-16 bg-white border-b border-gray-200 flex-shrink-0 flex items-center justify-between px-4">
-                <!-- Contenedor Izquierdo: Toggle y Título -->
-                <div class="flex items-center">
-                    <!-- Botón para ocultar/mostrar sidebar -->
-                    <button id="toggle-sidebar-btn" class="p-2 -ml-2 mr-2 rounded-full text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-300">
-                        <span class="font-bold text-lg">»</span>
-                    </button>
-                    <!-- Título principal (se actualiza dinámicamente) -->
-                    <h1 id="main-header-title" class="text-lg font-semibold text-gray-900 truncate">
-                        Cargando...
-                    </h1>
-                </div>
-                
-                <!-- Contenedor Derecho: Icono de Estado -->
-                <!-- CAMBIO: Iconos de nube mejorados -->
-                <div id="status-icon-container" class="text-gray-500" title="Estado de la conexión">
-                    <!-- Nube OK -->
-                    <svg id="status-ok" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 text-green-500 hidden">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.758A3.75 3.75 0 0013.5 4.5h-4.5a4.5 4.5 0 00-4.5 4.5v3.75m.75 6.75v-3.75m0 0H3.75M3 12h18" />
+            <header class="h-16 bg-white border-b border-gray-200 flex-shrink-0 flex items-center px-4">
+                <!-- Botón para ocultar/mostrar sidebar -->
+                <button id="toggle-sidebar-btn" class="p-2 -ml-2 mr-2 rounded-full text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                    <span class="font-bold text-lg">»</span>
+                </button>
+                <!-- Título principal (se actualiza dinámicamente) -->
+                <h1 id="main-header-title" class="text-lg font-semibold text-gray-900 truncate">
+                    Cargando...
+                </h1>
+
+                <!-- CAMBIO: Iconos de Nube actualizados -->
+                <div id="status-indicator" class="ml-auto flex items-center pr-2" title="Estado de la conexión">
+                    <!-- Estado 1: Conectado (Nube normal) -->
+                    <svg id="status-ok" class="w-6 h-6 text-gray-400 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4C9.11 4 6.6 5.64 5.35 8.04C2.34 8.36 0 10.91 0 14C0 17.31 2.69 20 6 20H19C21.76 20 24 17.76 24 15C24 12.36 21.95 10.22 19.35 10.04Z"/>
                     </svg>
-                    <!-- Loading Spinner -->
-                    <svg id="status-loading" class="animate-spin h-6 w-6 text-blue-500 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    
+                    <!-- Estado 2: Cargando (Spinner) -->
+                    <svg id="status-loading" class="w-6 h-6 text-blue-500 animate-spin hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <!-- Nube Error -->
-                    <svg id="status-error" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 text-red-500 hidden">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                    
+                    <!-- Estado 3: Error/Sin Conexión (Nube tachada) -->
+                    <svg id="status-error" class="w-6 h-6 text-gray-400 hidden" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4C9.11 4 6.6 5.64 5.35 8.04C2.34 8.36 0 10.91 0 14C0 17.31 2.69 20 6 20H19C21.76 20 24 17.76 24 15C24 12.36 21.95 10.22 19.35 10.04ZM19 18H6C3.79 18 2 16.21 2 14C2 11.95 3.53 10.24 5.56 10.03L6.63 9.92L7.13 8.97C8.08 7.14 9.94 6 12 6C14.62 6 16.88 7.86 17.39 10.43L17.69 11.93L19.22 12.01C20.78 12.09 22 13.4 22 15C22 16.65 20.65 18 19 18Z"/>
+                        <path d="M4.7 4.7L19.3 19.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>
                 </div>
             </header>
@@ -94,65 +84,76 @@
                     <!-- Contenido neutral o tabla de grupo irá aquí -->
                 </div>
 
-                <!-- Contenedor de Resumen (CAMBIO: Separado en Bóveda y Top 3) -->
+                <!-- Contenedor de Resumen Compacto (Solo en Home) -->
                 <div id="home-stats-container" class="mb-6 hidden">
-                    <!-- Título Bóveda -->
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Resumen del Banco</h3>
-                    <div id="boveda-card-container" class="mb-6">
-                        <!-- La tarjeta de Bóveda se insertará aquí -->
-                    </div>
                     
-                    <!-- Título Top 3 -->
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Alumnos Destacados</h3>
-                    <div id="top-3-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <!-- Las 3 tarjetas del Top 3 se insertarán aquí -->
+                    <!-- CAMBIO: Reestructurado para permitir títulos separados -->
+                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6"> <!-- Aumenté el gap a 6 -->
+                        
+                        <!-- Columna 1: Bóveda -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Resumen del Banco</h3>
+                            <div id="boveda-card-container">
+                                <!-- Tarjeta Bóveda se inyectará aquí -->
+                            </div>
+                        </div>
+                        
+                        <!-- Columna 2-4: Alumnos Destacados -->
+                        <div class="lg:col-span-3">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Alumnos Destacados</h3>
+                            <div id="top-3-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <!-- Las 3 tarjetas de alumnos se insertarán here -->
+                            </div>
+                        </div>
+
                     </div>
                 </div>
                 
-                <!-- MÓDULOS DE HOME (CAMBIO: Nueva estructura de grid) -->
-                <div id="home-modules-grid" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- CAMBIO: MÓDULOS DE HOME (grid-cols-4) -->
+                <div id="home-modules-grid" class="hidden grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
                     
-                    <!-- Columna 1: Riesgo y Estadísticas -->
-                    <div class="space-y-6 lg:col-span-1">
+                    <!-- Panel de "Alumnos en Riesgo" (col-span-1) -->
+                    <div id="riesgo-container" class="bg-white rounded-lg shadow-md lg:col-span-1">
+                        <h3 class="text-lg font-semibold text-gray-800 p-4 border-b border-gray-200">Alumnos en Riesgo</h3>
                         
-                        <!-- Panel de "Alumnos en Riesgo" (CAMBIO: Convertido a tabla) -->
-                        <div id="riesgo-container" class="bg-white rounded-lg shadow-md">
-                            <h3 class="text-lg font-semibold text-gray-800 p-4 border-b border-gray-200">Alumnos en Riesgo</h3>
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full">
-                                    <thead class="bg-gray-50">
-                                        <tr>
-                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
-                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Grupo</th>
-                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Pinceles</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="riesgo-lista" class="divide-y divide-gray-100">
-                                        <!-- Items de alumnos en riesgo se insertarán aquí -->
-                                        <tr><td colspan="3" class="p-4 text-sm text-gray-500 text-center">Calculando...</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- NUEVO: Panel de Estadísticas Rápidas -->
-                        <div id="stats-container" class="bg-white rounded-lg shadow-md">
-                            <h3 class="text-lg font-semibold text-gray-800 p-4 border-b border-gray-200">Estadísticas Rápidas</h3>
-                            <div id="quick-stats-list" class="p-4 space-y-2">
-                                <!-- Stats se insertarán aquí -->
-                            </div>
+                        <!-- CAMBIO: Convertido de lista a tabla para organización lineal -->
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                        <!-- CAMBIO: Añadido whitespace-nowrap y w-1/4 -->
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap w-1/4">Grupo</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap w-1/4">Pinceles</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="riesgo-lista" class="bg-white divide-y divide-gray-200">
+                                    <!-- Items de alumnos en riesgo se insertarán aquí -->
+                                    <tr>
+                                        <td colspan="3" class="p-4 text-sm text-gray-500 text-center">Calculando...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
-                    <!-- Columna 2: Tablón de Anuncios (col-span-2) -->
+                    <!-- NUEVO: Panel de "Estadísticas Rápidas" (col-span-1) -->
+                    <div id="quick-stats-container" class="bg-white rounded-lg shadow-md lg:col-span-1">
+                        <h3 class="text-lg font-semibold text-gray-800 p-4 border-b border-gray-200">Estadísticas</h3>
+                        <div id="quick-stats-list" class="p-4 space-y-3">
+                            <!-- Stats will be injected here -->
+                            <div class="text-center p-4 text-sm text-gray-500">Calculando...</div>
+                        </div>
+                    </div>
+
+                    <!-- Tablón de Anuncios (col-span-2) -->
                     <div id="anuncios-container" class="bg-white rounded-lg shadow-md lg:col-span-2">
+                        <!-- CAMBIO: Añadido botón de modal -->
                         <div class="flex justify-between items-center p-4 border-b border-gray-200">
                             <h3 class="text-lg font-semibold text-gray-800">Tablón de Anuncios</h3>
-                            <!-- NUEVO: Botón Ver Todos -->
-                            <button id="anuncios-modal-btn" class="text-sm font-medium text-blue-600 hover:text-blue-500">Ver Todos</button>
+                            <button id="anuncios-modal-btn" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Ver Todos</button>
                         </div>
-                        
-                        <ul id="anuncios-lista" class="divide-y divide-gray-100 p-4 space-y-3">
+                        <ul id="anuncios-lista" class="divide-y divide-gray-100 p-4 space-y-1">
                             <!-- Anuncios dinámicos se insertarán aquí -->
                         </ul>
                     </div>
@@ -202,20 +203,23 @@
         </div>
     </div>
 
-    <!-- Overlay de Carga (Rediseñado) -->
+    <!-- Overlay de Carga (Rediseñado con Animación) -->
     <div id="loading-overlay" class="fixed inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-[10000] transition-opacity duration-300">
-        <!-- Contenido de Carga -->
+        <!-- Contenedor del Título, Eslogan y Puntos -->
         <div class="text-center">
-            <!-- CAMBIO: Título más grande y azul -->
-            <h1 class="text-5xl font-bold text-blue-600 mb-3">Banco del Pincel Dorado</h1>
-            <!-- CAMBIO: Slogan con comillas -->
-            <p class="text-lg text-gray-600 mb-6">"Donde el esfuerzo académico tiene recompensa"</p>
-            
+            <!-- Título Grande y Azul -->
+            <h1 class="text-5xl font-bold text-blue-600 mb-2">
+                Banco del Pincel Dorado
+            </h1>
+            <!-- Eslogan con Comillas -->
+            <p class="text-lg text-gray-600 mb-6">
+                "Donde el esfuerzo académico tiene su recompensa"
+            </p>
             <!-- Animación de Puntos Pulsantes -->
             <div class="flex justify-center items-center space-x-2">
-                <span class="animate-pulse-dot w-4 h-4 bg-blue-500 rounded-full" style="animation-delay: 0s;"></span>
-                <span class="animate-pulse-dot w-4 h-4 bg-blue-500 rounded-full" style="animation-delay: 0.2s;"></span>
-                <span class="animate-pulse-dot w-4 h-4 bg-blue-500 rounded-full" style="animation-delay: 0.4s;"></span>
+                <span class="w-3 h-3 bg-blue-600 rounded-full animate-pulse-dot" style="animation-delay: 0s;"></span>
+                <span class="w-3 h-3 bg-blue-600 rounded-full animate-pulse-dot" style="animation-delay: 0.2s;"></span>
+                <span class="w-3 h-3 bg-blue-600 rounded-full animate-pulse-dot" style="animation-delay: 0.4s;"></span>
             </div>
         </div>
     </div>
@@ -273,6 +277,23 @@
         </div>
     </div>
 
+    <!-- NUEVO: Modal de Todos los Anuncios -->
+    <div id="anuncios-modal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl transform scale-95 transition-transform duration-300">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Todos los Anuncios</h2>
+                    <button id="anuncios-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                </div>
+                <!-- Contenido de todos los anuncios -->
+                <div id="anuncios-modal-lista" class="max-h-[60vh] overflow-y-auto space-y-4 pr-2">
+                    <!-- Los anuncios se poblarán aquí desde JS -->
+                    <p class="text-gray-500 text-center">Cargando anuncios...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de Información del Alumno (Rediseñado) -->
     <div id="student-modal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[1002] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
         <div id="student-modal-content" class="bg-white rounded-lg shadow-xl w-full max-w-lg transform scale-95 transition-transform duration-300">
@@ -280,98 +301,9 @@
         </div>
     </div>
 
-    <!-- NUEVO: Modal "Todos los Anuncios" -->
-    <div id="anuncios-modal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl transform scale-95 transition-transform duration-300 flex flex-col" style="max-height: 80vh;">
-            <!-- Cabecera -->
-            <div class="flex justify-between items-center p-4 border-b border-gray-200 flex-shrink-0">
-                <h2 class="text-lg font-semibold text-gray-900">Todos los Anuncios</h2>
-                <button id="anuncios-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
-            </div>
-            <!-- Contenido Scrollable -->
-            <div id="anuncios-modal-lista" class="p-6 space-y-6 overflow-y-auto">
-                <!-- Anuncios por categoría se insertarán aquí -->
-            </div>
-        </div>
-    </div>
 
-    <!-- NUEVO: Modal de Verificación de Clave (para Transacción) -->
-    <div id="tx-clave-modal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[1003] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform scale-95 transition-transform duration-300">
-            <div class="p-6">
-                <h2 class="text-lg font-semibold text-gray-900 text-center mb-4">Desbloquear Transacciones</h2>
-                <div class="mb-4">
-                    <label for="tx-clave-input" class="block text-sm font-medium text-gray-700 mb-1">Clave de Acceso</label>
-                    <input type="password" id="tx-clave-input" placeholder="Ingrese su clave" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                </div>
-                <div class="flex justify-end gap-3">
-                    <button id="tx-clave-cancel" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">Cancelar</button>
-                    <button id="tx-clave-submit" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">Desbloquear</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- NUEVO: Modal Principal de Transacción -->
-    <div id="tx-main-modal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[1002] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg transform scale-95 transition-transform duration-300">
-            <form id="tx-form">
-                <!-- Cabecera -->
-                <div class="flex justify-between items-center p-6 border-b border-gray-200">
-                    <h2 class="text-lg font-semibold text-gray-900">Realizar Transacción</h2>
-                    <button type="button" id="tx-main-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
-                </div>
-                
-                <!-- Cuerpo del Formulario -->
-                <div class="p-6 space-y-4">
-                    <!-- Fila 1: Grupo -->
-                    <div>
-                        <label for="tx-grupo-select" class="block text-sm font-medium text-gray-700 mb-1">Grupo</label>
-                        <select id="tx-grupo-select" required class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
-                            <option value="" disabled selected>Seleccione un grupo...</option>
-                            <!-- Opciones de grupo se insertarán aquí -->
-                        </select>
-                    </div>
-                    
-                    <!-- Fila 2: Alumno -->
-                    <div>
-                        <label for="tx-alumno-select" class="block text-sm font-medium text-gray-700 mb-1">Alumno</label>
-                        <select id="tx-alumno-select" required disabled class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white disabled:bg-gray-50">
-                            <option value="" disabled selected>Seleccione un alumno...</option>
-                            <!-- Opciones de alumno se insertarán aquí -->
-                        </select>
-                    </div>
-                    
-                    <!-- Fila 3: Cantidad -->
-                    <div>
-                        <label for="tx-cantidad-input" class="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
-                        <input type="number" id="tx-cantidad-input" required placeholder="Ej. 500 (depósito) o -50 (retiro)" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <p class="text-xs text-gray-500 mt-1">Use números positivos para depositar y negativos para retirar.</p>
-                    </div>
-                    
-                    <!-- Mensaje de Error/Éxito -->
-                    <div id="tx-message" class="text-sm text-center p-2 rounded-lg hidden"></div>
-                </div>
-
-                <!-- Footer -->
-                <div class="flex justify-end gap-3 p-6 bg-gray-50 border-t border-gray-200 rounded-b-lg">
-                    <button type="button" id="tx-main-cancel" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">Cancelar</button>
-                    <button type="submit" id="tx-main-submit" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm w-32">
-                        <span id="tx-submit-text">Confirmar</span>
-                        <!-- Spinner para el botón -->
-                        <svg id="tx-submit-spinner" class="animate-spin h-5 w-5 text-white mx-auto hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-
-    <!-- Lógica de la Aplicación (CAMBIO: cache buster) -->
+    <!-- Lógica de la Aplicación -->
+    <!-- CAMBIO: Añadido ?v=2 para forzar la recarga de caché del script -->
     <script src="script.js?v=2" type="module" defer></script>
 </body>
 </html>
-
