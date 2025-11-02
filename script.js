@@ -81,9 +81,9 @@ const AppTransacciones = {
         try {
             const payload = {
                 grupo: grupo,
-                nombre: alumno, // <-- CAMBIO: "alumno" se cambió a "nombre" para coincidir con la API
-                pinceles: pinceles,
-                clave: AppConfig.CLAVE_MAESTRA // <-- CAMBIO: Añadida la clave maestra al payload
+                nombre: alumno, 
+                cantidad: pinceles, // <-- CAMBIO: "pinceles" se cambió a "cantidad"
+                clave: AppConfig.CLAVE_MAESTRA 
             };
 
             const response = await fetch(AppConfig.TRANSACCION_API_URL, {
@@ -991,5 +991,4 @@ window.onload = function() {
     console.log("window.onload disparado. El DOM está listo. Iniciando AppUI...");
     AppUI.init();
 };
-
 
