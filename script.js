@@ -12,7 +12,7 @@ const AppConfig = {
     
     // CAMBIO v0.3.0: Versión y Estado de la Aplicación (Nueva función P2P)
     APP_STATUS: 'Pre-Alfa', 
-    APP_VERSION: 'v0.3.3', // CAMBIO v0.3.3: Ajuste final de layout
+    APP_VERSION: 'v0.3.5', // CAMBIO v0.3.5: Ajuste de layout (2x2)
     
     // CAMBIO v0.3.0: Impuesto P2P (debe coincidir con el Backend)
     IMPUESTO_P2P_TASA: 0.10, // 10%
@@ -725,7 +725,11 @@ const AppUI = {
 
         Object.keys(paquetes).forEach(tipo => {
             const pkg = paquetes[tipo];
-            const totalAPagar = pkg.monto * (1 + pkg.interes / 100);
+            
+            // ***** CAMBIO v12.2: Cálculo de cuota diaria *****
+            const totalAPagar = Math.ceil(pkg.monto * (1 + pkg.interes / 100));
+            const cuotaDiaria = Math.ceil(totalAPagar / 7);
+            // ***** FIN DEL CAMBIO *****
             
             // Lógica de elegibilidad del frontend
             let isEligible = true;
@@ -768,7 +772,8 @@ const AppUI = {
                 <div class="flex justify-between items-center p-3 border-b border-blue-100">
                     <div>
                         <span class="font-semibold text-gray-800">${pkg.label} (${AppFormat.formatNumber(pkg.monto)} ℙ)</span>
-                        <span class="text-xs text-gray-500 block">Tasa: ${pkg.interes}% (7 días). Total: ${AppFormat.formatNumber(totalAPagar)} ℙ.</span>
+                        <!-- ***** CAMBIO v12.2: Mostrar cuota diaria ***** -->
+                        <span class="text-xs text-gray-500 block">Cuota: <strong>${AppFormat.formatNumber(cuotaDiaria)} ℙ</strong> (x7 días). Total: ${AppFormat.formatNumber(totalAPagar)} ℙ.</span>
                     </div>
                     <button onclick="${action}" class="px-3 py-1 text-xs font-medium text-white rounded-lg transition-colors ${buttonClass}" ${buttonDisabled}>
                         Otorgar ${isEligible ? '' : eligibilityMessage}
@@ -990,35 +995,45 @@ const AppUI = {
 
         // 1. MOSTRAR RESUMEN COMPACTO
         const homeStatsContainer = document.getElementById('home-stats-container');
+        // CAMBIO v0.3.5: Nuevos contenedores separados
         const bovedaContainer = document.getElementById('boveda-card-container');
+        const tesoreriaContainer = document.getElementById('tesoreria-card-container');
         const top3Grid = document.getElementById('top-3-grid');
         
         let bovedaHtml = '';
+        let tesoreriaHtml = ''; // Separado
         let top3Html = '';
 
         // Tarjeta de Bóveda
         const totalGeneral = grupos.reduce((acc, g) => acc + g.total, 0);
         
-        // CAMBIO V0.2.2: Tarjeta de Tesorería (NUEVA)
+        // Tarjeta de Tesorería
         const tesoreriaSaldo = AppState.datosAdicionales.saldoTesoreria;
         
-        // CAMBIO v0.3.3: Vuelve a DOS tarjetas separadas, pero hiper-compactas para alineación
+        // CAMBIO v0.3.5: Añadido h-full para igualar altura y flex-col
         bovedaHtml = `
-            <div class="bg-white rounded-lg shadow-md p-2">
-                <div class="flex items-center justify-between mb-0.5">
-                    <span class="text-xs font-medium text-gray-500 truncate">Total en Cuentas</span>
-                    <span class="text-xs font-bold bg-green-100 text-green-700 rounded-full px-2 py-0.5">BÓVEDA</span>
+            <div class="bg-white rounded-lg shadow-md p-2 h-full flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-0.5">
+                        <span class="text-xs font-medium text-gray-500 truncate">Total en Cuentas</span>
+                        <span class="text-xs font-bold bg-green-100 text-green-700 rounded-full px-2 py-0.5">BÓVEDA</span>
+                    </div>
+                    <p class="text-sm font-semibold text-gray-900 truncate">Pinceles Totales</p>
                 </div>
-                <p class="text-sm font-semibold text-gray-900 truncate">Pinceles Totales</p>
                 <p class="text-lg font-bold text-green-600 text-right">${AppFormat.formatNumber(totalGeneral)} ℙ</p>
             </div>
-            
-            <div class="bg-white rounded-lg shadow-md p-2">
-                <div class="flex items-center justify-between mb-0.5">
-                    <span class="text-xs font-medium text-gray-500 truncate">Capital Operativo</span>
-                    <span class="text-xs font-bold bg-blue-100 text-blue-700 rounded-full px-2 py-0.5">TESORERÍA</span>
+        `;
+        
+        // CAMBIO v0.3.5: Añadido h-full para igualar altura y flex-col
+        tesoreriaHtml = `
+            <div class="bg-white rounded-lg shadow-md p-2 h-full flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-0.5">
+                        <span class="text-xs font-medium text-gray-500 truncate">Capital Operativo</span>
+                        <span class="text-xs font-bold bg-blue-100 text-blue-700 rounded-full px-2 py-0.5">TESORERÍA</span>
+                    </div>
+                    <p class="text-sm font-semibold text-gray-900 truncate">Fondo del Banco</p>
                 </div>
-                <p class="text-sm font-semibold text-gray-900 truncate">Fondo del Banco</p>
                 <p class="text-lg font-bold text-blue-600 text-right">${AppFormat.formatNumber(tesoreriaSaldo)} ℙ</p>
             </div>
         `;
@@ -1027,7 +1042,7 @@ const AppUI = {
         const top3 = AppState.datosAdicionales.allStudents.sort((a, b) => b.pinceles - a.pinceles).slice(0, 3);
 
         if (top3.length > 0) {
-            // CAMBIO v0.2.6: Padding reducido de p-4 a p-3
+            // CAMBIO v0.3.5: Añadido h-full para igualar altura y flex-col
             top3Html = top3.map((student, index) => {
                 let rankColor = 'bg-blue-100 text-blue-700';
                 if (index === 0) rankColor = 'bg-yellow-100 text-yellow-700';
@@ -1036,29 +1051,35 @@ const AppUI = {
                 const grupoNombre = student.grupoNombre || 'N/A';
 
                 return `
-                    <div class="bg-white rounded-lg shadow-md p-3">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="text-sm font-medium text-gray-500 truncate">${grupoNombre}</span>
-                            <span class="text-xs font-bold ${rankColor} rounded-full px-2 py-0.5">${index + 1}º</span>
+                    <div class="bg-white rounded-lg shadow-md p-3 h-full flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-500 truncate">${grupoNombre}</span>
+                                <span class="text-xs font-bold ${rankColor} rounded-full px-2 py-0.5">${index + 1}º</span>
+                            </div>
+                            <p class="text-base font-semibold text-gray-900 truncate">${student.nombre}</p>
                         </div>
-                        <p class="text-base font-semibold text-gray-900 truncate">${student.nombre}</p>
                         <p class="text-xl font-bold text-blue-600 text-right">${AppFormat.formatNumber(student.pinceles)} ℙ</p>
                     </div>
                 `;
             }).join('');
         }
         for (let i = top3.length; i < 3; i++) {
-             // CAMBIO v0.2.6: Padding reducido de p-4 a p-3
+             // CAMBIO v0.3.5: Añadido h-full para igualar altura y flex-col
             top3Html += `
-                <div class="bg-white rounded-lg shadow-md p-3 opacity-50">
-                    <div class="flex items-center justify-between mb-1"><span class="text-sm font-medium text-gray-400">-</span><span class="text-xs font-bold bg-gray-100 text-gray-400 rounded-full px-2 py-0.5">${i + 1}º</span></div>
-                    <p class="text-base font-semibold text-gray-400 truncate">-</p>
+                <div class="bg-white rounded-lg shadow-md p-3 opacity-50 h-full flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-1"><span class="text-sm font-medium text-gray-400">-</span><span class="text-xs font-bold bg-gray-100 text-gray-400 rounded-full px-2 py-0.5">${i + 1}º</span></div>
+                        <p class="text-base font-semibold text-gray-400 truncate">-</p>
+                    </div>
                     <p class="text-xl font-bold text-gray-400 text-right">- ℙ</p>
                 </div>
             `;
         }
 
+        // CAMBIO v0.3.5: Inyectar en contenedores separados
         bovedaContainer.innerHTML = bovedaHtml;
+        tesoreriaContainer.innerHTML = tesoreriaHtml;
         top3Grid.innerHTML = top3Html;
         
         homeStatsContainer.classList.remove('hidden');
@@ -1694,4 +1715,3 @@ window.onload = function() {
     console.log("window.onload disparado. Iniciando AppUI...");
     AppUI.init();
 };
-
