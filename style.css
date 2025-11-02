@@ -58,18 +58,5 @@ scrollbar-width: none;  /* Firefox */
 }
 .active-tab {
     border-bottom-color: #3b82f6 !important; /* blue-600 */
-    color: #3b82f6 !important;
-}
-.tab-content {
-    /* Estilos para el contenido de las pestañas */
-    padding-top: 0.5rem; 
-    /* CAMBIO v0.2.6: Altura mínima aumentada para estabilizar el modal (eliminar jiggle) */
-    min-height: 540px;
-}
-
-/* V0.2.4: Estilos para el contenedor de resultados de búsqueda (autocomplete) */
-.autocomplete-results {
-    /* Tailwind ya aplica 'absolute' y 'z-10', pero nos aseguramos */
-    position: absolute; 
-}
+    color: #3b82f6 !impor
 
