@@ -10,9 +10,9 @@ const AppConfig = {
     MAX_RETRIES: 5,
     CACHE_DURATION: 300000,
     
-    // CAMBIO V0.2.3: Actualización de versión
+    // CAMBIO V0.2.4: Actualización de versión
     APP_STATUS: 'Pre-Alfa', 
-    APP_VERSION: 'v0.2.3', 
+    APP_VERSION: 'v0.2.4', 
 };
 
 // --- ESTADO DE LA APLICACIÓN ---
@@ -63,30 +63,30 @@ const AppFormat = {
 };
 
 // --- BASE DE DATOS DE ANUNCIOS ---
+// CAMBIO v0.2.4: Textos acortados para evitar saltos de línea
 const AnunciosDB = {
     'AVISO': [
-        "La subasta de fin de mes es el último Jueves de cada mes. ¡Preparen sus pinceles!",
-        "Revisen sus saldos antes del cierre de mes. No se aceptan saldos negativos en la subasta.",
-        "Recuerden: 'Ver Reglas' tiene información importante sobre la participación en la subasta y la 'Cicla'."
+        "Subasta: Último Jueves de cada mes. ¡Preparen sus pinceles!",
+        "Revisen saldos antes del cierre. No se aceptan negativos en la subasta.",
+        "Recuerden: 'Ver Reglas' tiene info clave sobre la subasta y la 'Cicla'."
     ],
     'NUEVO': [
-        // CAMBIO V0.2.2: Avisos sobre el nuevo sistema económico
-        "¡Nuevo Sistema Económico Bancario! Los depósitos de admin están limitados por la Tesorería.",
-        "Nueva sección 'Préstamos' y 'Depósitos' en el Panel de Administración (botón verde).",
-        "La Tesorería del Banco cobra un 0.05% diario de impuesto a saldos altos y ofrece un Ingreso Pasivo Diario."
+        "¡Nuevo Sistema Económico! Depósitos de admin limitados por la Tesorería.",
+        "Nuevas secciones 'Préstamos' y 'Depósitos' en el Panel de Administración.",
+        "Tesorería cobra 0.05% de impuesto diario y da un Ingreso Pasivo."
     ],
     'CONSEJO': [
-        "Usa el botón '»' en la esquina superior para abrir y cerrar la barra lateral de grupos.",
-        "Haz clic en el nombre de un alumno en la tabla para ver sus estadísticas detalladas.",
-        "Usa el botón 'Ver Todos' en el tablón de anuncios para no perderte ninguna novedad.",
-        "¡Invierte! Usa los Depósitos a Plazo para obtener retornos fijos y seguros en 7, 14 o 21 días."
+        "Usa el botón '»' en la esquina superior para abrir y cerrar la barra lateral.",
+        "Haz clic en el nombre de un alumno en la tabla para ver sus estadísticas.",
+        "Usa el botón 'Ver Todos' en el tablón de anuncios para no perderte ninguna."
     ],
     'ALERTA': [
-        "¡Cuidado! Saldos negativos (incluso -1 ℙ) te mueven automáticamente a Cicla.",
-        "Los alumnos en Cicla pueden solicitar préstamos de rescate, pero están limitados por el tamaño de su deuda.",
-        "Si tienes un préstamo activo, NO puedes crear un Depósito a Plazo. ¡Suelda tu deuda primero!"
+        "¡Cuidado! Saldos negativos (incluso -1 ℙ) te mueven a Cicla.",
+        "Alumnos en Cicla pueden pedir préstamos de rescate (limitados por deuda).",
+        "Si tienes un préstamo activo, NO puedes crear un Depósito a Plazo."
     ]
 };
+
 
 // --- MANEJO de datos ---
 const AppData = {
@@ -277,6 +277,20 @@ const AppUI = {
                 AppUI.changeAdminTab(tabId);
             });
         });
+        
+        // V0.2.4: Listeners para Búsqueda (Autocomplete)
+        document.getElementById('prestamo-alumno-search').addEventListener('input', (e) => AppUI.handleStudentSearch(e, 'prestamo'));
+        document.getElementById('deposito-alumno-search').addEventListener('input', (e) => AppUI.handleStudentSearch(e, 'deposito'));
+        
+        // Ocultar resultados si se hace clic fuera
+        document.addEventListener('click', (e) => {
+            // Asegurarse de que el clic no sea en el input o en los resultados
+            if (!e.target.closest('.relative')) {
+                AppUI.hideSearchResults('prestamo');
+                AppUI.hideSearchResults('deposito');
+            }
+        });
+
 
         // V0.2.2: Mostrar versión de la App
         AppUI.mostrarVersionApp();
@@ -333,9 +347,14 @@ const AppUI = {
             document.getElementById('transaccion-cantidad-input').value = "";
             document.getElementById('transaccion-status-msg').textContent = "";
             
-            // Limpiar select de Préstamos/Depósitos
-            document.getElementById('prestamo-alumno-select').value = "";
-            document.getElementById('deposito-alumno-select').value = "";
+            // CAMBIO v0.2.4: Limpiar campos de búsqueda (autocomplete)
+            document.getElementById('prestamo-alumno-search').value = "";
+            document.getElementById('deposito-alumno-search').value = "";
+            document.getElementById('prestamo-search-results').innerHTML = "";
+            document.getElementById('deposito-search-results').innerHTML = "";
+            AppUI.hideSearchResults('prestamo');
+            AppUI.hideSearchResults('deposito');
+            
             document.getElementById('prestamo-paquetes-container').innerHTML = '<div class="text-sm text-gray-500">Seleccione un alumno para ver las opciones de préstamo.</div>';
             document.getElementById('deposito-paquetes-container').innerHTML = '<div class="text-sm text-gray-500">Seleccione un alumno para ver las opciones de depósito.</div>';
             
@@ -370,10 +389,10 @@ const AppUI = {
         if (tabId === 'transaccion') {
             AppUI.populateGruposTransaccion();
         } else if (tabId === 'prestamos') {
-            AppUI.populateAlumnosSelect('prestamo-alumno-select', AppUI.loadPrestamoPaquetes);
+            // CAMBIO v0.2.4: Ya no se usa populateAlumnosSelect
             AppUI.loadPrestamoPaquetes(null); // Inicializar sin alumno
         } else if (tabId === 'depositos') {
-            AppUI.populateAlumnosSelect('deposito-alumno-select', AppUI.loadDepositoPaquetes);
+            // CAMBIO v0.2.4: Ya no se usa populateAlumnosSelect
             AppUI.loadDepositoPaquetes(null); // Inicializar sin alumno
         }
         
@@ -382,26 +401,70 @@ const AppUI = {
     },
 
 
-    // V0.2.2: Funciones para poblar Selects (Préstamos/Depósitos)
-    populateAlumnosSelect: function(selectId, changeListener) {
-        const select = document.getElementById(selectId);
-        select.innerHTML = '<option value="" disabled selected>Seleccione un alumno...</option>';
-        select.removeEventListener('change', changeListener); // Limpiar listener viejo
+    // CAMBIO v0.2.4: Se elimina la función populateAlumnosSelect
+    
+    // V0.2.4: Funciones para Búsqueda (Autocomplete)
+    handleStudentSearch: function(event, type) {
+        const searchTerm = event.target.value.toLowerCase();
+        const resultsContainer = document.getElementById(`${type}-search-results`);
+        
+        if (searchTerm.length < 1) {
+            AppUI.hideSearchResults(type);
+            AppUI.selectStudent(null, type); // Limpiar paquetes
+            return;
+        }
 
-        const sortedStudents = [...AppState.datosAdicionales.allStudents].sort((a, b) => a.nombre.localeCompare(b.nombre));
+        const filteredStudents = AppState.datosAdicionales.allStudents.filter(student => 
+            student.nombre.toLowerCase().includes(searchTerm)
+        ).sort((a,b) => a.nombre.localeCompare(b.nombre)); // Ordenar alfabéticamente
+        
+        if (filteredStudents.length === 0) {
+            resultsContainer.innerHTML = `<div class="p-2 text-sm text-gray-500 text-center">No se encontraron alumnos.</div>`;
+            resultsContainer.classList.remove('hidden');
+            return;
+        }
 
-        sortedStudents.forEach(student => {
-            const option = document.createElement('option');
-            option.value = student.nombre;
-            option.textContent = `${student.nombre} (${student.grupoNombre})`;
-            option.dataset.saldo = student.pinceles;
-            select.appendChild(option);
+        resultsContainer.innerHTML = filteredStudents.map(student => `
+            <div class="p-2 text-sm text-gray-800 hover:bg-blue-50 cursor-pointer" data-student-name="${student.nombre}" data-type="${type}">
+                ${student.nombre} <span class="text-xs text-gray-500">(${student.grupoNombre})</span>
+            </div>
+        `).join('');
+        
+        // Añadir listeners a los nuevos resultados
+        resultsContainer.querySelectorAll('div[data-student-name]').forEach(item => {
+            item.addEventListener('click', () => {
+                const studentName = item.dataset.studentName;
+                AppUI.selectStudent(studentName, type);
+            });
         });
 
-        select.addEventListener('change', (e) => {
-            changeListener(e.target.value);
-        });
+        resultsContainer.classList.remove('hidden');
     },
+
+    selectStudent: function(studentName, type) {
+        if (studentName) {
+            document.getElementById(`${type}-alumno-search`).value = studentName;
+        } else {
+            // No limpiar el input aquí, permitir que el usuario borre
+            // document.getElementById(`${type}-alumno-search`).value = "";
+        }
+        
+        AppUI.hideSearchResults(type);
+        
+        if (type === 'prestamo') {
+            AppUI.loadPrestamoPaquetes(studentName);
+        } else if (type === 'deposito') {
+            AppUI.loadDepositoPaquetes(studentName);
+        }
+    },
+    
+    hideSearchResults: function(type) {
+        const resultsContainer = document.getElementById(`${type}-search-results`);
+        if(resultsContainer) {
+            resultsContainer.classList.add('hidden');
+        }
+    },
+    // --- FIN V0.2.4 ---
 
     // --- FUNCIÓN CENTRAL: Mostrar Modal de Administración y pestaña inicial ---
     showTransaccionModal: function(tab) {
@@ -534,20 +597,25 @@ const AppUI = {
     // --- FUNCIONES DE PRÉSTAMOS (PESTAÑA 2) ---
     loadPrestamoPaquetes: function(selectedStudentName) {
         const container = document.getElementById('prestamo-paquetes-container');
-        const select = document.getElementById('prestamo-alumno-select');
+        // CAMBIO v0.2.4: No se usa 'select'
+        // const select = document.getElementById('prestamo-alumno-select');
         const saldoSpan = document.getElementById('prestamo-alumno-saldo');
         
         // V0.2.2: Mostrar el saldo de Tesorería en la pestaña Préstamos
         document.getElementById('tesoreria-saldo-prestamo').textContent = `(Tesorería: ${AppFormat.formatNumber(AppState.datosAdicionales.saldoTesoreria)} ℙ)`;
 
         if (!selectedStudentName) {
-            container.innerHTML = '<div class="text-sm text-gray-500">Seleccione un alumno para ver las opciones de préstamo.</div>';
+            container.innerHTML = '<div class="text-sm text-gray-500">Escriba el nombre de un alumno para ver sus opciones.</div>';
             saldoSpan.textContent = '';
             return;
         }
 
         const student = AppState.datosAdicionales.allStudents.find(s => s.nombre === selectedStudentName);
-        if (!student) return;
+        if (!student) {
+             container.innerHTML = '<div class="text-sm text-red-500">Alumno no encontrado.</div>';
+             saldoSpan.textContent = '';
+             return;
+        }
         
         saldoSpan.textContent = `(Saldo actual: ${AppFormat.formatNumber(student.pinceles)} ℙ)`;
 
@@ -620,20 +688,25 @@ const AppUI = {
     // --- FUNCIONES DE DEPÓSITOS (PESTAÑA 3) ---
     loadDepositoPaquetes: function(selectedStudentName) {
         const container = document.getElementById('deposito-paquetes-container');
-        const select = document.getElementById('deposito-alumno-select');
+        // CAMBIO v0.2.4: No se usa 'select'
+        // const select = document.getElementById('deposito-alumno-select');
         const saldoSpan = document.getElementById('deposito-alumno-saldo');
         
         // V0.2.2: Mostrar info de Tesorería en Depósitos
         document.getElementById('deposito-info-tesoreria').textContent = `(Tesorería: ${AppFormat.formatNumber(AppState.datosAdicionales.saldoTesoreria)} ℙ)`;
 
         if (!selectedStudentName) {
-            container.innerHTML = '<div class="text-sm text-gray-500">Seleccione un alumno para ver las opciones de depósito.</div>';
+            container.innerHTML = '<div class="text-sm text-gray-500">Escriba el nombre de un alumno para ver sus opciones.</div>';
             saldoSpan.textContent = '';
             return;
         }
 
         const student = AppState.datosAdicionales.allStudents.find(s => s.nombre === selectedStudentName);
-        if (!student) return;
+        if (!student) {
+            container.innerHTML = '<div class="text-sm text-red-500">Alumno no encontrado.</div>';
+            saldoSpan.textContent = '';
+            return;
+        }
 
         saldoSpan.textContent = `(Saldo actual: ${AppFormat.formatNumber(student.pinceles)} ℙ)`;
 
@@ -891,6 +964,7 @@ const AppUI = {
         AppUI.actualizarEstadisticasRapidas(grupos);
         
         // 3. MOSTRAR ACCESO RÁPIDO (Idea 3)
+        // CAMBIO v0.2.4: Se quita 'hidden' porque ya no está al final
         document.getElementById('acceso-rapido-container').classList.remove('hidden');
     },
 
@@ -961,6 +1035,7 @@ const AppUI = {
         // 4. OCULTAR MÓDULOS DE HOME
         document.getElementById('home-stats-container').classList.add('hidden');
         document.getElementById('home-modules-grid').classList.add('hidden');
+        // CAMBIO v0.2.4: Ocultar también el contador
         document.getElementById('acceso-rapido-container').classList.add('hidden');
     },
 
@@ -1037,7 +1112,8 @@ const AppUI = {
             const shuffled = [...arr].sort(() => 0.5 - Math.random());
             return shuffled.slice(0, num);
         };
-
+        
+        // CAMBIO v0.2.4: Se reduce el número de anuncios para compensar el texto acortado
         const anuncios = [
             ...getUniqueRandomItems(AnunciosDB['AVISO'], 2).map(texto => ({ tipo: 'AVISO', texto, bg: 'bg-gray-100', text: 'text-gray-700' })),
             ...getUniqueRandomItems(AnunciosDB['NUEVO'], 2).map(texto => ({ tipo: 'NUEVO', texto, bg: 'bg-blue-100', text: 'text-blue-700' })),
@@ -1254,9 +1330,12 @@ const AppTransacciones = {
                 cantidadInput.value = "";
                 AppData.cargarDatos(false); 
 
+                // CAMBIO v0.2.4: Se elimina el cierre automático del modal
+                /*
                 setTimeout(() => {
                     AppUI.hideModal('transaccion-modal');
                 }, 2000); 
+                */
 
             } else {
                 throw new Error(result.message || "Error desconocido de la API.");
@@ -1266,6 +1345,7 @@ const AppTransacciones = {
             AppTransacciones.setError(statusMsg, error.message);
         } finally {
             AppTransacciones.setLoadingState(submitBtn, btnText, false);
+            AppUI.populateGruposTransaccion(); // Recargar listas
         }
     },
     
@@ -1295,9 +1375,12 @@ const AppTransacciones = {
                 AppTransacciones.setSuccess(statusMsg, result.message || "¡Préstamo otorgado con éxito!");
                 AppData.cargarDatos(false); 
 
+                // CAMBIO v0.2.4: Se elimina el cierre automático del modal
+                /*
                 setTimeout(() => {
                     AppUI.hideModal('transaccion-modal');
-                }, 2000); 
+                }, 2000);
+                */ 
 
             } else {
                 throw new Error(result.message || "Error al otorgar el préstamo.");
@@ -1307,6 +1390,7 @@ const AppTransacciones = {
             AppTransacciones.setError(statusMsg, error.message);
         } finally {
             AppTransacciones.setLoadingState(submitBtn, null, false);
+            AppUI.loadPrestamoPaquetes(alumnoNombre); // Recargar paquetes para este alumno
         }
     },
     
@@ -1336,9 +1420,12 @@ const AppTransacciones = {
                 AppTransacciones.setSuccess(statusMsg, result.message || "¡Depósito creado con éxito!");
                 AppData.cargarDatos(false); 
 
+                // CAMBIO v0.2.4: Se elimina el cierre automático del modal
+                /*
                 setTimeout(() => {
                     AppUI.hideModal('transaccion-modal');
-                }, 2000); 
+                }, 2000);
+                */ 
 
             } else {
                 throw new Error(result.message || "Error al crear el depósito.");
@@ -1348,6 +1435,7 @@ const AppTransacciones = {
             AppTransacciones.setError(statusMsg, error.message);
         } finally {
             AppTransacciones.setLoadingState(submitBtn, null, false);
+            AppUI.loadDepositoPaquetes(alumnoNombre); // Recargar paquetes para este alumno
         }
     },
     
@@ -1413,3 +1501,4 @@ window.onload = function() {
     console.log("window.onload disparado. Iniciando AppUI...");
     AppUI.init();
 };
+
