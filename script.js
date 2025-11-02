@@ -1,6 +1,6 @@
 // --- CONFIGURACIÓN ---
 const AppConfig = {
-    // CAMBIO v0.3.0: URL de API actualizada
+    // CAMBIO V0.3.0: URL de tu API actualizada (con P2P)
     API_URL: 'https://script.google.com/macros/s/AKfycbyhPHZuRmC7_t9z20W4h-VPqVFk0z6qKFG_W-YXMgnth4BMRgi8ibAfjeOtIeR5OrFPXw/exec',
     TRANSACCION_API_URL: 'https://script.google.com/macros/s/AKfycbyhPHZuRmC7_t9z20W4h-VPqVFk0z6qKFG_W-YXMgnth4BMRgi8ibAfjeOtIeR5OrFPXw/exec',
     CLAVE_MAESTRA: 'PinceladasM25-26',
@@ -10,9 +10,9 @@ const AppConfig = {
     MAX_RETRIES: 5,
     CACHE_DURATION: 300000,
     
-    // CAMBIO v0.3.1: Versión y Estado de la Aplicación
+    // CAMBIO v0.3.0: Versión y Estado de la Aplicación (Nueva función P2P)
     APP_STATUS: 'Pre-Alfa', 
-    APP_VERSION: 'v0.3.1', 
+    APP_VERSION: 'v0.3.2', // CAMBIO v0.3.2: Ajuste de layout y reglas
     
     // CAMBIO v0.3.0: Impuesto P2P (debe coincidir con el Backend)
     IMPUESTO_P2P_TASA: 0.10, // 10%
@@ -36,8 +36,16 @@ const AppState = {
     isOffline: false,
     selectedGrupo: null, 
     isSidebarOpen: false, 
+    sidebarTimer: null, // CAMBIO v0.2.6: Timer para auto-cerrar
     transaccionSelectAll: {}, 
-    sidebarTimer: null, // CAMBIO v0.2.6: Timer para auto-cierre
+    
+    // CAMBIO v0.2.4: Estado para los buscadores (autocomplete)
+    currentSearch: {
+        prestamo: { query: '', selected: null },
+        deposito: { query: '', selected: null },
+        p2pOrigen: { query: '', selected: null },
+        p2pDestino: { query: '', selected: null }
+    }
 };
 
 // --- AUTENTICACIÓN ---
@@ -67,29 +75,29 @@ const AppFormat = {
 };
 
 // --- BASE DE DATOS DE ANUNCIOS ---
-// CAMBIO v0.2.5: Textos acortados para evitar saltos de línea
+// CAMBIO v0.2.4: Textos acortados para evitar saltos de línea
 const AnunciosDB = {
     'AVISO': [
-        "La subasta es el último Jueves de cada mes. ¡Preparen sus pinceles!",
+        "La subasta de fin de mes es el último Jueves de cada mes.",
         "Revisen sus saldos antes del cierre de mes. No se aceptan saldos negativos.",
-        "Recuerden: 'Ver Reglas' tiene información importante sobre la Cicla."
+        "Recuerden: 'Ver Reglas' tiene información importante sobre la subasta."
     ],
     'NUEVO': [
+        // CAMBIO V0.2.2: Avisos sobre el nuevo sistema económico
         "¡Nuevo Sistema Económico! Depósitos de admin limitados por la Tesorería.",
         "Nueva sección 'Préstamos' y 'Depósitos' en el Panel de Administración.",
-        "La Tesorería cobra un 0.05% diario de impuesto a saldos altos (+100 ℙ).",
-        // CAMBIO v0.3.0: Nuevo anuncio P2P
-        "¡Nuevo Portal P2P! Transfiere pinceles a tus compañeros (Impuesto 10%)."
+        "¡Nuevo Portal P2P! Transfiere pinceles a tus compañeros (con 10% de comisión).",
+        "La Tesorería cobra un 0.05% diario de impuesto a saldos altos."
     ],
     'CONSEJO': [
         "Usa el botón '»' en la esquina para abrir y cerrar la barra lateral.",
         "Haz clic en el nombre de un alumno en la tabla para ver sus estadísticas.",
-        "Usa 'Ver Todos' en el tablón de anuncios para no perderte ninguna novedad.",
-        "¡Invierte! Usa los Depósitos a Plazo para obtener retornos fijos y seguros."
+        "Usa el botón 'Ver Todos' en el tablón de anuncios para no perderte ninguna.",
+        "¡Invierte! Usa los Depósitos a Plazo para obtener retornos fijos (Admin)."
     ],
     'ALERTA': [
         "¡Cuidado! Saldos negativos (incluso -1 ℙ) te mueven a Cicla.",
-        "Alumnos en Cicla pueden solicitar préstamos 'Rescate' (ver reglas).",
+        "Alumnos en Cicla pueden solicitar préstamos de rescate (Admin).",
         "Si tienes un préstamo activo, NO puedes crear un Depósito a Plazo."
     ]
 };
@@ -109,7 +117,7 @@ const AppData = {
         }
 
         if (!AppState.datosActuales) {
-            AppUI.showLoading(); 
+            AppUI.showLoading(); // <-- Esta es la línea 106
         } else {
             AppUI.setConnectionStatus('loading', 'Cargando...');
         }
@@ -126,7 +134,6 @@ const AppData = {
             } else {
                 AppState.isOffline = false;
                 
-                // CAMBIO v0.3.0: Usar la URL base de la API
                 const url = `${AppConfig.API_URL}?cacheBuster=${new Date().getTime()}`;
                 const response = await fetch(url, { method: 'GET', cache: 'no-cache', redirect: 'follow' });
 
@@ -135,12 +142,12 @@ const AppData = {
                 }
                 
                 const data = await response.json();
-                // console.log('DATOS RECIBIDOS DESDE APPSCRIPT:', JSON.stringify(data)); 
+                // console.log('DATOS RECIBIDOS DESDE APPSCRIPT:', JSON.stringify(data));
                 if (data && data.error) {
                     throw new Error(`Error de API: ${data.message}`);
                 }
                 
-                // La API devuelve un objeto { gruposData, saldoTesoreria, prestamosActivos, depositosActivos }
+                // CAMBIO V0.2.2: La API devuelve un objeto { gruposData, saldoTesoreria, prestamosActivos, depositosActivos }
                 AppState.datosActuales = AppData.procesarYMostrarDatos(data);
                 AppState.cachedData = data;
                 AppState.lastCacheTime = Date.now();
@@ -164,7 +171,7 @@ const AppData = {
             }
         } finally {
             AppState.actualizacionEnProceso = false;
-            AppUI.hideLoading(); 
+            AppUI.hideLoading(); // <-- Esta es la línea 166
         }
     },
 
@@ -257,17 +264,20 @@ const AppUI = {
         // Listener para el botón de enviar transacción
         document.getElementById('transaccion-submit-btn').addEventListener('click', AppTransacciones.realizarTransaccionMultiple);
         
+        // Listener para el link de DB
+        document.getElementById('db-link-btn').href = AppConfig.SPREADSHEET_URL;
+        
         // CAMBIO v0.3.0: Listeners para el nuevo Modal P2P
-        document.getElementById('p2p-portal-btn').addEventListener('click', () => AppUI.showModal('p2p-transfer-modal'));
+        document.getElementById('p2p-portal-btn').addEventListener('click', () => AppUI.showP2PModal());
         document.getElementById('p2p-modal-close-btn').addEventListener('click', () => AppUI.hideModal('p2p-transfer-modal'));
         document.getElementById('p2p-cancel-btn').addEventListener('click', () => AppUI.hideModal('p2p-transfer-modal'));
         document.getElementById('p2p-transfer-modal').addEventListener('click', (e) => {
             if (e.target.id === 'p2p-transfer-modal') AppUI.hideModal('p2p-transfer-modal');
         });
+        // Listener para el botón de enviar P2P
         document.getElementById('p2p-submit-btn').addEventListener('click', AppTransacciones.realizarTransferenciaP2P);
-        
-        // Listener para el link de DB
-        document.getElementById('db-link-btn').href = AppConfig.SPREADSHEET_URL;
+        // Listener para el cálculo de impuesto P2P
+        document.getElementById('p2p-cantidad').addEventListener('input', AppUI.updateP2PCalculoImpuesto);
 
         // Listeners Modal Reglas
         document.getElementById('reglas-btn').addEventListener('click', () => AppUI.showModal('reglas-modal'));
@@ -285,11 +295,14 @@ const AppUI = {
 
         // Listener Sidebar
         document.getElementById('toggle-sidebar-btn').addEventListener('click', AppUI.toggleSidebar);
-        // CAMBIO v0.2.6: Listeners para auto-cierre de sidebar
+        
+        // CAMBIO v0.2.6: Listeners para auto-cerrar sidebar
         const sidebar = document.getElementById('sidebar');
-        sidebar.addEventListener('mouseenter', () => clearTimeout(AppState.sidebarTimer));
+        sidebar.addEventListener('mouseenter', () => {
+            if (AppState.sidebarTimer) clearTimeout(AppState.sidebarTimer);
+        });
         sidebar.addEventListener('mouseleave', () => AppUI.resetSidebarTimer());
-
+        
 
         // V0.2.2: Listeners de cambio de Pestaña
         document.querySelectorAll('.tab-btn').forEach(button => {
@@ -299,20 +312,16 @@ const AppUI = {
             });
         });
 
-        // CAMBIO v0.2.4: Listeners para Búsqueda (Autocomplete) en Admin
-        document.getElementById('prestamo-alumno-search').addEventListener('input', (e) => AppUI.handleStudentSearch(e, 'prestamo-search-results', 'prestamo-alumno-search'));
-        document.getElementById('deposito-alumno-search').addEventListener('input', (e) => AppUI.handleStudentSearch(e, 'deposito-search-results', 'deposito-alumno-search'));
-
-        // CAMBIO v0.3.0: Listeners para Búsqueda (Autocomplete) en P2P
-        document.getElementById('p2p-search-origen').addEventListener('input', (e) => AppUI.handleStudentSearch(e, 'p2p-origen-results', 'p2p-search-origen'));
-        document.getElementById('p2p-search-destino').addEventListener('input', (e) => AppUI.handleStudentSearch(e, 'p2p-destino-results', 'p2p-search-destino'));
-        
-        // CAMBIO v0.3.0: Listener para cálculo de impuesto P2P
-        document.getElementById('p2p-cantidad').addEventListener('input', AppUI.updateP2PTax);
-
-
         // V0.2.2: Mostrar versión de la App
         AppUI.mostrarVersionApp();
+        
+        // CAMBIO v0.2.4: Listeners para los buscadores (autocomplete)
+        AppUI.setupSearchInput('prestamo-alumno-search', 'prestamo-search-results', 'prestamo', AppUI.loadPrestamoPaquetes);
+        AppUI.setupSearchInput('deposito-alumno-search', 'deposito-search-results', 'deposito', AppUI.loadDepositoPaquetes);
+        
+        // CAMBIO v0.3.0: Listeners para los buscadores P2P
+        AppUI.setupSearchInput('p2p-search-origen', 'p2p-origen-results', 'p2pOrigen', AppUI.selectP2PStudent);
+        AppUI.setupSearchInput('p2p-search-destino', 'p2p-destino-results', 'p2pDestino', AppUI.selectP2PStudent);
 
         // Carga inicial
         AppData.cargarDatos(false);
@@ -361,41 +370,35 @@ const AppUI = {
             document.getElementById('transaccion-lista-grupos-container').innerHTML = '';
             document.getElementById('transaccion-lista-usuarios-container').innerHTML = '';
             document.getElementById('transaccion-cantidad-input').value = "";
+            document.getElementById('transaccion-status-msg').textContent = "";
             
             // CAMBIO v0.2.4: Limpiar campos de búsqueda
-            document.getElementById('prestamo-alumno-search').value = "";
-            document.getElementById('deposito-alumno-search').value = "";
+            AppUI.resetSearchInput('prestamo');
+            AppUI.resetSearchInput('deposito');
+            
             document.getElementById('prestamo-paquetes-container').innerHTML = '<div class="text-sm text-gray-500">Seleccione un alumno para ver las opciones de préstamo.</div>';
             document.getElementById('deposito-paquetes-container').innerHTML = '<div class="text-sm text-gray-500">Seleccione un alumno para ver las opciones de depósito.</div>';
-            document.getElementById('prestamo-alumno-saldo').textContent = '';
-            document.getElementById('deposito-alumno-saldo').textContent = '';
             
             AppState.transaccionSelectAll = {}; 
             
-            document.getElementById('transaccion-submit-btn').disabled = false;
-            document.getElementById('transaccion-btn-text').textContent = 'Realizar Transacción'; 
+            AppTransacciones.setLoadingState(document.getElementById('transaccion-submit-btn'), document.getElementById('transaccion-btn-text'), false, 'Realizar Transacción');
         }
         
-        // CAMBIO v0.3.0: Limpiar campos de modal P2P
+        // CAMBIO v0.3.0: Limpiar campos de P2P
         if (modalId === 'p2p-transfer-modal') {
-            document.getElementById('p2p-search-origen').value = "";
+            AppUI.resetSearchInput('p2pOrigen');
+            AppUI.resetSearchInput('p2pDestino');
             document.getElementById('p2p-clave').value = "";
-            document.getElementById('p2p-search-destino').value = "";
             document.getElementById('p2p-cantidad').value = "";
-            document.getElementById('p2p-calculo-impuesto').innerHTML = "";
-            document.getElementById('p2p-status-msg').innerHTML = "";
-            document.getElementById('p2p-submit-btn').disabled = false;
-            document.getElementById('p2p-btn-text').textContent = 'Realizar Transferencia';
+            document.getElementById('p2p-calculo-impuesto').textContent = "";
+            document.getElementById('p2p-status-msg').textContent = "";
+            AppTransacciones.setLoadingState(document.getElementById('p2p-submit-btn'), document.getElementById('p2p-btn-text'), false, 'Realizar Transferencia');
         }
         
         if (modalId === 'gestion-modal') {
              document.getElementById('clave-input').value = "";
              document.getElementById('clave-input').classList.remove('shake', 'border-red-500');
         }
-        
-        // Limpiar estado general
-        const statusMsg = document.getElementById('transaccion-status-msg');
-        if(statusMsg) statusMsg.textContent = "";
     },
     
     // V0.2.2: Función para cambiar entre pestañas del modal de administración
@@ -418,7 +421,7 @@ const AppUI = {
             AppUI.populateGruposTransaccion();
         } else if (tabId === 'prestamos') {
             // CAMBIO v0.2.4: Ya no se pobla el select, se inicializa el paquete
-            AppUI.loadPrestamoPaquetes(null); 
+            AppUI.loadPrestamoPaquetes(null);
         } else if (tabId === 'depositos') {
              // CAMBIO v0.2.4: Ya no se pobla el select, se inicializa el paquete
             AppUI.loadDepositoPaquetes(null);
@@ -429,79 +432,132 @@ const AppUI = {
     },
 
 
-    // --- FUNCIONES DE BÚSQUEDA (AUTOCOMPLETE) ---
+    // --- FUNCIONES DE BÚSQUEDA (AUTOCOMPLETE) v0.2.4 ---
+    
+    setupSearchInput: function(inputId, resultsId, stateKey, onSelectCallback) {
+        const input = document.getElementById(inputId);
+        const results = document.getElementById(resultsId);
 
-    // CAMBIO v0.2.4: Nueva función para manejar la búsqueda de alumnos
-    handleStudentSearch: function(event, resultsContainerId, inputId) {
-        const searchTerm = event.target.value.toLowerCase();
-        const resultsContainer = document.getElementById(resultsContainerId);
+        input.addEventListener('input', (e) => {
+            const query = e.target.value;
+            AppState.currentSearch[stateKey].query = query;
+            AppState.currentSearch[stateKey].selected = null; // Deseleccionar al escribir
+            
+            // Limpiar el estado dependiente si se borra la búsqueda
+            if (query === '') {
+                onSelectCallback(null);
+            }
+            
+            AppUI.handleStudentSearch(query, resultsId, stateKey, onSelectCallback);
+        });
         
-        if (searchTerm.length < 1) {
-            resultsContainer.innerHTML = '';
+        // Ocultar resultados si se hace clic fuera
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && !results.contains(e.target)) {
+                results.classList.add('hidden');
+            }
+        });
+        
+        // Mostrar resultados al hacer focus
+        input.addEventListener('focus', () => {
+             if (input.value) {
+                 AppUI.handleStudentSearch(input.value, resultsId, stateKey, onSelectCallback);
+             }
+        });
+    },
+    
+    handleStudentSearch: function(query, resultsId, stateKey, onSelectCallback) {
+        const resultsContainer = document.getElementById(resultsId);
+        
+        if (query.length < 1) {
             resultsContainer.classList.add('hidden');
             return;
         }
 
-        const filteredStudents = AppState.datosAdicionales.allStudents.filter(student => 
-            student.nombre.toLowerCase().includes(searchTerm)
-        ).sort((a, b) => a.nombre.localeCompare(b.nombre));
+        const lowerQuery = query.toLowerCase();
+        const filteredStudents = AppState.datosAdicionales.allStudents
+            .filter(s => s.nombre.toLowerCase().includes(lowerQuery))
+            .sort((a, b) => a.nombre.localeCompare(b.nombre))
+            .slice(0, 10); // Limitar a 10 resultados
 
+        resultsContainer.innerHTML = '';
         if (filteredStudents.length === 0) {
             resultsContainer.innerHTML = `<div class="p-2 text-sm text-gray-500">No se encontraron alumnos.</div>`;
-            resultsContainer.classList.remove('hidden');
-            return;
+        } else {
+            filteredStudents.forEach(student => {
+                const div = document.createElement('div');
+                div.className = 'p-2 hover:bg-gray-100 cursor-pointer text-sm';
+                div.textContent = `${student.nombre} (${student.grupoNombre})`;
+                div.onclick = () => {
+                    const input = document.getElementById(resultsId.replace('-results', '-search'));
+                    input.value = student.nombre;
+                    AppState.currentSearch[stateKey].query = student.nombre;
+                    AppState.currentSearch[stateKey].selected = student.nombre;
+                    resultsContainer.classList.add('hidden');
+                    onSelectCallback(student.nombre); // Llamar al callback con el nombre
+                };
+                resultsContainer.appendChild(div);
+            });
         }
-
-        resultsContainer.innerHTML = filteredStudents.map(student => `
-            <div class="p-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer" 
-                 data-name="${student.nombre}">
-                ${student.nombre} <span class="text-xs text-gray-500">(${student.grupoNombre})</span>
-            </div>
-        `).join('');
         resultsContainer.classList.remove('hidden');
-        
-        // CAMBIO v0.3.0: Añadir listeners de clic a los nuevos resultados
-        resultsContainer.querySelectorAll('div[data-name]').forEach(div => {
-            div.onclick = () => {
-                const studentName = div.dataset.name;
-                AppUI.selectStudent(studentName, inputId, resultsContainerId);
-                
-                // Cargar paquetes SÓLO si es un modal de admin
-                if (inputId === 'prestamo-alumno-search') {
-                    AppUI.loadPrestamoPaquetes(studentName);
-                } else if (inputId === 'deposito-alumno-search') {
-                    AppUI.loadDepositoPaquetes(studentName);
-                }
-            };
-        });
     },
 
-    // CAMBIO v0.2.4: Nueva función para seleccionar un alumno de la búsqueda
-    selectStudent: function(studentName, inputId, resultsContainerId) {
-        document.getElementById(inputId).value = studentName;
-        document.getElementById(resultsContainerId).innerHTML = '';
-        document.getElementById(resultsContainerId).classList.add('hidden');
+    // CAMBIO v0.2.4: Limpia un input de búsqueda y su estado
+    resetSearchInput: function(stateKey) {
+        const inputId = stateKey.includes('p2p') 
+            ? `${stateKey.replace('p2p', 'p2p-search-')}` 
+            : `${stateKey}-alumno-search`;
+            
+        const input = document.getElementById(inputId);
+        if (input) {
+            input.value = "";
+        }
+        AppState.currentSearch[stateKey].query = "";
+        AppState.currentSearch[stateKey].selected = null;
     },
     
-    // CAMBIO v0.3.0: Nueva función para calcular el impuesto P2P
-    updateP2PTax: function() {
+    // --- FIN FUNCIONES DE BÚSQUEDA ---
+    
+    // --- FUNCIONES P2P (v0.3.0) ---
+    
+    showP2PModal: function() {
+        if (!AppState.datosActuales) return;
+        
+        // Resetear campos antes de mostrar
+        AppUI.resetSearchInput('p2pOrigen');
+        AppUI.resetSearchInput('p2pDestino');
+        document.getElementById('p2p-clave').value = "";
+        document.getElementById('p2p-cantidad').value = "";
+        document.getElementById('p2p-calculo-impuesto').textContent = "";
+        document.getElementById('p2p-status-msg').textContent = "";
+        
+        AppUI.showModal('p2p-transfer-modal');
+    },
+    
+    // Callback para los buscadores P2P (no hace nada, solo selecciona)
+    selectP2PStudent: function(studentName) {
+        // Esta función solo necesita existir para el callback,
+        // la selección real se guarda en AppState.currentSearch
+    },
+    
+    // Calcula y muestra el impuesto P2P en tiempo real
+    updateP2PCalculoImpuesto: function() {
         const cantidadInput = document.getElementById('p2p-cantidad');
-        const taxDiv = document.getElementById('p2p-calculo-impuesto');
-        const cantidad = parseInt(cantidadInput.value, 10) || 0;
+        const calculoMsg = document.getElementById('p2p-calculo-impuesto');
+        const cantidad = parseInt(cantidadInput.value, 10);
 
-        if (cantidad <= 0) {
-            taxDiv.innerHTML = '';
+        if (isNaN(cantidad) || cantidad <= 0) {
+            calculoMsg.textContent = "";
             return;
         }
-        
+
         const impuesto = Math.ceil(cantidad * AppConfig.IMPUESTO_P2P_TASA);
         const total = cantidad + impuesto;
-
-        taxDiv.innerHTML = `
-            Impuesto (${AppConfig.IMPUESTO_P2P_TASA * 100}%): <span class="font-semibold text-red-600">${AppFormat.formatNumber(impuesto)} ℙ</span> | 
-            Total a debitar: <span class="font-semibold text-gray-900">${AppFormat.formatNumber(total)} ℙ</span>
-        `;
+        
+        calculoMsg.textContent = `Impuesto (10%): ${AppFormat.formatNumber(impuesto)} ℙ | Total a debitar: ${AppFormat.formatNumber(total)} ℙ`;
     },
+
+    // --- FIN FUNCIONES P2P ---
 
 
     // --- FUNCIÓN CENTRAL: Mostrar Modal de Administración y pestaña inicial ---
@@ -509,7 +565,9 @@ const AppUI = {
         if (!AppState.datosActuales) {
             return;
         }
+        
         AppUI.changeAdminTab(tab); 
+        
         AppUI.showModal('transaccion-modal');
     },
 
@@ -519,8 +577,8 @@ const AppUI = {
         grupoContainer.innerHTML = ''; 
 
         AppState.datosActuales.forEach(grupo => {
-            // CAMBIO v0.2.3: No mostrar Cicla ni grupos con 0 pinceles
-            if (grupo.nombre === 'Cicla' || grupo.total === 0) return; 
+            // CAMBIO v0.2.3: No mostrar grupos con 0 pinceles
+            if (grupo.nombre === 'Cicla' || grupo.total === 0) return;
 
             const div = document.createElement('div');
             div.className = "flex items-center p-1 rounded hover:bg-gray-200";
@@ -630,15 +688,15 @@ const AppUI = {
     },
 
     // --- FUNCIONES DE PRÉSTAMOS (PESTAÑA 2) ---
-    // CAMBIO v0.2.4: Acepta nombre de alumno (o null)
     loadPrestamoPaquetes: function(selectedStudentName) {
         const container = document.getElementById('prestamo-paquetes-container');
         const saldoSpan = document.getElementById('prestamo-alumno-saldo');
         
+        // V0.2.2: Mostrar el saldo de Tesorería en la pestaña Préstamos
         document.getElementById('tesoreria-saldo-prestamo').textContent = `(Tesorería: ${AppFormat.formatNumber(AppState.datosAdicionales.saldoTesoreria)} ℙ)`;
 
         if (!selectedStudentName) {
-            container.innerHTML = '<div class="text-sm text-gray-500">Busque y seleccione un alumno para ver sus opciones.</div>';
+            container.innerHTML = '<div class="text-sm text-gray-500">Busque y seleccione un alumno para ver las opciones.</div>';
             saldoSpan.textContent = '';
             return;
         }
@@ -648,6 +706,7 @@ const AppUI = {
         
         saldoSpan.textContent = `(Saldo actual: ${AppFormat.formatNumber(student.pinceles)} ℙ)`;
 
+        // Mapeo de paquetes (debería coincidir con el backend)
         const paquetes = {
             'rescate': { monto: 15000, interes: 25, label: "Rescate" },
             'estandar': { monto: 50000, interes: 20, label: "Estándar" },
@@ -669,18 +728,16 @@ const AppUI = {
             // Lógica de elegibilidad del frontend
             let isEligible = true;
             let eligibilityMessage = '';
-            
-            // CAMBIO v0.2.6: Lógica de Préstamo de Rescate Universal
-            // El Rescate ignora las reglas de saldo (50%)
-            
-            // 1. Regla Universal: Verificar Fondos de Tesorería
+
+            // V0.2.2: Verificar si la Tesorería tiene fondos para este préstamo
             if (AppState.datosAdicionales.saldoTesoreria < pkg.monto) {
                 isEligible = false;
                 eligibilityMessage = `(Tesorería sin fondos)`;
             }
-            
-            // 2. Reglas Específicas (Solo para Estándar e Inversión)
-            else if (tipo !== 'rescate') {
+
+            // CAMBIO v0.2.6: Nueva lógica de elegibilidad
+            if (isEligible && tipo !== 'rescate') {
+                // Solo 'estandar' e 'inversion' tienen validaciones de saldo
                 if (student.pinceles >= 0) { // RUTA A: Positivo o Cero
                     const capacidad = student.pinceles * 0.50;
                     if (pkg.monto > capacidad) {
@@ -691,15 +748,15 @@ const AppUI = {
                     isEligible = false;
                     eligibilityMessage = `(Solo Rescate)`;
                 }
-            }
-            
-            // 3. Regla Específica (Solo para Rescate)
-            else if (tipo === 'rescate') {
-                if (student.pinceles < 0 && Math.abs(student.pinceles) >= pkg.monto) {
+            } else if (isEligible && tipo === 'rescate') {
+                 // El rescate solo tiene una validación (si está en Cicla)
+                 if (student.pinceles < 0 && Math.abs(student.pinceles) >= pkg.monto) {
                      isEligible = false;
-                    eligibilityMessage = `(Deuda muy alta: ${AppFormat.formatNumber(student.pinceles)} ℙ)`;
-                }
+                     eligibilityMessage = `(Deuda muy alta: ${AppFormat.formatNumber(student.pinceles)} ℙ)`;
+                 }
             }
+            // FIN CAMBIO v0.2.6
+
 
             const buttonClass = isEligible ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed';
             const buttonDisabled = !isEligible ? 'disabled' : '';
@@ -722,15 +779,15 @@ const AppUI = {
     },
     
     // --- FUNCIONES DE DEPÓSITOS (PESTAÑA 3) ---
-    // CAMBIO v0.2.4: Acepta nombre de alumno (o null)
     loadDepositoPaquetes: function(selectedStudentName) {
         const container = document.getElementById('deposito-paquetes-container');
         const saldoSpan = document.getElementById('deposito-alumno-saldo');
         
+        // V0.2.2: Mostrar info de Tesorería en Depósitos
         document.getElementById('deposito-info-tesoreria').textContent = `(Tesorería: ${AppFormat.formatNumber(AppState.datosAdicionales.saldoTesoreria)} ℙ)`;
 
         if (!selectedStudentName) {
-            container.innerHTML = '<div class="text-sm text-gray-500">Busque y seleccione un alumno para ver sus opciones.</div>';
+            container.innerHTML = '<div class="text-sm text-gray-500">Busque y seleccione un alumno para ver las opciones.</div>';
             saldoSpan.textContent = '';
             return;
         }
@@ -740,6 +797,7 @@ const AppUI = {
 
         saldoSpan.textContent = `(Saldo actual: ${AppFormat.formatNumber(student.pinceles)} ℙ)`;
 
+        // Mapeo de paquetes (debería coincidir con el backend)
         const paquetes = {
             'ahorro_express': { monto: 50000, interes: 8, plazo: 7, label: "Ahorro Express" },
             'fondo_fiduciario': { monto: 150000, interes: 15, plazo: 14, label: "Fondo Fiduciario" },
@@ -816,6 +874,7 @@ const AppUI = {
         }
     },
 
+    // CAMBIO v0.2.6: Añadido manejo del timer
     toggleSidebar: function() {
         const sidebar = document.getElementById('sidebar');
         const btn = document.getElementById('toggle-sidebar-btn');
@@ -830,21 +889,24 @@ const AppUI = {
             btn.innerHTML = '»'; // Flecha de abrir
         }
         
-        // CAMBIO v0.2.6: (Re)iniciar el temporizador de cierre
-        AppUI.resetSidebarTimer();
+        AppUI.resetSidebarTimer(); // Iniciar o limpiar el timer
     },
     
-    // CAMBIO v0.2.6: Nueva función para el temporizador de la sidebar
+    // CAMBIO v0.2.6: Nueva función para resetear el timer del sidebar
     resetSidebarTimer: function() {
-        clearTimeout(AppState.sidebarTimer);
+        if (AppState.sidebarTimer) {
+            clearTimeout(AppState.sidebarTimer);
+        }
+        
         if (AppState.isSidebarOpen) {
             AppState.sidebarTimer = setTimeout(() => {
-                if (AppState.isSidebarOpen) {
+                if (AppState.isSidebarOpen) { // Doble chequeo por si acaso
                     AppUI.toggleSidebar();
                 }
             }, 10000); // 10 segundos
         }
     },
+
 
     actualizarSidebar: function(grupos) {
         const nav = document.getElementById('sidebar-nav');
@@ -935,29 +997,31 @@ const AppUI = {
         // Tarjeta de Bóveda
         const totalGeneral = grupos.reduce((acc, g) => acc + g.total, 0);
         
-        // Tarjeta de Tesorería (NUEVA)
+        // CAMBIO V0.2.2: Tarjeta de Tesorería (NUEVA)
         const tesoreriaSaldo = AppState.datosAdicionales.saldoTesoreria;
         
-        // CAMBIO v0.3.1: Reestructurado a DOS tarjetas separadas para alineación vertical.
+        // CAMBIO v0.3.2: Reestructurado a UNA sola tarjeta compacta.
         bovedaHtml = `
-            <!-- Tarjeta 1: Total en Cuentas -->
             <div class="bg-white rounded-lg shadow-md p-3">
-                <div class="flex items-center justify-between mb-1">
-                    <span class="text-sm font-medium text-gray-500 truncate">Total en Cuentas</span>
-                    <span class="text-xs font-bold bg-green-100 text-green-700 rounded-full px-2 py-0.5">BÓVEDA</span>
+                <!-- Sección Bóveda -->
+                <div class="pb-2">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-sm font-medium text-gray-500 truncate">Total en Cuentas</span>
+                        <span class="text-xs font-bold bg-green-100 text-green-700 rounded-full px-2 py-0.5">BÓVEDA</span>
+                    </div>
+                    <p class="text-base font-semibold text-gray-900 truncate">Pinceles Totales</p>
+                    <p class="text-xl font-bold text-green-600 text-right">${AppFormat.formatNumber(totalGeneral)} ℙ</p>
                 </div>
-                <p class="text-base font-semibold text-gray-900 truncate">Pinceles Totales</p>
-                <p class="text-xl font-bold text-green-600 text-right">${AppFormat.formatNumber(totalGeneral)} ℙ</p>
-            </div>
-            
-            <!-- Tarjeta 2: Capital Operativo -->
-            <div class="bg-white rounded-lg shadow-md p-3">
-                <div class="flex items-center justify-between mb-1">
-                    <span class="text-sm font-medium text-gray-500 truncate">Capital Operativo</span>
-                    <span class="text-xs font-bold bg-blue-100 text-blue-700 rounded-full px-2 py-0.5">TESORERÍA</span>
+                
+                <!-- Sección Tesorería -->
+                <div class="border-t border-gray-200 pt-2">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-sm font-medium text-gray-500 truncate">Capital Operativo</span>
+                        <span class="text-xs font-bold bg-blue-100 text-blue-700 rounded-full px-2 py-0.5">TESORERÍA</span>
+                    </div>
+                    <p class="text-base font-semibold text-gray-900 truncate">Fondo del Banco</p>
+                    <p class="text-xl font-bold text-blue-600 text-right">${AppFormat.formatNumber(tesoreriaSaldo)} ℙ</p>
                 </div>
-                <p class="text-base font-semibold text-gray-900 truncate">Fondo del Banco</p>
-                <p class="text-xl font-bold text-blue-600 text-right">${AppFormat.formatNumber(tesoreriaSaldo)} ℙ</p>
             </div>
         `;
         
@@ -965,7 +1029,7 @@ const AppUI = {
         const top3 = AppState.datosAdicionales.allStudents.sort((a, b) => b.pinceles - a.pinceles).slice(0, 3);
 
         if (top3.length > 0) {
-            // CAMBIO v0.2.6: Compactado (p-3)
+            // CAMBIO v0.2.6: Padding reducido de p-4 a p-3
             top3Html = top3.map((student, index) => {
                 let rankColor = 'bg-blue-100 text-blue-700';
                 if (index === 0) rankColor = 'bg-yellow-100 text-yellow-700';
@@ -975,21 +1039,22 @@ const AppUI = {
 
                 return `
                     <div class="bg-white rounded-lg shadow-md p-3">
-                        <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center justify-between mb-1">
                             <span class="text-sm font-medium text-gray-500 truncate">${grupoNombre}</span>
                             <span class="text-xs font-bold ${rankColor} rounded-full px-2 py-0.5">${index + 1}º</span>
                         </div>
-                        <p class="text-lg font-semibold text-gray-900 truncate">${student.nombre}</p>
+                        <p class="text-base font-semibold text-gray-900 truncate">${student.nombre}</p>
                         <p class="text-xl font-bold text-blue-600 text-right">${AppFormat.formatNumber(student.pinceles)} ℙ</p>
                     </div>
                 `;
             }).join('');
         }
         for (let i = top3.length; i < 3; i++) {
+             // CAMBIO v0.2.6: Padding reducido de p-4 a p-3
             top3Html += `
                 <div class="bg-white rounded-lg shadow-md p-3 opacity-50">
-                    <div class="flex items-center justify-between mb-2"><span class="text-sm font-medium text-gray-400">-</span><span class="text-xs font-bold bg-gray-100 text-gray-400 rounded-full px-2 py-0.5">${i + 1}º</span></div>
-                    <p class="text-lg font-semibold text-gray-400 truncate">-</p>
+                    <div class="flex items-center justify-between mb-1"><span class="text-sm font-medium text-gray-400">-</span><span class="text-xs font-bold bg-gray-100 text-gray-400 rounded-full px-2 py-0.5">${i + 1}º</span></div>
+                    <p class="text-base font-semibold text-gray-400 truncate">-</p>
                     <p class="text-xl font-bold text-gray-400 text-right">- ℙ</p>
                 </div>
             `;
@@ -1006,8 +1071,8 @@ const AppUI = {
         AppUI.actualizarAnuncios(); 
         AppUI.actualizarEstadisticasRapidas(grupos);
         
-        // 3. MOSTRAR ACCESO RÁPIDO (Idea 3) - CAMBIO v0.2.5: Se muestra dentro del bloque de stats
-        document.getElementById('acceso-rapido-container').classList.remove('hidden');
+        // 3. MOSTRAR ACCESO RÁPIDO (Idea 3)
+        // (Contador ahora está dentro del bloque de home-stats-container en el HTML)
     },
 
     /**
@@ -1077,7 +1142,6 @@ const AppUI = {
         // 4. OCULTAR MÓDULOS DE HOME
         document.getElementById('home-stats-container').classList.add('hidden');
         document.getElementById('home-modules-grid').classList.add('hidden');
-        document.getElementById('acceso-rapido-container').classList.add('hidden');
     },
 
     actualizarAlumnosEnRiesgo: function() {
@@ -1148,7 +1212,7 @@ const AppUI = {
     actualizarAnuncios: function() {
         const lista = document.getElementById('anuncios-lista');
         
-        // CAMBIO v0.2.5: Lógica de aleatoriedad modificada
+        // CAMBIO v0.2.5: Juntar todos los anuncios y sacar 6 al azar
         const todosLosAnuncios = [
             ...AnunciosDB['AVISO'].map(texto => ({ tipo: 'AVISO', texto, bg: 'bg-gray-100', text: 'text-gray-700' })),
             ...AnunciosDB['NUEVO'].map(texto => ({ tipo: 'NUEVO', texto, bg: 'bg-blue-100', text: 'text-blue-700' })),
@@ -1156,11 +1220,7 @@ const AppUI = {
             ...AnunciosDB['ALERTA'].map(texto => ({ tipo: 'ALERTA', texto, bg: 'bg-red-100', text: 'text-red-700' }))
         ];
         
-        // Barajar todos los anuncios
-        const anunciosBarajados = [...todosLosAnuncios].sort(() => 0.5 - Math.random());
-        // Seleccionar los primeros 6
-        const anuncios = anunciosBarajados.slice(0, 6);
-
+        const anuncios = [...todosLosAnuncios].sort(() => 0.5 - Math.random()).slice(0, 6);
 
         lista.innerHTML = anuncios.map(anuncio => `
             <li class="flex items-start p-2 hover:bg-gray-50 rounded-lg transition-colors"> 
@@ -1304,7 +1364,7 @@ const AppUI = {
     }
 };
 
-// --- OBJETO TRANSACCIONES (Admin y P2P) ---
+// --- OBJETO TRANSACCIONES (Préstamos y Depósitos) ---
 const AppTransacciones = {
 
     realizarTransaccionMultiple: async function() {
@@ -1346,11 +1406,12 @@ const AppTransacciones = {
         }
 
         // --- Pasa validación, iniciar transacción ---
-        AppTransacciones.setLoadingState(submitBtn, btnText, true, statusMsg, `Procesando ${checkedUsers.length} transacción(es)...`);
+        AppTransacciones.setLoadingState(submitBtn, btnText, true, 'Procesando...');
+        AppTransacciones.setLoading(statusMsg, `Procesando ${checkedUsers.length} transacción(es)...`);
         
         try {
             const payload = {
-                accion: 'transaccion_multiple', 
+                accion: 'transaccion_multiple', // NUEVA ACCIÓN
                 clave: AppConfig.CLAVE_MAESTRA,
                 cantidad: pinceles, 
                 transacciones: transacciones 
@@ -1369,8 +1430,10 @@ const AppTransacciones = {
                 
                 cantidadInput.value = "";
                 AppData.cargarDatos(false); 
+                AppUI.populateGruposTransaccion(); // Recargar la lista
+                AppUI.populateUsuariosTransaccion(); // Limpiar usuarios
 
-                // CAMBIO v0.2.4: Ya no se cierra automáticamente
+                // CAMBIO v0.2.4: No cerrar el modal
                 // setTimeout(() => {
                 //     AppUI.hideModal('transaccion-modal');
                 // }, 2000); 
@@ -1382,7 +1445,7 @@ const AppTransacciones = {
         } catch (error) {
             AppTransacciones.setError(statusMsg, error.message);
         } finally {
-            AppTransacciones.setLoadingState(submitBtn, btnText, false);
+            AppTransacciones.setLoadingState(submitBtn, btnText, false, 'Realizar Transacción');
         }
     },
     
@@ -1391,11 +1454,12 @@ const AppTransacciones = {
         const submitBtn = modalDialog.querySelector(`button[onclick*="realizarPrestamo('${alumnoNombre}', '${tipoPrestamo}')"]`);
         const statusMsg = document.getElementById('transaccion-status-msg');
         
-        AppTransacciones.setLoadingState(submitBtn, null, true, statusMsg, `Otorgando préstamo ${tipoPrestamo}...`);
+        AppTransacciones.setLoadingState(submitBtn, null, true, 'Procesando...');
+        AppTransacciones.setLoading(statusMsg, `Otorgando préstamo ${tipoPrestamo}...`);
         
         try {
             const payload = {
-                accion: 'otorgar_prestamo', 
+                accion: 'otorgar_prestamo', // NUEVA ACCIÓN
                 clave: AppConfig.CLAVE_MAESTRA,
                 alumnoNombre: alumnoNombre,
                 tipoPrestamo: tipoPrestamo 
@@ -1411,8 +1475,9 @@ const AppTransacciones = {
             if (result.success === true) {
                 AppTransacciones.setSuccess(statusMsg, result.message || "¡Préstamo otorgado con éxito!");
                 AppData.cargarDatos(false); 
-                
-                // CAMBIO v0.2.4: Ya no se cierra automáticamente
+                AppUI.loadPrestamoPaquetes(alumnoNombre); // Recargar paquetes para ese alumno
+
+                // CAMBIO v0.2.4: No cerrar el modal
                 // setTimeout(() => {
                 //     AppUI.hideModal('transaccion-modal');
                 // }, 2000); 
@@ -1433,11 +1498,12 @@ const AppTransacciones = {
         const submitBtn = modalDialog.querySelector(`button[onclick*="realizarDeposito('${alumnoNombre}', '${tipoDeposito}')"]`);
         const statusMsg = document.getElementById('transaccion-status-msg');
         
-        AppTransacciones.setLoadingState(submitBtn, null, true, statusMsg, `Creando depósito ${tipoDeposito}...`);
+        AppTransacciones.setLoadingState(submitBtn, null, true, 'Procesando...');
+        AppTransacciones.setLoading(statusMsg, `Creando depósito ${tipoDeposito}...`);
         
         try {
             const payload = {
-                accion: 'crear_deposito', 
+                accion: 'crear_deposito', // NUEVA ACCIÓN
                 clave: AppConfig.CLAVE_MAESTRA,
                 alumnoNombre: alumnoNombre,
                 tipoDeposito: tipoDeposito 
@@ -1453,8 +1519,9 @@ const AppTransacciones = {
             if (result.success === true) {
                 AppTransacciones.setSuccess(statusMsg, result.message || "¡Depósito creado con éxito!");
                 AppData.cargarDatos(false); 
+                AppUI.loadDepositoPaquetes(alumnoNombre); // Recargar paquetes para ese alumno
 
-                // CAMBIO v0.2.4: Ya no se cierra automáticamente
+                // CAMBIO v0.2.4: No cerrar el modal
                 // setTimeout(() => {
                 //     AppUI.hideModal('transaccion-modal');
                 // }, 2000); 
@@ -1476,42 +1543,45 @@ const AppTransacciones = {
         const submitBtn = document.getElementById('p2p-submit-btn');
         const btnText = document.getElementById('p2p-btn-text');
         
-        const nombre_origen = document.getElementById('p2p-search-origen').value;
-        const clave_p2p_origen = document.getElementById('p2p-clave').value;
-        const nombre_destino = document.getElementById('p2p-search-destino').value;
-        const cantidadInput = document.getElementById('p2p-cantidad').value;
+        // 1. Recoger y validar datos
+        const nombreOrigen = AppState.currentSearch.p2pOrigen.selected;
+        const nombreDestino = AppState.currentSearch.p2pDestino.selected;
+        const claveP2P = document.getElementById('p2p-clave').value;
+        const cantidad = parseInt(document.getElementById('p2p-cantidad').value, 10);
         
         let errorValidacion = "";
-        
-        if (!nombre_origen) errorValidacion = "Debe seleccionar su nombre (Remitente).";
-        else if (!clave_p2p_origen) errorValidacion = "Debe ingresar su Clave P2P.";
-        else if (!nombre_destino) errorValidacion = "Debe seleccionar un Destinatario.";
-        else if (nombre_origen === nombre_destino) errorValidacion = "No puede enviarse pinceles a sí mismo.";
-
-        const cantidad = parseInt(cantidadInput, 10);
-        if (isNaN(cantidad) || cantidad <= 0) {
+        if (!nombreOrigen) {
+            errorValidacion = "Debe seleccionar su nombre (Remitente) de la lista.";
+        } else if (!claveP2P) {
+            errorValidacion = "Debe ingresar su Clave P2P.";
+        } else if (!nombreDestino) {
+            errorValidacion = "Debe seleccionar un Destinatario de la lista.";
+        } else if (isNaN(cantidad) || cantidad <= 0) {
             errorValidacion = "La cantidad debe ser un número positivo.";
+        } else if (nombreOrigen === nombreDestino) {
+            errorValidacion = "No puedes enviarte pinceles a ti mismo.";
         }
-
+        
         if (errorValidacion) {
-            AppTransacciones.setError(statusMsg, errorValidacion, 'p2p-status-msg');
+            AppTransacciones.setError(statusMsg, errorValidacion);
             return;
         }
 
         // --- Pasa validación, iniciar transacción P2P ---
-        AppTransacciones.setLoadingState(submitBtn, btnText, true, statusMsg, `Procesando transferencia...`, 'p2p-btn-text', 'Realizar Transferencia');
+        AppTransacciones.setLoadingState(submitBtn, btnText, true, 'Procesando...');
+        AppTransacciones.setLoading(statusMsg, `Transfiriendo ${AppFormat.formatNumber(cantidad)} ℙ a ${nombreDestino}...`);
         
         try {
+            // El payload NO lleva clave maestra
             const payload = {
                 accion: 'transferir_p2p',
-                nombre_origen: nombre_origen,
-                clave_p2p_origen: clave_p2p_origen,
-                nombre_destino: nombre_destino,
+                nombre_origen: nombreOrigen,
+                clave_p2p_origen: claveP2P,
+                nombre_destino: nombreDestino,
                 cantidad: cantidad
             };
 
-            // Usar la URL base de TRANSACCION
-            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.TRANSACCION_API_URL, {
+            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
                 method: 'POST',
                 body: JSON.stringify(payload), 
             });
@@ -1519,26 +1589,25 @@ const AppTransacciones = {
             const result = await response.json();
 
             if (result.success === true) {
-                const successMsg = result.message || "¡Transferencia exitosa!";
-                AppTransacciones.setSuccess(statusMsg, successMsg, 'p2p-status-msg');
+                AppTransacciones.setSuccess(statusMsg, result.message || "¡Transferencia exitosa!");
                 
-                // Limpiar campos sensibles
+                // Limpiar campos
+                AppUI.resetSearchInput('p2pDestino');
                 document.getElementById('p2p-clave').value = "";
-                document.getElementById('p2p-search-destino').value = "";
                 document.getElementById('p2p-cantidad').value = "";
-                document.getElementById('p2p-calculo-impuesto').innerHTML = "";
+                document.getElementById('p2p-calculo-impuesto').textContent = "";
                 
                 // Recargar datos
                 AppData.cargarDatos(false); 
 
             } else {
-                throw new Error(result.message || "Error desconocido de la API P2P.");
+                throw new Error(result.message || "Error desconocido de la API.");
             }
 
         } catch (error) {
-            AppTransacciones.setError(statusMsg, error.message, 'p2p-status-msg');
+            AppTransacciones.setError(statusMsg, error.message);
         } finally {
-            AppTransacciones.setLoadingState(submitBtn, btnText, false, null, null, 'p2p-btn-text', 'Realizar Transferencia');
+            AppTransacciones.setLoadingState(submitBtn, btnText, false, 'Realizar Transferencia');
         }
     },
     
@@ -1549,33 +1618,37 @@ const AppTransacciones = {
         for (let attempt = 0; attempt < maxRetries; attempt++) {
             try {
                 const response = await fetch(url, options);
+                // Si la respuesta no es 429 (Too Many Requests), devuélvela
                 if (response.status !== 429) {
                     return response;
                 }
+                // Es 429, loggear y reintentar
                 console.warn(`Attempt ${attempt + 1}: Rate limit exceeded (429). Retrying...`);
             } catch (error) {
+                // Para errores de red, reintentar (a menos que sea el último intento)
                 if (attempt === maxRetries - 1) throw error;
             }
+            // Espera exponencial
             const delay = initialDelay * Math.pow(2, attempt) + Math.random() * 1000;
             await new Promise(resolve => setTimeout(resolve, delay));
         }
         throw new Error('Failed to fetch after multiple retries.');
     },
 
-    setLoadingState: function(btn, btnTextEl, isLoading, statusMsgEl, message, btnTextId = 'transaccion-btn-text', btnTextDefault = 'Realizar Transacción') {
-        // CAMBIO v0.3.0: Adaptado para múltiples botones/textos
-        if (!btnTextEl) btnTextEl = document.getElementById(btnTextId);
-
+    setLoadingState: function(btn, btnTextEl, isLoading, defaultText) {
         if (isLoading) {
             if (btnTextEl) btnTextEl.textContent = 'Procesando...';
             if (btn) btn.disabled = true;
-            if (statusMsgEl && message) {
-                statusMsgEl.textContent = message;
-                statusMsgEl.className = "text-sm text-center font-medium text-blue-600 h-auto min-h-[1rem]";
-            }
         } else {
-            if (btnTextEl) btnTextEl.textContent = btnTextDefault;
+            if (btnTextEl && defaultText) btnTextEl.textContent = defaultText;
             if (btn) btn.disabled = false;
+        }
+    },
+    
+    setLoading: function(statusMsgEl, message) {
+        if (statusMsgEl) {
+            statusMsgEl.textContent = message;
+            statusMsgEl.className = "text-sm text-center font-medium text-blue-600 h-auto min-h-[1rem]";
         }
     },
 
@@ -1604,4 +1677,3 @@ window.onload = function() {
     console.log("window.onload disparado. Iniciando AppUI...");
     AppUI.init();
 };
-
