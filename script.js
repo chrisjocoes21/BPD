@@ -15,15 +15,16 @@ const AppConfig = {
 // --- ESTADO DE LA APLICACIÓN ---
 const AppState = {
     datosActuales: null,
-    historialUsuarios: {}, 
+    historialUsuarios: {}, // CAMBIO: Ya no almacena cambios recientes
     actualizacionEnProceso: false,
     retryCount: 0,
     retryDelay: AppConfig.INITIAL_RETRY_DELAY,
     cachedData: null,
     lastCacheTime: null,
     isOffline: false,
-    selectedGrupo: null, 
-    isSidebarOpen: false, 
+    selectedGrupo: null, // Para rastrear el grupo seleccionado
+    isSidebarOpen: false, // Inicia oculta por defecto
+    transaccionSelectAll: false, // NUEVO: Estado para el botón "Seleccionar Todos"
 };
 
 // --- AUTENTICACIÓN ---
@@ -52,45 +53,59 @@ const AppAuth = {
 const AppTransacciones = {
     realizarTransaccion: async function() {
         const grupoSelect = document.getElementById('transaccion-grupo-select');
-        const usuarioSelect = document.getElementById('transaccion-usuario-select');
         const cantidadInput = document.getElementById('transaccion-cantidad-input');
         const statusMsg = document.getElementById('transaccion-status-msg');
-        
-        // CAMBIO: IDs para controlar el spinner del botón
         const submitBtn = document.getElementById('transaccion-submit-btn');
         const btnText = document.getElementById('transaccion-btn-text');
-        // CAMBIO: Spinner ya no existe
-        // const btnSpinner = document.getElementById('transaccion-btn-spinner');
-
+        
+        // CAMBIO: Lógica de validación simplificada
         const grupo = grupoSelect.value;
-        const alumno = usuarioSelect.value;
         const pinceles = parseInt(cantidadInput.value, 10);
 
-        // Validación
-        if (!grupo || !alumno) {
-            statusMsg.textContent = "Debe seleccionar un grupo y un usuario.";
-            statusMsg.className = "text-sm text-center font-medium text-red-600 h-4";
-            return;
+        let nombres = [];
+        let errorValidacion = "";
+
+        // Validación de Grupo y Cantidad (común)
+        if (!grupo) {
+            errorValidacion = "Debe seleccionar un grupo.";
+        } else if (isNaN(pinceles) || pinceles === 0) {
+            errorValidacion = "La cantidad debe ser un número distinto de cero.";
         }
-        if (isNaN(pinceles) || pinceles === 0) {
-            statusMsg.textContent = "La cantidad debe ser un número distinto de cero.";
-            statusMsg.className = "text-sm text-center font-medium text-red-600 h-4";
+
+        // Validación de Nombres (depende del tipo)
+        if (!errorValidacion) {
+            // CAMBIO: Obtener nombres desde los checkboxes marcados
+            nombres = Array.from(document.querySelectorAll('#transaccion-lista-usuarios-container input[type="checkbox"]:checked'))
+                         .map(cb => cb.value);
+            
+            if (nombres.length === 0) {
+                errorValidacion = "Debe seleccionar al menos un usuario.";
+            } 
+            
+            // CAMBIO: La validación de usuarios "inválidos" ya no es necesaria,
+            // porque los checkboxes se generan desde los datos válidos.
+        }
+
+        // Mostrar error de validación si existe
+        if (errorValidacion) {
+            statusMsg.textContent = errorValidacion;
+            statusMsg.className = "text-sm text-center font-medium text-red-600 h-auto min-h-[1rem]";
             return;
         }
 
+        // --- Pasa validación, iniciar transacción ---
+
         // Estado de carga
-        statusMsg.textContent = "Procesando...";
-        statusMsg.className = "text-sm text-center font-medium text-blue-600 h-4";
+        statusMsg.textContent = `Procesando ${nombres.length} transacción(es)...`;
+        statusMsg.className = "text-sm text-center font-medium text-blue-600 h-auto min-h-[1rem]";
         
-        // CAMBIO: Mostrar spinner en el botón
         submitBtn.disabled = true;
-        btnText.textContent = 'Procesando...'; // CAMBIO: Solo cambia el texto
-        // btnSpinner.classList.remove('hidden');
+        btnText.textContent = 'Procesando...';
 
         try {
             const payload = {
                 grupo: grupo,
-                nombre: alumno, 
+                nombres: nombres, // CAMBIO: Se envía 'nombres' (array) en lugar de 'nombre'
                 cantidad: pinceles, 
                 clave: AppConfig.CLAVE_MAESTRA 
             };
@@ -106,14 +121,17 @@ const AppTransacciones = {
 
             const result = await response.json();
 
+            // CAMBIO: Manejo de respuesta (asumiendo que la API responde "Éxito" o un error)
             if (result.status === "success" || (result.message && result.message.startsWith("Éxito"))) {
-                statusMsg.textContent = "¡Transacción exitosa!";
-                statusMsg.className = "text-sm text-center font-medium text-green-600 h-4";
+                // Si la API devuelve el mensaje de éxito genérico O el mensaje descriptivo
+                const successMsg = result.message || "¡Transacción(es) exitosa(s)!";
+                statusMsg.textContent = successMsg;
+                statusMsg.className = "text-sm text-center font-medium text-green-600 h-auto min-h-[1rem]";
                 
                 // Limpiar formulario y recargar datos
                 grupoSelect.value = "";
-                usuarioSelect.innerHTML = '<option value="">Seleccione un usuario...</option>';
-                usuarioSelect.disabled = true;
+                // CAMBIO: Limpiar la lista de checkboxes
+                document.getElementById('transaccion-lista-usuarios-container').innerHTML = '<span class="text-sm text-gray-500 p-2">Seleccione un grupo...</span>';
                 cantidadInput.value = "";
                 
                 // Forzar recarga de datos para ver el cambio
@@ -122,7 +140,7 @@ const AppTransacciones = {
                 // Cerrar modal después de un momento
                 setTimeout(() => {
                     AppUI.hideModal('transaccion-modal');
-                }, 1500);
+                }, 2000); // Un poco más de tiempo para leer el mensaje de éxito
 
             } else {
                 throw new Error(result.message || "Error desconocido de la API.");
@@ -131,12 +149,11 @@ const AppTransacciones = {
         } catch (error) {
             console.error("Error en la transacción:", error);
             statusMsg.textContent = `Error: ${error.message}`;
-            statusMsg.className = "text-sm text-center font-medium text-red-600 h-4";
+            statusMsg.className = "text-sm text-center font-medium text-red-600 h-auto min-h-[1em]";
         } finally {
             // CAMBIO: Ocultar spinner en el botón
             submitBtn.disabled = false;
-            btnText.textContent = 'Realizar Transacción'; // CAMBIO: Resetea el texto
-            // btnSpinner.classList.add('hidden');
+            btnText.textContent = 'Realizar Transacción';
         }
     }
 };
@@ -168,7 +185,7 @@ const AnunciosDB = {
     ]
 };
 
-// --- MANEJO DE DATOS ---
+// --- MANEJO de datos ---
 const AppData = {
     
     formatNumber: (num) => new Intl.NumberFormat('es-DO').format(num),
@@ -346,6 +363,10 @@ const AppUI = {
         // Listener para el botón de enviar transacción
         document.getElementById('transaccion-submit-btn').addEventListener('click', AppTransacciones.realizarTransaccion);
 
+        // CAMBIO: Listeners eliminados para los radio buttons
+        // CAMBIO: Listener añadido para el botón "Seleccionar Todos"
+        document.getElementById('transaccion-select-all-btn').addEventListener('click', AppUI.toggleSelectAllUsuarios);
+
 
         // Listeners Modal Reglas
         console.log("Buscando 'reglas-btn'...");
@@ -399,16 +420,19 @@ const AppUI = {
         // NUEVO: Limpiar campos si se cierra el modal de transacciones
         if (modalId === 'transaccion-modal') {
             document.getElementById('transaccion-grupo-select').value = "";
-            const usuarioSelect = document.getElementById('transaccion-usuario-select');
-            usuarioSelect.innerHTML = '<option value="">Seleccione un usuario...</option>';
-            usuarioSelect.disabled = true;
+            // CAMBIO: Limpiar lista de checkboxes en lugar de <select> y <textarea>
+            document.getElementById('transaccion-lista-usuarios-container').innerHTML = '<span class="text-sm text-gray-500 p-2">Seleccione un grupo...</span>';
             document.getElementById('transaccion-cantidad-input').value = "";
             document.getElementById('transaccion-status-msg').textContent = "";
+            
+            // CAMBIO: Resetear el estado de "Seleccionar Todos"
+            AppState.transaccionSelectAll = false;
+            document.getElementById('transaccion-select-all-btn').textContent = "Seleccionar Todos";
+            document.getElementById('transaccion-select-all-btn').classList.add('hidden'); // Ocultarlo
             
             // CAMBIO: Resetear el spinner del botón
             document.getElementById('transaccion-submit-btn').disabled = false;
             document.getElementById('transaccion-btn-text').textContent = 'Realizar Transacción'; // CAMBIO: Resetea el texto
-            // document.getElementById('transaccion-btn-spinner').classList.add('hidden');
         }
         
         // NUEVO: Limpiar campo de clave si se cierra el modal de gestión
@@ -419,6 +443,9 @@ const AppUI = {
     },
 
     // --- NUEVAS FUNCIONES PARA EL MODAL DE TRANSACCIONES ---
+
+    // CAMBIO: Eliminada la función toggleTipoTransaccion
+
     showTransaccionModal: function() {
         if (!AppState.datosActuales) {
             alert("Los datos de los grupos aún no se han cargado. Intente de nuevo en un momento.");
@@ -437,41 +464,85 @@ const AppUI = {
             grupoSelect.appendChild(option);
         });
 
+        // CAMBIO: Resetear la lista de usuarios
+        document.getElementById('transaccion-lista-usuarios-container').innerHTML = '<span class="text-sm text-gray-500 p-2">Seleccione un grupo...</span>';
+        AppState.transaccionSelectAll = false;
+        const btnSelectAll = document.getElementById('transaccion-select-all-btn');
+        btnSelectAll.textContent = "Seleccionar Todos";
+        btnSelectAll.classList.add('hidden'); // Ocultar hasta que se seleccione grupo
+
+
         AppUI.showModal('transaccion-modal');
     },
 
     populateUsuariosTransaccion: function() {
         const grupoSelect = document.getElementById('transaccion-grupo-select');
-        const usuarioSelect = document.getElementById('transaccion-usuario-select');
+        // CAMBIO: Contenedor de lista en lugar de <select>
+        const listaContainer = document.getElementById('transaccion-lista-usuarios-container');
         const selectedGrupoNombre = grupoSelect.value;
+        const btnSelectAll = document.getElementById('transaccion-select-all-btn');
 
-        usuarioSelect.innerHTML = '<option value="">Cargando...</option>'; // Placeholder
+        // CAMBIO: Lógica de radio buttons eliminada
+
+        listaContainer.innerHTML = '<span class="text-sm text-gray-500 p-2">Cargando...</span>'; // Placeholder
 
         if (!selectedGrupoNombre) {
-            usuarioSelect.innerHTML = '<option value="">Seleccione un usuario...</option>';
-            usuarioSelect.disabled = true;
+            listaContainer.innerHTML = '<span class="text-sm text-gray-500 p-2">Seleccione un grupo...</span>';
+            btnSelectAll.classList.add('hidden'); // Ocultar botón si no hay grupo
             return;
         }
 
         const grupo = AppState.datosActuales.find(g => g.nombre === selectedGrupoNombre);
+        
+        AppState.transaccionSelectAll = false; // Resetear estado
+        btnSelectAll.textContent = "Seleccionar Todos";
 
-        if (grupo && grupo.usuarios) {
-            usuarioSelect.innerHTML = '<option value="">Seleccione un usuario...</option>';
+
+        if (grupo && grupo.usuarios && grupo.usuarios.length > 0) {
+            listaContainer.innerHTML = ''; // Limpiar "Cargando..."
+            btnSelectAll.classList.remove('hidden'); // Mostrar botón
             
             // Ordenar usuarios alfabéticamente para facilitar la búsqueda
             const usuariosOrdenados = [...grupo.usuarios].sort((a, b) => a.nombre.localeCompare(b.nombre));
 
+            // CAMBIO: Crear checkboxes en lugar de <options>
             usuariosOrdenados.forEach(usuario => {
-                const option = document.createElement('option');
-                option.value = usuario.nombre;
-                option.textContent = usuario.nombre;
-                usuarioSelect.appendChild(option);
+                const div = document.createElement('div');
+                div.className = "flex items-center p-1 rounded hover:bg-gray-200";
+                
+                const input = document.createElement('input');
+                input.type = "checkbox";
+                input.id = `user-cb-${usuario.nombre}`;
+                input.value = usuario.nombre;
+                input.className = "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500";
+
+                const label = document.createElement('label');
+                label.htmlFor = input.id;
+                label.textContent = usuario.nombre;
+                label.className = "ml-2 block text-sm text-gray-900 cursor-pointer flex-1";
+
+                div.appendChild(input);
+                div.appendChild(label);
+                listaContainer.appendChild(div);
             });
-            usuarioSelect.disabled = false;
         } else {
-            usuarioSelect.innerHTML = '<option value="">No hay usuarios en este grupo</option>';
-            usuarioSelect.disabled = true;
+            listaContainer.innerHTML = '<span class="text-sm text-gray-500 p-2">No hay usuarios en este grupo.</span>';
+            btnSelectAll.classList.add('hidden'); // Ocultar si no hay usuarios
         }
+    },
+    
+    // NUEVO: Función para el botón "Seleccionar Todos"
+    toggleSelectAllUsuarios: function() {
+        const checkboxes = document.querySelectorAll('#transaccion-lista-usuarios-container input[type="checkbox"]');
+        if (checkboxes.length === 0) return;
+
+        AppState.transaccionSelectAll = !AppState.transaccionSelectAll; // Invertir estado
+        
+        checkboxes.forEach(cb => {
+            cb.checked = AppState.transaccionSelectAll;
+        });
+
+        document.getElementById('transaccion-select-all-btn').textContent = AppState.transaccionSelectAll ? "Deseleccionar Todos" : "Seleccionar Todos";
     },
     // --- FIN DE NUEVAS FUNCIONES ---
 
