@@ -206,10 +206,21 @@ const AppData = {
 const AppUI = {
     
     init: function() {
+        console.log("AppUI.init() llamado."); // Log de inicio
+
         // Listeners Modales
-        document.getElementById('gestion-btn').addEventListener('click', () => AppUI.showModal('gestion-modal'));
-        document.getElementById('modal-cancel').addEventListener('click', () => AppUI.hideModal('gestion-modal'));
-        document.getElementById('modal-submit').addEventListener('click', AppAuth.verificarClave);
+        const gestionBtn = document.getElementById('gestion-btn');
+        console.log("Buscando 'gestion-btn':", gestionBtn); // Log de diagnóstico
+        gestionBtn.addEventListener('click', () => AppUI.showModal('gestion-modal'));
+        
+        const modalCancel = document.getElementById('modal-cancel');
+        console.log("Buscando 'modal-cancel':", modalCancel); // Log de diagnóstico
+        modalCancel.addEventListener('click', () => AppUI.hideModal('gestion-modal'));
+        
+        const modalSubmit = document.getElementById('modal-submit');
+        console.log("Buscando 'modal-submit':", modalSubmit); // Log de diagnóstico
+        modalSubmit.addEventListener('click', AppAuth.verificarClave);
+        
         document.getElementById('gestion-modal').addEventListener('click', (e) => {
             if (e.target.id === 'gestion-modal') AppUI.hideModal('gestion-modal');
         });
@@ -218,14 +229,22 @@ const AppUI = {
         });
 
         // Listeners Modal Reglas
-        document.getElementById('reglas-btn').addEventListener('click', () => AppUI.showModal('reglas-modal'));
-        document.getElementById('reglas-modal-close').addEventListener('click', () => AppUI.hideModal('reglas-modal'));
+        const reglasBtn = document.getElementById('reglas-btn');
+        console.log("Buscando 'reglas-btn':", reglasBtn); // Log de diagnóstico
+        reglasBtn.addEventListener('click', () => AppUI.showModal('reglas-modal'));
+        
+        const reglasModalClose = document.getElementById('reglas-modal-close');
+        console.log("Buscando 'reglas-modal-close':", reglasModalClose); // Log de diagnóstico
+        reglasModalClose.addEventListener('click', () => AppUI.hideModal('reglas-modal'));
+        
         document.getElementById('reglas-modal').addEventListener('click', (e) => {
             if (e.target.id === 'reglas-modal') AppUI.hideModal('reglas-modal');
         });
 
         // Listener Sidebar
-        document.getElementById('toggle-sidebar-btn').addEventListener('click', AppUI.toggleSidebar);
+        const toggleSidebarBtn = document.getElementById('toggle-sidebar-btn');
+        console.log("Buscando 'toggle-sidebar-btn':", toggleSidebarBtn); // Log de diagnóstico
+        toggleSidebarBtn.addEventListener('click', AppUI.toggleSidebar);
 
         // Carga inicial
         AppData.cargarDatos(false);
@@ -641,8 +660,9 @@ const AppUI = {
 // --- INICIALIZACIÓN ---
 // Hacer AppUI accesible globalmente para los `onclick` en el HTML
 window.AppUI = AppUI;
-// Esperar a que el DOM esté completamente cargado antes de inicializar
-document.addEventListener('DOMContentLoaded', (event) => {
+// Esperar a que TODA la ventana (incluyendo DOM) esté cargada
+window.onload = () => {
+    console.log("window.onload disparado. Iniciando AppUI.init()..."); // Log de diagnóstico
     AppUI.init();
-});
+};
 
