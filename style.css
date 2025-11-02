@@ -58,5 +58,25 @@ scrollbar-width: none;  /* Firefox */
 }
 .active-tab {
     border-bottom-color: #3b82f6 !important; /* blue-600 */
-    color: #3b82f6 !impor
+    color: #3b82f6 !important;
+}
+.tab-content {
+    /* CAMBIO v0.3.1: Aumentado a 540px para eliminar 100% el "jiggle" */
+    min-height: 540px; 
+}
+
+/* CAMBIO v0.2.4: Estilos para el contenedor de resultados de búsqueda */
+.search-results-container {
+    /* Estilos para el dropdown de autocomplete */
+    position: absolute;
+    z-index: 10;
+    width: 100%;
+    background-color: white;
+    border: 1px solid #d1d5db; /* border-gray-300 */
+    border-radius: 0.5rem; /* rounded-lg */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+    margin-top: 0.25rem; /* mt-1 */
+    max-height: 15rem; /* max-h-60 */
+    overflow-y: auto;
+}
 
