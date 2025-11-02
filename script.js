@@ -24,7 +24,8 @@ const AppState = {
     isOffline: false,
     selectedGrupo: null, // Para rastrear el grupo seleccionado
     isSidebarOpen: false, // Inicia oculta por defecto
-    transaccionSelectAll: false, // NUEVO: Estado para el botón "Seleccionar Todos"
+    // CAMBIO: Objeto para rastrear el estado "Select All" por grupo
+    transaccionSelectAll: {}, 
 };
 
 // --- AUTENTICACIÓN ---
@@ -52,39 +53,47 @@ const AppAuth = {
 // --- NUEVO: Objeto para manejar transacciones ---
 const AppTransacciones = {
     realizarTransaccion: async function() {
-        const grupoSelect = document.getElementById('transaccion-grupo-select');
+        // CAMBIO: Ya no se usa grupoSelect, se usa la lista de checkboxes
         const cantidadInput = document.getElementById('transaccion-cantidad-input');
         const statusMsg = document.getElementById('transaccion-status-msg');
         const submitBtn = document.getElementById('transaccion-submit-btn');
         const btnText = document.getElementById('transaccion-btn-text');
         
-        // CAMBIO: Lógica de validación simplificada
-        const grupo = grupoSelect.value;
         const pinceles = parseInt(cantidadInput.value, 10);
 
-        let nombres = [];
         let errorValidacion = "";
 
-        // Validación de Grupo y Cantidad (común)
-        if (!grupo) {
-            errorValidacion = "Debe seleccionar un grupo.";
-        } else if (isNaN(pinceles) || pinceles === 0) {
+        // Validación de Cantidad
+        if (isNaN(pinceles) || pinceles === 0) {
             errorValidacion = "La cantidad debe ser un número distinto de cero.";
         }
 
-        // Validación de Nombres (depende del tipo)
-        if (!errorValidacion) {
-            // CAMBIO: Obtener nombres desde los checkboxes marcados
-            nombres = Array.from(document.querySelectorAll('#transaccion-lista-usuarios-container input[type="checkbox"]:checked'))
-                         .map(cb => cb.value);
-            
-            if (nombres.length === 0) {
-                errorValidacion = "Debe seleccionar al menos un usuario.";
-            } 
-            
-            // CAMBIO: La validación de usuarios "inválidos" ya no es necesaria,
-            // porque los checkboxes se generan desde los datos válidos.
+        // CAMBIO: Nueva lógica de validación y recolección de datos
+        // 1. Agrupar selecciones
+        const groupedSelections = {};
+        const checkedUsers = document.querySelectorAll('#transaccion-lista-usuarios-container input[type="checkbox"]:checked');
+        
+        if (!errorValidacion && checkedUsers.length === 0) {
+            errorValidacion = "Debe seleccionar al menos un usuario.";
+        } else {
+             checkedUsers.forEach(cb => {
+                const nombre = cb.value;
+                const grupo = cb.dataset.grupo; // <-- El grupo se obtiene del checkbox del usuario
+
+                if (!groupedSelections[grupo]) {
+                    groupedSelections[grupo] = [];
+                }
+                groupedSelections[grupo].push(nombre);
+            });
         }
+        
+        // 2. Convertir a formato de array de transacciones
+        const transacciones = Object.keys(groupedSelections).map(grupo => {
+            return {
+                grupo: grupo,
+                nombres: groupedSelections[grupo]
+            };
+        });
 
         // Mostrar error de validación si existe
         if (errorValidacion) {
@@ -96,18 +105,18 @@ const AppTransacciones = {
         // --- Pasa validación, iniciar transacción ---
 
         // Estado de carga
-        statusMsg.textContent = `Procesando ${nombres.length} transacción(es)...`;
+        statusMsg.textContent = `Procesando ${checkedUsers.length} transacción(es) en ${transacciones.length} grupo(s)...`;
         statusMsg.className = "text-sm text-center font-medium text-blue-600 h-auto min-h-[1rem]";
         
         submitBtn.disabled = true;
         btnText.textContent = 'Procesando...';
 
         try {
+            // CAMBIO: Nuevo formato de payload
             const payload = {
-                grupo: grupo,
-                nombres: nombres, // CAMBIO: Se envía 'nombres' (array) en lugar de 'nombre'
+                clave: AppConfig.CLAVE_MAESTRA,
                 cantidad: pinceles, 
-                clave: AppConfig.CLAVE_MAESTRA 
+                transacciones: transacciones // <-- Array de transacciones
             };
 
             const response = await fetch(AppConfig.TRANSACCION_API_URL, {
@@ -121,26 +130,23 @@ const AppTransacciones = {
 
             const result = await response.json();
 
-            // CAMBIO: Manejo de respuesta (asumiendo que la API responde "Éxito" o un error)
             if (result.status === "success" || (result.message && result.message.startsWith("Éxito"))) {
-                // Si la API devuelve el mensaje de éxito genérico O el mensaje descriptivo
                 const successMsg = result.message || "¡Transacción(es) exitosa(s)!";
                 statusMsg.textContent = successMsg;
                 statusMsg.className = "text-sm text-center font-medium text-green-600 h-auto min-h-[1rem]";
                 
                 // Limpiar formulario y recargar datos
-                grupoSelect.value = "";
-                // CAMBIO: Limpiar la lista de checkboxes
+                // CAMBIO: Limpiar ambas listas
+                document.getElementById('transaccion-lista-grupos-container').innerHTML = '<span class="text-sm text-gray-500 p-2">Cargando grupos...</span>';
                 document.getElementById('transaccion-lista-usuarios-container').innerHTML = '<span class="text-sm text-gray-500 p-2">Seleccione un grupo...</span>';
                 cantidadInput.value = "";
                 
                 // Forzar recarga de datos para ver el cambio
                 AppData.cargarDatos(false); 
 
-                // Cerrar modal después de un momento
                 setTimeout(() => {
                     AppUI.hideModal('transaccion-modal');
-                }, 2000); // Un poco más de tiempo para leer el mensaje de éxito
+                }, 2000); 
 
             } else {
                 throw new Error(result.message || "Error desconocido de la API.");
@@ -151,7 +157,6 @@ const AppTransacciones = {
             statusMsg.textContent = `Error: ${error.message}`;
             statusMsg.className = "text-sm text-center font-medium text-red-600 h-auto min-h-[1em]";
         } finally {
-            // CAMBIO: Ocultar spinner en el botón
             submitBtn.disabled = false;
             btnText.textContent = 'Realizar Transacción';
         }
@@ -328,15 +333,14 @@ const AppData = {
 // --- MANEJO DE LA INTERFAZ (UI) ---
 const AppUI = {
     
-    // --- CAMBIO: Añadidos console.log para depurar el error de carga ---
     init: function() {
+        // ... (Listeners de gestión, reglas, anuncios y sidebar se mantienen igual) ...
         console.log("AppUI.init() comenzando.");
         
         // Listeners Modales de Gestión (Clave)
         console.log("Buscando 'gestion-btn'...");
         const gestionBtn = document.getElementById('gestion-btn');
         console.log("Buscando 'gestion-btn':", gestionBtn);
-        // El error ocurría aquí si gestionBtn era null
         gestionBtn.addEventListener('click', () => AppUI.showModal('gestion-modal'));
 
         console.log("Buscando 'modal-cancel'...");
@@ -358,15 +362,15 @@ const AppUI = {
         document.getElementById('transaccion-modal').addEventListener('click', (e) => {
             if (e.target.id === 'transaccion-modal') AppUI.hideModal('transaccion-modal');
         });
-        // Listener para el <select> de grupos
-        document.getElementById('transaccion-grupo-select').addEventListener('change', AppUI.populateUsuariosTransaccion);
+        
+        // CAMBIO: El listener de 'transaccion-grupo-select' se elimina porque ya no existe.
+        // El nuevo listener se añade dinámicamente en showTransaccionModal.
+        
         // Listener para el botón de enviar transacción
         document.getElementById('transaccion-submit-btn').addEventListener('click', AppTransacciones.realizarTransaccion);
 
-        // CAMBIO: Listeners eliminados para los radio buttons
-        // CAMBIO: Listener añadido para el botón "Seleccionar Todos"
-        document.getElementById('transaccion-select-all-btn').addEventListener('click', AppUI.toggleSelectAllUsuarios);
-
+        // CAMBIO: El listener de 'transaccion-select-all-btn' se elimina
+        // Se añadirá dinámicamente en populateUsuariosTransaccion.
 
         // Listeners Modal Reglas
         console.log("Buscando 'reglas-btn'...");
@@ -419,20 +423,18 @@ const AppUI = {
 
         // NUEVO: Limpiar campos si se cierra el modal de transacciones
         if (modalId === 'transaccion-modal') {
-            document.getElementById('transaccion-grupo-select').value = "";
-            // CAMBIO: Limpiar lista de checkboxes en lugar de <select> y <textarea>
+            // CAMBIO: Limpiar ambas listas de checkboxes
+            document.getElementById('transaccion-lista-grupos-container').innerHTML = '<span class="text-sm text-gray-500 p-2">Cargando grupos...</span>';
             document.getElementById('transaccion-lista-usuarios-container').innerHTML = '<span class="text-sm text-gray-500 p-2">Seleccione un grupo...</span>';
             document.getElementById('transaccion-cantidad-input').value = "";
             document.getElementById('transaccion-status-msg').textContent = "";
             
             // CAMBIO: Resetear el estado de "Seleccionar Todos"
-            AppState.transaccionSelectAll = false;
-            document.getElementById('transaccion-select-all-btn').textContent = "Seleccionar Todos";
-            document.getElementById('transaccion-select-all-btn').classList.add('hidden'); // Ocultarlo
+            AppState.transaccionSelectAll = {}; // Resetear objeto
             
             // CAMBIO: Resetear el spinner del botón
             document.getElementById('transaccion-submit-btn').disabled = false;
-            document.getElementById('transaccion-btn-text').textContent = 'Realizar Transacción'; // CAMBIO: Resetea el texto
+            document.getElementById('transaccion-btn-text').textContent = 'Realizar Transacción'; 
         }
         
         // NUEVO: Limpiar campo de clave si se cierra el modal de gestión
@@ -444,105 +446,136 @@ const AppUI = {
 
     // --- NUEVAS FUNCIONES PARA EL MODAL DE TRANSACCIONES ---
 
-    // CAMBIO: Eliminada la función toggleTipoTransaccion
-
     showTransaccionModal: function() {
         if (!AppState.datosActuales) {
             alert("Los datos de los grupos aún no se han cargado. Intente de nuevo en un momento.");
             return;
         }
         
-        const grupoSelect = document.getElementById('transaccion-grupo-select');
-        grupoSelect.innerHTML = '<option value="">Seleccione un grupo...</option>'; // Resetear
+        // CAMBIO: Poblar la lista de checkboxes de GRUPOS
+        const grupoContainer = document.getElementById('transaccion-lista-grupos-container');
+        grupoContainer.innerHTML = ''; // Resetear
 
-        // Poblar el dropdown de grupos
+        // Poblar la lista de grupos
         AppState.datosActuales.forEach(grupo => {
-            // Permitir transacciones a todos los grupos, incluida Cicla
-            const option = document.createElement('option');
-            option.value = grupo.nombre;
-            option.textContent = grupo.nombre;
-            grupoSelect.appendChild(option);
+            const div = document.createElement('div');
+            div.className = "flex items-center p-1 rounded hover:bg-gray-200";
+            
+            const input = document.createElement('input');
+            input.type = "checkbox";
+            input.id = `group-cb-${grupo.nombre}`;
+            input.value = grupo.nombre;
+            input.className = "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 group-checkbox";
+            // Añadir listener que actualiza la lista de usuarios
+            input.addEventListener('change', AppUI.populateUsuariosTransaccion);
+
+            const label = document.createElement('label');
+            label.htmlFor = input.id;
+            label.textContent = grupo.nombre;
+            label.className = "ml-2 block text-sm text-gray-900 cursor-pointer flex-1";
+
+            div.appendChild(input);
+            div.appendChild(label);
+            grupoContainer.appendChild(div);
         });
 
         // CAMBIO: Resetear la lista de usuarios
         document.getElementById('transaccion-lista-usuarios-container').innerHTML = '<span class="text-sm text-gray-500 p-2">Seleccione un grupo...</span>';
-        AppState.transaccionSelectAll = false;
-        const btnSelectAll = document.getElementById('transaccion-select-all-btn');
-        btnSelectAll.textContent = "Seleccionar Todos";
-        btnSelectAll.classList.add('hidden'); // Ocultar hasta que se seleccione grupo
+        AppState.transaccionSelectAll = {}; // Resetear estado
 
 
         AppUI.showModal('transaccion-modal');
     },
 
+    // CAMBIO: Esta función AHORA se activa cuando CUALQUIER checkbox de grupo cambia
     populateUsuariosTransaccion: function() {
-        const grupoSelect = document.getElementById('transaccion-grupo-select');
-        // CAMBIO: Contenedor de lista en lugar de <select>
+        // 1. Encontrar todos los grupos seleccionados
+        const checkedGroups = document.querySelectorAll('#transaccion-lista-grupos-container input[type="checkbox"]:checked');
+        const selectedGroupNames = Array.from(checkedGroups).map(cb => cb.value);
+        
         const listaContainer = document.getElementById('transaccion-lista-usuarios-container');
-        const selectedGrupoNombre = grupoSelect.value;
-        const btnSelectAll = document.getElementById('transaccion-select-all-btn');
+        listaContainer.innerHTML = ''; // Limpiar lista de usuarios
 
-        // CAMBIO: Lógica de radio buttons eliminada
-
-        listaContainer.innerHTML = '<span class="text-sm text-gray-500 p-2">Cargando...</span>'; // Placeholder
-
-        if (!selectedGrupoNombre) {
+        if (selectedGroupNames.length === 0) {
             listaContainer.innerHTML = '<span class="text-sm text-gray-500 p-2">Seleccione un grupo...</span>';
-            btnSelectAll.classList.add('hidden'); // Ocultar botón si no hay grupo
             return;
         }
 
-        const grupo = AppState.datosActuales.find(g => g.nombre === selectedGrupoNombre);
-        
-        AppState.transaccionSelectAll = false; // Resetear estado
-        btnSelectAll.textContent = "Seleccionar Todos";
+        // 2. Iterar sobre los nombres de grupos seleccionados y construir la lista de usuarios
+        selectedGroupNames.forEach(grupoNombre => {
+            const grupo = AppState.datosActuales.find(g => g.nombre === grupoNombre);
 
-
-        if (grupo && grupo.usuarios && grupo.usuarios.length > 0) {
-            listaContainer.innerHTML = ''; // Limpiar "Cargando..."
-            btnSelectAll.classList.remove('hidden'); // Mostrar botón
-            
-            // Ordenar usuarios alfabéticamente para facilitar la búsqueda
-            const usuariosOrdenados = [...grupo.usuarios].sort((a, b) => a.nombre.localeCompare(b.nombre));
-
-            // CAMBIO: Crear checkboxes en lugar de <options>
-            usuariosOrdenados.forEach(usuario => {
-                const div = document.createElement('div');
-                div.className = "flex items-center p-1 rounded hover:bg-gray-200";
+            if (grupo && grupo.usuarios && grupo.usuarios.length > 0) {
+                // Añadir un encabezado de grupo
+                const headerDiv = document.createElement('div');
+                headerDiv.className = "flex justify-between items-center bg-gray-200 p-2 mt-2 sticky top-0";
+                headerDiv.innerHTML = `<span class="text-sm font-semibold text-gray-700">${grupo.nombre}</span>`;
                 
-                const input = document.createElement('input');
-                input.type = "checkbox";
-                input.id = `user-cb-${usuario.nombre}`;
-                input.value = usuario.nombre;
-                input.className = "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500";
+                // Añadir botón "Seleccionar Todos" para ESTE grupo
+                const btnSelectAll = document.createElement('button');
+                btnSelectAll.textContent = "Todos";
+                btnSelectAll.dataset.grupo = grupo.nombre; // Guardar el grupo al que pertenece
+                btnSelectAll.className = "text-xs font-medium text-blue-600 hover:text-blue-800 select-all-users-btn";
+                // Inicializar estado
+                AppState.transaccionSelectAll[grupo.nombre] = false; 
+                btnSelectAll.addEventListener('click', AppUI.toggleSelectAllUsuarios);
+                
+                headerDiv.appendChild(btnSelectAll);
+                listaContainer.appendChild(headerDiv);
 
-                const label = document.createElement('label');
-                label.htmlFor = input.id;
-                label.textContent = usuario.nombre;
-                label.className = "ml-2 block text-sm text-gray-900 cursor-pointer flex-1";
+                // Ordenar usuarios alfabéticamente
+                const usuariosOrdenados = [...grupo.usuarios].sort((a, b) => a.nombre.localeCompare(b.nombre));
 
-                div.appendChild(input);
-                div.appendChild(label);
-                listaContainer.appendChild(div);
-            });
-        } else {
-            listaContainer.innerHTML = '<span class="text-sm text-gray-500 p-2">No hay usuarios en este grupo.</span>';
-            btnSelectAll.classList.add('hidden'); // Ocultar si no hay usuarios
+                // Añadir checkboxes de usuario
+                usuariosOrdenados.forEach(usuario => {
+                    const div = document.createElement('div');
+                    div.className = "flex items-center p-1 rounded hover:bg-gray-200 ml-2"; // Añadido ml-2 para indentación
+                    
+                    const input = document.createElement('input');
+                    input.type = "checkbox";
+                    input.id = `user-cb-${grupo.nombre}-${usuario.nombre}`; // ID único
+                    input.value = usuario.nombre;
+                    input.dataset.grupo = grupo.nombre; // ¡CRÍTICO! Almacena el grupo
+                    input.className = "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 user-checkbox";
+                    input.dataset.checkboxGrupo = grupo.nombre; // Para el 'Select All'
+
+                    const label = document.createElement('label');
+                    label.htmlFor = input.id;
+                    label.textContent = usuario.nombre;
+                    label.className = "ml-2 block text-sm text-gray-900 cursor-pointer flex-1";
+
+                    div.appendChild(input);
+                    div.appendChild(label);
+                    listaContainer.appendChild(div);
+                });
+            }
+        });
+        
+        if (listaContainer.innerHTML === '') {
+             listaContainer.innerHTML = '<span class="text-sm text-gray-500 p-2">Los grupos seleccionados no tienen usuarios.</span>';
         }
     },
     
-    // NUEVO: Función para el botón "Seleccionar Todos"
-    toggleSelectAllUsuarios: function() {
-        const checkboxes = document.querySelectorAll('#transaccion-lista-usuarios-container input[type="checkbox"]');
-        if (checkboxes.length === 0) return;
+    // CAMBIO: Función actualizada para manejar el 'Select All' POR GRUPO
+    toggleSelectAllUsuarios: function(event) {
+        event.preventDefault(); // Prevenir que el botón envíe el formulario
+        const btn = event.target;
+        const grupoNombre = btn.dataset.grupo;
+        if (!grupoNombre) return;
 
-        AppState.transaccionSelectAll = !AppState.transaccionSelectAll; // Invertir estado
+        // Invertir estado para este grupo específico
+        AppState.transaccionSelectAll[grupoNombre] = !AppState.transaccionSelectAll[grupoNombre];
+        
+        const isChecked = AppState.transaccionSelectAll[grupoNombre];
+
+        // Encontrar todos los checkboxes de usuario que pertenecen a ESTE grupo
+        const checkboxes = document.querySelectorAll(`#transaccion-lista-usuarios-container input[data-checkbox-grupo="${grupoNombre}"]`);
         
         checkboxes.forEach(cb => {
-            cb.checked = AppState.transaccionSelectAll;
+            cb.checked = isChecked;
         });
 
-        document.getElementById('transaccion-select-all-btn').textContent = AppState.transaccionSelectAll ? "Deseleccionar Todos" : "Seleccionar Todos";
+        btn.textContent = isChecked ? "Ninguno" : "Todos";
     },
     // --- FIN DE NUEVAS FUNCIONES ---
 
@@ -597,7 +630,7 @@ const AppUI = {
         AppState.isSidebarOpen = !AppState.isSidebarOpen; 
 
         if (AppState.isSidebarOpen) {
-            sidebar.classList.remove('-translate-x-full');
+            sidebar.classList.remove('-translatex-full');
             btn.innerHTML = '<span class="font-bold text-lg">«</span>';
         } else {
             sidebar.classList.add('-translate-x-full');
@@ -1062,4 +1095,3 @@ window.onload = function() {
     console.log("window.onload disparado. El DOM está listo. Iniciando AppUI...");
     AppUI.init();
 };
-
