@@ -575,18 +575,19 @@ const AppUI = {
             // Definir color de pinceles para la tabla
             const pincelesColor = student.pinceles <= 0 ? 'text-red-600' : 'text-gray-900'; // 0 también es riesgo
 
+            // CAMBIO: Añadido whitespace-nowrap a las celdas
             return `
                 <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-2 text-sm text-gray-700 font-medium">${student.nombre}</td>
-                    <td class="px-4 py-2 text-sm text-gray-500">${grupoNombre}</td>
-                    <td class="px-4 py-2 text-sm font-semibold ${pincelesColor} text-right">${pinceles} ℙ</td>
+                    <td class="px-4 py-2 text-sm text-gray-700 font-medium truncate">${student.nombre}</td>
+                    <td class="px-4 py-2 text-sm text-gray-500 whitespace-nowrap">${grupoNombre}</td>
+                    <td class="px-4 py-2 text-sm font-semibold ${pincelesColor} text-right whitespace-nowrap">${pinceles} ℙ</td>
                 </tr>
             `;
         }).join('');
     },
     // --- FIN CAMBIO DE LÓGICA ---
     
-    // --- NUEVA FUNCIÓN: Módulo de Estadísticas Rápidas ---
+    // --- NUEVA FUNCIÓN: Módulo de Estadísticas Rápidas (CAMBIO: Añadidas 2 nuevas stats) ---
     actualizarEstadisticasRapidas: function(grupos) {
         const statsList = document.getElementById('quick-stats-list');
         if (!statsList) return;
@@ -598,34 +599,44 @@ const AppUI = {
         const totalEnCicla = ciclaGrupo ? ciclaGrupo.usuarios.length : 0;
         const totalBoveda = grupos.reduce((acc, g) => acc + g.total, 0);
         const promedioPinceles = totalAlumnos > 0 ? (totalBoveda / totalAlumnos) : 0;
+
+        // NUEVO: Calcular pinceles positivos y negativos
+        const pincelesPositivos = allStudents.reduce((sum, user) => sum + user.pinceles, 0);
+        const pincelesEnCicla = ciclaGrupo ? ciclaGrupo.total : 0;
         
-        const createStat = (label, value) => `
-            <div class="flex justify-between items-baseline text-sm py-1 border-b border-gray-100">
+        const createStat = (label, value, valueClass = 'text-gray-900') => `
+            <div class="flex justify-between items-baseline text-sm py-2 border-b border-gray-100">
                 <span class="text-gray-600">${label}:</span>
-                <span class="font-semibold text-gray-900">${value}</span>
+                <span class="font-semibold ${valueClass}">${value}</span>
             </div>
         `;
 
         statsList.innerHTML = `
             ${createStat('Alumnos Totales', totalAlumnos)}
-            ${createStat('Alumnos en Cicla', totalEnCicla)}
-            ${createStat('Pincel Promedio', `${AppData.formatNumber(promedioPinceles.toFixed(0))} ℙ`)}
+            ${createStat('Alumnos en Cicla', totalEnCicla, 'text-red-600')}
             ${createStat('Grupos Activos', grupos.length)}
+            ${createStat('Pincel Promedio', `${AppData.formatNumber(promedioPinceles.toFixed(0))} ℙ`)}
+            ${createStat('Pinceles Positivos', `${AppData.formatNumber(pincelesPositivos)} ℙ`, 'text-green-600')}
+            ${createStat('Pinceles en Cicla', `${AppData.formatNumber(pincelesEnCicla)} ℙ`, 'text-red-600')}
         `;
     },
 
-    // --- INICIO CAMBIO: Función para Anuncios Dinámicos (Uso de flexbox para mejor distribución horizontal) ---
+    // --- INICIO CAMBIO: Función para Anuncios Dinámicos (CAMBIO: Muestra 6 anuncios) ---
     actualizarAnuncios: function() {
         const lista = document.getElementById('anuncios-lista');
         
         const getRandomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
+        const getUniqueRandomItems = (arr, num) => {
+            const shuffled = [...arr].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, num);
+        };
 
-        // Nota: Mantenemos 4 elementos en la lista (AVISO, NUEVO, CONSEJO, ALERTA)
+        // CAMBIO: Lógica para mostrar 6 anuncios (2 Aviso, 2 Nuevo, 1 Consejo, 1 Alerta)
         const anuncios = [
-            { tipo: 'AVISO', texto: getRandomItem(AnunciosDB['AVISO']), bg: 'bg-gray-100', text: 'text-gray-700' },
-            { tipo: 'NUEVO', texto: getRandomItem(AnunciosDB['NUEVO']), bg: 'bg-blue-100', text: 'text-blue-700' },
-            { tipo: 'CONSEJO', texto: getRandomItem(AnunciosDB['CONSEJO']), bg: 'bg-green-100', text: 'text-green-700' },
-            { tipo: 'ALERTA', texto: getRandomItem(AnunciosDB['ALERTA']), bg: 'bg-red-100', text: 'text-red-700' }
+            ...getUniqueRandomItems(AnunciosDB['AVISO'], 2).map(texto => ({ tipo: 'AVISO', texto, bg: 'bg-gray-100', text: 'text-gray-700' })),
+            ...getUniqueRandomItems(AnunciosDB['NUEVO'], 2).map(texto => ({ tipo: 'NUEVO', texto, bg: 'bg-blue-100', text: 'text-blue-700' })),
+            ...getUniqueRandomItems(AnunciosDB['CONSEJO'], 1).map(texto => ({ tipo: 'CONSEJO', texto, bg: 'bg-green-100', text: 'text-green-700' })),
+            ...getUniqueRandomItems(AnunciosDB['ALERTA'], 1).map(texto => ({ tipo: 'ALERTA', texto, bg: 'bg-red-100', text: 'text-red-700' }))
         ];
 
         // Usamos una estructura más clara y compacta para el elemento de lista
