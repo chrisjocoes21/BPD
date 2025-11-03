@@ -12,11 +12,14 @@ const AppConfig = {
     
     // CAMBIO v0.3.0: Versión y Estado de la Aplicación (Nueva función P2P)
     APP_STATUS: 'Pre-Alfa', 
-    // CAMBIO v0.3.7: UI Top 3 (Tooltip) y Lógica de Capital
-    APP_VERSION: 'v0.3.7', 
+    // CAMBIO v0.3.9: Lógica Top 3 (Fix), Tooltip CSS, Impuesto 5% Depósitos
+    APP_VERSION: 'v0.3.9', 
     
     // CAMBIO v0.3.0: Impuesto P2P (debe coincidir con el Backend)
     IMPUESTO_P2P_TASA: 0.10, // 10%
+    
+    // CAMBIO v0.3.9: Nueva tasa de impuesto sobre intereses de depósitos
+    IMPUESTO_DEPOSITO_TASA: 0.05, // 5%
 };
 
 // --- ESTADO DE LA APLICACIÓN ---
@@ -824,7 +827,18 @@ const AppUI = {
         
         Object.keys(paquetes).forEach(tipo => {
             const pkg = paquetes[tipo];
-            const totalARecibir = pkg.monto * (1 + pkg.interes / 100);
+            
+            // ===================================================================
+            // INICIO DE LA MODIFICACIÓN (v0.3.9): Lógica de Impuesto 5%
+            // ===================================================================
+            const interesBruto = pkg.monto * (pkg.interes / 100);
+            const impuesto = Math.ceil(interesBruto * AppConfig.IMPUESTO_DEPOSITO_TASA); // 5%
+            const interesNeto = interesBruto - impuesto;
+            const totalARecibirNeto = pkg.monto + interesNeto;
+            // ===================================================================
+            // FIN DE LA MODIFICACIÓN (v0.3.9)
+            // ===================================================================
+
             
             // Lógica de elegibilidad del frontend
             let isEligible = student.pinceles >= pkg.monto;
@@ -842,7 +856,14 @@ const AppUI = {
                 <div class="flex justify-between items-center p-3 border-b border-green-100">
                     <div>
                         <span class="font-semibold text-gray-800">${pkg.label} (${AppFormat.formatNumber(pkg.monto)} ℙ)</span>
-                        <span class="text-xs text-gray-500 block">Tasa: ${pkg.interes}% (${pkg.plazo} días). Recibe: ${AppFormat.formatNumber(totalARecibir)} ℙ.</span>
+                        
+                        <!-- TEXTO MODIFICADO (v0.3.9) -->
+                        <span class="text-xs text-gray-500 block">
+                            Recibe: <strong>${AppFormat.formatNumber(totalARecibirNeto)} ℙ</strong> 
+                            (Tasa ${pkg.interes}% - Imp. ${AppFormat.formatNumber(impuesto)} ℙ)
+                        </span>
+                        <!-- FIN DE LA MODIFICACIÓN -->
+
                     </div>
                     <button onclick="${action}" class="px-3 py-1 text-xs font-medium text-white rounded-lg transition-colors ${buttonClass}" ${buttonDisabled}>
                         Depositar ${isEligible ? '' : eligibilityMessage}
@@ -1042,7 +1063,7 @@ const AppUI = {
         `;
         
         // ===================================================================
-        // INICIO DE LA MODIFICACIÓN (v0.3.7): Lógica de "Alumnos Destacados"
+        // INICIO DE LA MODIFICACIÓN (v0.3.9): Lógica "Alumnos Destacados"
         // ===================================================================
         
         // Tarjetas Top 3 Alumnos (CON LÓGICA DE DEPÓSITOS)
@@ -1056,7 +1077,12 @@ const AppUI = {
             // Calcular el total invertido para este alumno
             const totalInvertido = depositosActivos
                 .filter(deposito => deposito.alumno === student.nombre)
-                .reduce((sum, deposito) => sum + (deposito.monto || 0), 0); // 'monto' es el capital invertido
+                .reduce((sum, deposito) => {
+                    // **FIX (v0.3.9):** Convertir monto (que puede ser "150.000") a número
+                    const montoStr = String(deposito.monto || '0');
+                    const montoNumerico = parseInt(montoStr.replace(/[^0-9]/g, ''), 10) || 0;
+                    return sum + montoNumerico;
+                }, 0);
 
             const capitalTotal = student.pinceles + totalInvertido;
 
@@ -1078,8 +1104,12 @@ const AppUI = {
                 if (index === 1) rankColor = 'bg-gray-100 text-gray-700';
                 if (index === 2) rankColor = 'bg-orange-100 text-orange-700';
                 const grupoNombre = student.grupoNombre || 'N/A';
+                
+                // Formatear números para el tooltip
+                const pincelesLiquidosF = AppFormat.formatNumber(student.pinceles);
+                const totalInvertidoF = AppFormat.formatNumber(student.totalInvertido);
 
-                // NUEVO HTML con desglose en el tooltip
+                // NUEVO HTML con tooltip CSS (v0.3.9)
                 return `
                     <div class="bg-white rounded-lg shadow-md p-3 h-full flex flex-col justify-between">
                         <div>
@@ -1090,12 +1120,20 @@ const AppUI = {
                             <p class="text-base font-semibold text-gray-900 truncate">${student.nombre}</p>
                         </div>
                         
-                        <!-- CONTENIDO MODIFICADO (v0.3.7) -->
+                        <!-- CONTENIDO MODIFICADO (v0.3.9) -->
                         <div class="text-right mt-2">
-                            <p class="text-xl font-bold text-blue-600" 
-                               title="Capital Total. Desglose: ${AppFormat.formatNumber(student.pinceles)} (en bolsa) + ${AppFormat.formatNumber(student.totalInvertido)} (invertido)">
-                                ${AppFormat.formatNumber(student.capitalTotal)} ℙ
-                            </p>
+                            <div class="tooltip-container relative inline-block">
+                                <p class="text-xl font-bold text-blue-600">
+                                    ${AppFormat.formatNumber(student.capitalTotal)} ℙ
+                                </p>
+                                <!-- Tooltip personalizado -->
+                                <div class="tooltip-text hidden md:block w-48">
+                                    <span class="font-bold">Capital Total</span>
+                                    <div class="flex justify-between mt-1 text-xs"><span>En bolsa:</span> <span>${pincelesLiquidosF} ℙ</span></div>
+                                    <div class="flex justify-between text-xs"><span>Invertido:</span> <span>${totalInvertidoF} ℙ</span></div>
+                                    <svg class="absolute text-gray-800 h-2 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255" xml:space="preserve"><polygon class="fill-current" points="0,0 127.5,127.5 255,0"/></svg>
+                                </div>
+                            </div>
                         </div>
                         <!-- FIN DE LA MODIFICACIÓN -->
                     </div>
@@ -1114,18 +1152,15 @@ const AppUI = {
                         </div>
                         <p class="text-base font-semibold text-gray-400 truncate">-</p>
                     </div>
-                    
-                    <!-- CONTENIDO MODIFICADO (Placeholder v0.3.7) -->
                     <div class="text-right mt-2">
                          <p class="text-xl font-bold text-gray-400">- ℙ</p>
                     </div>
-                    <!-- FIN DE LA MODIFICACIÓN -->
                 </div>
             `;
         }
         
         // ===================================================================
-        // FIN DE LA MODIFICACIÓN (v0.3.7)
+        // FIN DE LA MODIFICACIÓN (v0.3.9)
         // ===================================================================
 
 
@@ -1767,4 +1802,3 @@ window.onload = function() {
     console.log("window.onload disparado. Iniciando AppUI...");
     AppUI.init();
 };
-
