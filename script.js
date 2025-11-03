@@ -1136,8 +1136,8 @@ const AppUI = {
                                 <!-- Tooltip personalizado -->
                                 <div class="tooltip-text hidden md:block w-48">
                                     <span class="font-bold">Capital Total</span>
-                                    <div class="flex justify-between mt-1 text-xs"><span>En bolsa:</span> <span>${pincelesLiquidosF} ℙ</span></div>
-                                    <div class="flex justify-between text-xs"><span>Invertido:</span> <span>${totalInvertidoF} ℙ</span></div>
+                                    <div class="flex justify-between mt-1 text-xs"><span>Capital líquido:</span> <span>${pincelesLiquidosF} ℙ</span></div>
+                                    <div class="flex justify-between text-xs"><span>Capital invertido:</span> <span>${totalInvertidoF} ℙ</span></div>
                                     <svg class="absolute text-gray-800 h-2 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255" xml:space="preserve"><polygon class="fill-current" points="0,0 127.5,127.5 255,0"/></svg>
                                 </div>
                             </div>
