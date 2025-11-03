@@ -12,8 +12,8 @@ const AppConfig = {
     
     // CAMBIO v0.3.0: Versión y Estado de la Aplicación (Nueva función P2P)
     APP_STATUS: 'Pre-Alfa', 
-    // CAMBIO v0.3.12: Arreglo lógico de ranking (comparación .trim())
-    APP_VERSION: 'v0.3.12', 
+    // CAMBIO v0.3.13: Reemplazo "Subasta" por "Tienda"
+    APP_VERSION: 'v0.3.13', 
     
     // CAMBIO v0.3.0: Impuesto P2P (debe coincidir con el Backend)
     IMPUESTO_P2P_TASA: 0.10, // 10%
@@ -85,9 +85,9 @@ const AppFormat = {
 // ... (El objeto AnunciosDB se mantiene igual) ...
 const AnunciosDB = {
     'AVISO': [
-        "La subasta de fin de mes es el último Jueves de cada mes.",
+        "La tienda de fin de mes abre el último Jueves de cada mes.", // CAMBIO v0.3.13
         "Revisen sus saldos antes del cierre de mes. No se aceptan saldos negativos.",
-        "Recuerden: 'Ver Reglas' tiene información importante sobre la subasta."
+        "Recuerden: 'Ver Reglas' tiene información importante sobre la tienda." // CAMBIO v0.3.13
     ],
     'NUEVO': [
         // CAMBIO V0.2.2: Avisos sobre el nuevo sistema económico
@@ -1068,7 +1068,7 @@ const AppUI = {
         `;
         
         // ===================================================================
-        // INICIO DE LA MODIFICACIÓN (v0.3.11): Lógica "Alumnos Destacados"
+        // INICIO DE LA MODIFICACIÓN (v0.3.12): Lógica "Alumnos Destacados"
         // ===================================================================
         
         // Tarjetas Top 3 Alumnos (CON LÓGICA DE DEPÓSITOS)
@@ -1081,7 +1081,7 @@ const AppUI = {
         const studentsWithCapital = allStudents.map(student => {
             // Calcular el total invertido para este alumno
             const totalInvertido = depositosActivos
-                .filter(deposito => deposito.alumno === student.nombre)
+                .filter(deposito => (deposito.alumno || '').trim() === (student.nombre || '').trim()) // <-- FIX v0.3.12: Usar trim() para la comparación
                 .reduce((sum, deposito) => {
                     // **FIX (v0.3.9):** Convertir monto (que puede ser "150.000") a número
                     const montoStr = String(deposito.monto || '0');
@@ -1445,16 +1445,18 @@ const AppUI = {
         const now = new Date();
         const currentYear = now.getFullYear();
         const currentMonth = now.getMonth();
-        let auctionDay = getLastThursday(currentYear, currentMonth);
+        let storeDay = getLastThursday(currentYear, currentMonth); // CAMBIO v0.3.13
 
-        const auctionStart = new Date(auctionDay.getFullYear(), auctionDay.getMonth(), auctionDay.getDate(), 0, 0, 0);
-        const auctionEnd = new Date(auctionDay.getFullYear(), auctionDay.getMonth(), auctionDay.getDate(), 23, 59, 59);
+        const storeOpen = new Date(storeDay.getFullYear(), storeDay.getMonth(), storeDay.getDate(), 0, 0, 0); // CAMBIO v0.3.13
+        const storeClose = new Date(storeDay.getFullYear(), storeDay.getMonth(), storeDay.getDate(), 23, 59, 59); // CAMBIO v0.3.13
 
         const timerEl = document.getElementById('countdown-timer');
-        const messageEl = document.getElementById('auction-message');
+        const messageEl = document.getElementById('store-message'); // CAMBIO v0.3.13
+        const tiendaBtn = document.getElementById('tienda-btn'); 
+
         const tiendaBtn = document.getElementById('tienda-btn'); // CAMBIO v0.3.4: Botón de tienda
 
-        if (now >= auctionStart && now <= auctionEnd) {
+        if (now >= storeOpen && now <= storeClose) { // CAMBIO v0.3.13
             timerEl.classList.add('hidden');
             messageEl.classList.remove('hidden');
 
@@ -1479,8 +1481,8 @@ const AppUI = {
                 // tiendaBtn.onclick = null;
             }
 
-            let targetDate = auctionStart;
-            if (now > auctionEnd) {
+            let targetDate = storeOpen; // CAMBIO v0.3.13
+            if (now > storeClose) { // CAMBIO v0.3.13
                 targetDate = getLastThursday(currentYear, currentMonth + 1);
                 targetDate.setHours(0, 0, 0, 0); 
             }
