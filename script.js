@@ -12,8 +12,8 @@ const AppConfig = {
     
     // CAMBIO v0.3.0: Versión y Estado de la Aplicación (Nueva función P2P)
     APP_STATUS: 'Pre-Alfa', 
-    // CAMBIO v0.3.10: Sincronización de versión (fix scrollbars en HTML)
-    APP_VERSION: 'v0.3.10', 
+    // CAMBIO v0.3.11: Arreglo lógico del ranking de Alumnos Destacados
+    APP_VERSION: 'v0.3.11', 
     
     // CAMBIO v0.3.0: Impuesto P2P (debe coincidir con el Backend)
     IMPUESTO_P2P_TASA: 0.10, // 10%
@@ -23,6 +23,7 @@ const AppConfig = {
 };
 
 // --- ESTADO DE LA APLICACIÓN ---
+// ... (El resto del objeto AppState se mantiene igual) ...
 const AppState = {
     datosActuales: null, // Grupos y alumnos (limpios, sin Cicla/Banco)
     datosAdicionales: { // Objeto para Tesorería, préstamos, etc.
@@ -53,6 +54,7 @@ const AppState = {
 };
 
 // --- AUTENTICACIÓN ---
+// ... (El objeto AppAuth se mantiene igual) ...
 const AppAuth = {
     verificarClave: function() {
         const claveInput = document.getElementById('clave-input');
@@ -74,12 +76,13 @@ const AppAuth = {
 };
 
 // --- NÚMEROS Y FORMATO ---
+// ... (El objeto AppFormat se mantiene igual) ...
 const AppFormat = {
     formatNumber: (num) => new Intl.NumberFormat('es-DO').format(num)
 };
 
 // --- BASE DE DATOS DE ANUNCIOS ---
-// CAMBIO v0.2.4: Textos acortados para evitar saltos de línea
+// ... (El objeto AnunciosDB se mantiene igual) ...
 const AnunciosDB = {
     'AVISO': [
         "La subasta de fin de mes es el último Jueves de cada mes.",
@@ -108,6 +111,7 @@ const AnunciosDB = {
 };
 
 // --- MANEJO de datos ---
+// ... (El objeto AppData se mantiene igual) ...
 const AppData = {
     
     isCacheValid: () => AppState.cachedData && AppState.lastCacheTime && (Date.now() - AppState.lastCacheTime < AppConfig.CACHE_DURATION),
@@ -243,6 +247,7 @@ const AppData = {
 };
 
 // --- MANEJO DE LA INTERFAZ (UI) ---
+// ... (El resto del objeto AppUI se mantiene igual hasta mostrarPantallaNeutral) ...
 const AppUI = {
     
     init: function() {
@@ -1063,7 +1068,7 @@ const AppUI = {
         `;
         
         // ===================================================================
-        // INICIO DE LA MODIFICACIÓN (v0.3.9): Lógica "Alumnos Destacados"
+        // INICIO DE LA MODIFICACIÓN (v0.3.11): Lógica "Alumnos Destacados"
         // ===================================================================
         
         // Tarjetas Top 3 Alumnos (CON LÓGICA DE DEPÓSITOS)
@@ -1094,6 +1099,7 @@ const AppUI = {
         });
 
         // 3. Ordenar por capitalTotal y tomar los 3 primeros
+        // ¡¡¡ ESTA ES LA LÍNEA CORREGIDA (v0.3.11) !!!
         const top3 = studentsWithCapital.sort((a, b) => b.capitalTotal - a.capitalTotal).slice(0, 3);
 
         // 4. Generar el HTML para las tarjetas del Top 3
@@ -1105,11 +1111,12 @@ const AppUI = {
                 if (index === 2) rankColor = 'bg-orange-100 text-orange-700';
                 const grupoNombre = student.grupoNombre || 'N/A';
                 
-                // Formatear números para el tooltip
+                // Formatear números para el tooltip (v0.3.9)
+                // (student.pinceles es el capital líquido)
                 const pincelesLiquidosF = AppFormat.formatNumber(student.pinceles);
                 const totalInvertidoF = AppFormat.formatNumber(student.totalInvertido);
 
-                // NUEVO HTML con tooltip CSS (v0.3.9)
+                // HTML con tooltip CSS (v0.3.9)
                 return `
                     <div class="bg-white rounded-lg shadow-md p-3 h-full flex flex-col justify-between">
                         <div>
@@ -1160,7 +1167,7 @@ const AppUI = {
         }
         
         // ===================================================================
-        // FIN DE LA MODIFICACIÓN (v0.3.9)
+        // FIN DE LA MODIFICACIÓN (v0.3.11)
         // ===================================================================
 
 
@@ -1490,6 +1497,7 @@ const AppUI = {
 };
 
 // --- OBJETO TRANSACCIONES (Préstamos y Depósitos) ---
+// ... (El objeto AppTransacciones se mantiene igual) ...
 const AppTransacciones = {
 
     realizarTransaccionMultiple: async function() {
@@ -1779,6 +1787,7 @@ const AppTransacciones = {
 
 
 // --- INICIALIZACIÓN ---
+// ... (La inicialización se mantiene igual) ...
 window.AppUI = AppUI;
 window.AppFormat = AppFormat;
 window.AppTransacciones = AppTransacciones;
@@ -1787,4 +1796,3 @@ window.onload = function() {
     console.log("window.onload disparado. Iniciando AppUI...");
     AppUI.init();
 };
-
