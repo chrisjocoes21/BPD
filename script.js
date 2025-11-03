@@ -12,8 +12,8 @@ const AppConfig = {
     
     // CAMBIO v0.3.0: Versión y Estado de la Aplicación (Nueva función P2P)
     APP_STATUS: 'Pre-Alfa', 
-    // CAMBIO v0.3.11: Arreglo lógico del ranking de Alumnos Destacados
-    APP_VERSION: 'v0.3.11', 
+    // CAMBIO v0.3.12: Arreglo lógico de ranking (comparación .trim())
+    APP_VERSION: 'v0.3.12', 
     
     // CAMBIO v0.3.0: Impuesto P2P (debe coincidir con el Backend)
     IMPUESTO_P2P_TASA: 0.10, // 10%
@@ -1796,3 +1796,4 @@ window.onload = function() {
     console.log("window.onload disparado. Iniciando AppUI...");
     AppUI.init();
 };
+
