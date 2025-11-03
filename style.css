@@ -56,7 +56,8 @@ scrollbar-width: none;  /* Firefox */
     border-radius: 0;
     margin-right: 0.5rem;
 }
-.active-tab {
+/* CAMBIO v0.4.0: Selector más específico para evitar conflictos */
+#transaccion-modal .tab-btn.active-tab {
     border-bottom-color: #3b82f6 !important; /* blue-600 */
     color: #3b82f6 !important;
 }
@@ -64,6 +65,24 @@ scrollbar-width: none;  /* Firefox */
     /* CAMBIO v0.3.1: Aumentado a 540px para eliminar 100% el "jiggle" */
     min-height: 540px; 
 }
+
+/* =================================================================== */
+/* NUEVO (v0.4.0): Estilos para Pestañas del Fondo de Inversión */
+/* =================================================================== */
+.fondo-tab-btn {
+    border-radius: 0;
+    margin-right: 0.5rem;
+}
+/* Estilo para la pestaña activa del fondo (púrpura) */
+#fondo-inversion-modal .fondo-tab-btn.active-tab {
+    border-bottom-color: #7c3aed !important; /* purple-600 */
+    color: #7c3aed !important;
+}
+/* Contenedor de contenido para pestañas del fondo */
+.fondo-tab-content {
+    min-height: 380px; /* Altura ajustada para el modal del fondo */
+}
+
 
 /* CAMBIO v0.2.4: Estilos para el contenedor de resultados de búsqueda */
 .search-results-container {
