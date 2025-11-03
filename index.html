@@ -12,8 +12,8 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏦</text></svg>">
 
     <!-- Archivo de estilos personalizados (cache buster añadido) -->
-    <!-- CAMBIO v0.3.0: Versión actualizada -->
-    <link rel="stylesheet" href="style.css?v=0.3.0">
+    <!-- CAMBIO v0.3.9: Versión actualizada para incluir estilos de tooltip -->
+    <link rel="stylesheet" href="style.css?v=0.3.9">
 </head>
 <body class="h-full">
     <div id="app-container" class="flex h-screen">
@@ -521,6 +521,8 @@
                                     <li>Impuesto Pasivo Diario (0.5% a saldos > 100 ℙ).</li>
                                     <li>Comisión por Transferencia P2P (10%).</li>
                                     <li>Cobro de cuotas e intereses (regulares y por mora) de préstamos.</li>
+                                    <!-- CAMBIO v0.3.9: Añadido impuesto de depósitos -->
+                                    <li>Impuesto del 5% sobre los intereses de Depósitos a Plazo.</li>
                                     <li>Multas (retiros de pinceles) impuestas por el administrador.</li>
                                     <li>Ingreso Pasivo Diario (simulación de crecimiento económico).</li>
                                 </ul>
@@ -560,6 +562,8 @@
                             <li><strong>Requisito Principal:</strong> El alumno no debe tener ningún préstamo activo para poder invertir.</li>
                             <li><strong>Requisito de Saldo:</strong> El alumno debe tener en su cuenta el monto exacto que exige el paquete de depósito.</li>
                             <li>Al vencer el plazo, la Tesorería paga al alumno el monto original MÁS el interés ganado. Si la Tesorería no tiene fondos suficientes en ese momento, el pago se reintentará automáticamente cada día.</li>
+                            <!-- CAMBIO v0.3.9: Añadida regla de impuesto -->
+                            <li class="text-red-700">Se aplica un impuesto del 5% sobre los intereses (ganancias) generados. Este impuesto se transfiere a la Tesorería.</li>
                         </ul>
                     </div>
                     
@@ -605,7 +609,7 @@
 
 
     <!-- Lógica de la Aplicación -->
-    <!-- CAMBIO v0.3.5: Versión actualizada -->
-    <script src="script.js?v=0.3.5" type="module" defer></script>
+    <!-- CAMBIO v0.3.9: Versión actualizada para lógica de impuestos y tooltips -->
+    <script src="script.js?v=0.3.9" type="module" defer></script>
 </body>
 </html>
