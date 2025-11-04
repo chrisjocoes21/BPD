@@ -13,8 +13,8 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏦</text></svg>">
 
     <!-- Archivo de estilos personalizados -->
-    <!-- CAMBIO v0.5.1: Versión actualizada para layout bonos -->
-    <link rel="stylesheet" href="style.css?v=0.5.1">
+    <!-- CAMBIO v0.5.3: Simetría de tarjetas y altura modal -->
+    <link rel="stylesheet" href="style.css?v=0.5.3">
 </head>
 <!-- CAMBIO 1 (SCROLL): 'overflow-hidden' ya estaba aquí (correcto) -->
 <body class="h-full overflow-hidden"> 
@@ -108,7 +108,8 @@
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     
                         <!-- Fila 1, Col 1: Bóveda -->
-                        <div id="boveda-card-container">
+                        <!-- CAMBIO v0.5.3: Añadido h-full -->
+                        <div id="boveda-card-container" class="h-full">
                             <!-- Bóveda Card Injected here. -->
                         </div>
                         
@@ -118,7 +119,8 @@
                         </div>
                         
                         <!-- Fila 2, Col 1: Tesorería -->
-                        <div id="tesoreria-card-container">
+                        <!-- CAMBIO v0.5.3: Añadido h-full -->
+                        <div id="tesoreria-card-container" class="h-full">
                             <!-- Tesorería Card Injected here. -->
                         </div>
                         
@@ -547,7 +549,8 @@
             </div>
 
             <!-- Contenedor de Pestañas (Scrollable) -->
-            <div class="p-6 max-h-[80vh] overflow-y-auto">
+            <!-- CAMBIO v0.5.3: Añadido min-h-[500px] para evitar saltos de layout -->
+            <div class="p-6 max-h-[80vh] overflow-y-auto min-h-[500px]">
 
                 <!-- PESTAÑA 1: CANJEAR BONO (USUARIO) -->
                 <!-- CAMBIO v0.5.2: Layout de 2 columnas (Form | Lista) -->
@@ -683,7 +686,8 @@
                     <button id="bonos-cancel-btn" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
                         Cerrar
                     </button>
-                    <button id="bono-submit-btn" class="px-4 py-2 bg-yellow-500 text-yellow-900 text-sm font-medium rounded-lg hover:bg-yellow-600 transition-colors shadow-sm">
+                    <!-- CAMBIO v0.5.3: Añadido 'hidden' por defecto -->
+                    <button id="bono-submit-btn" class="px-4 py-2 bg-yellow-500 text-yellow-900 text-sm font-medium rounded-lg hover:bg-yellow-600 transition-colors shadow-sm hidden">
                         <span id="bono-btn-text">Canjear Bono</span>
                     </button>
                 </div>
@@ -694,7 +698,7 @@
 
 
     <!-- Lógica de la Aplicación -->
-    <!-- CAMBIO v0.5.2: Versión actualizada para layout bonos -->
-    <script src="script.js?v=0.5.2" type="module" defer></script>
+    <!-- CAMBIO v0.5.3: Versión actualizada para simetría -->
+    <script src="script.js?v=0.5.3" type="module" defer></script>
 </body>
 </html>
