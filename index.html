@@ -13,40 +13,32 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏦</text></svg>">
 
     <!-- Archivo de estilos personalizados -->
-    <!-- CAMBIO v0.4.1: Versión actualizada -->
-    <link rel="stylesheet" href="style.css?v=0.4.1">
+    <!-- CAMBIO v0.4.0: Versión actualizada -->
+    <link rel="stylesheet" href="style.css?v=0.4.0">
 </head>
 <!-- CAMBIO 1 (SCROLL): 'overflow-hidden' ya estaba aquí (correcto) -->
 <body class="h-full overflow-hidden"> 
     <!-- CAMBIO 1 (SCROLL): Reemplazado 'h-screen' por 'h-full' para que coincida con el HTML -->
     <div id="app-container" class="flex h-full">
         <!-- 1. Barra Lateral de Navegación (Fija y Ocultable) -->
-        <!-- =================================================================== -->
-        <!-- CAMBIO ESTÉTICO (SIDEBAR): -->
-        <!-- 1. Cambiado bg-gray-50 a bg-gray-800 -->
-        <!-- 2. Eliminado border-r border-gray-200 -->
-        <!-- 3. Añadido 'lg:relative lg:translate-x-0' para hacerla estática en escritorio -->
-        <!-- =================================================================== -->
-        <nav id="sidebar" class="fixed top-0 left-0 h-full z-30 flex flex-col bg-gray-800 w-64 flex-shrink-0 transition-transform duration-300 transform -translate-x-full lg:relative lg:translate-x-0">
+        <nav id="sidebar" class="fixed top-0 left-0 h-full z-30 flex flex-col bg-gray-50 w-64 border-r border-gray-200 flex-shrink-0 transition-transform duration-300 transform -translate-x-full">
             
             <!-- Encabezado de la Sidebar -->
-            <!-- CAMBIO ESTÉTICO: Eliminado bg-white, cambiado border-gray-200 a border-gray-700, texto a text-white -->
-            <div class="p-4 border-b border-gray-700 flex items-center justify-center">
-                <span class="text-xl font-extrabold text-white">BPD</span>
+            <div class="p-4 border-b border-gray-200 flex items-center justify-center bg-white">
+                <span class="text-xl font-extrabold text-blue-600">BPD</span>
             </div>
 
             <!-- Contenedor de Grupos (se llenará dinámicamente) -->
             <div id="sidebar-nav" class="flex-1 overflow-y-auto p-2 space-y-1 pt-4">
                 <!-- Links de "Inicio" y grupos se insertarán aquí -->
-                <div class="text-center p-4 text-gray-400 text-sm">
+                <div class="text-center p-4 text-gray-500 text-sm">
                     Cargando grupos...
                 </div>
             </div>
             
             <!-- Footer de la Sidebar (Botón Admin y Versión) -->
             <!-- CAMBIO v0.4.0: Añadido Botón Fondo de Inversión -->
-            <!-- CAMBIO ESTÉTICO: Eliminado bg-white, cambiado border-gray-200 a border-gray-700 -->
-            <div class="p-2 border-t border-gray-700 flex-shrink-0 space-y-2">
+            <div class="p-2 border-t border-gray-200 bg-white flex-shrink-0 space-y-2">
                 <!-- V0.2.2: Contenedor de la Versión -->
                 <div id="app-version-container" class="text-center py-1 text-xs text-gray-400">
                     <!-- Versión se inyecta aquí -->
@@ -79,17 +71,12 @@
         </nav>
 
         <!-- 2. Área de Contenido Principal -->
-        <!-- =================================================================== -->
-        <!-- CAMBIO ESTÉTICO (CONTENIDO): -->
-        <!-- 1. Añadido 'lg:ml-64' para que el contenido sea empujado por la sidebar en escritorio -->
-        <!-- =================================================================== -->
-        <div id="main-content-container" class="flex-1 flex flex-col overflow-hidden ml-0 lg:ml-64">
+        <div id="main-content-container" class="flex-1 flex flex-col overflow-hidden ml-0">
             
             <!-- Barra Superior (para Toggle y Título) -->
             <header class="h-16 bg-white border-b border-gray-200 flex-shrink-0 flex items-center px-4">
                 <!-- Botón para ocultar/mostrar sidebar -->
-                <!-- CAMBIO ESTÉTICO: Añadido 'lg:hidden' para ocultar el botón en escritorio -->
-                <button id="toggle-sidebar-btn" class="p-2 -ml-2 mr-2 rounded-full text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-300 lg:hidden">
+                <button id="toggle-sidebar-btn" class="p-2 -ml-2 mr-2 rounded-full text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-300">
                     <span class="font-bold text-lg">»</span>
                 </button>
                 <!-- Título principal (se actualiza dinámicamente) -->
@@ -661,7 +648,7 @@
 
 
     <!-- Lógica de la Aplicación -->
-    <!-- CAMBIO v0.4.1: Versión actualizada -->
-    <script src="script.js?v=0.4.1" type="module" defer></script>
+    <!-- CAMBIO v0.4.0: Versión actualizada -->
+    <script src="script.js?v=0.4.0" type="module" defer></script>
 </body>
 </html>
