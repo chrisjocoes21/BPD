@@ -178,3 +178,47 @@ scrollbar-width: none;  /* Firefox */
 .delete-bono-btn {
     @apply text-red-600 hover:text-red-800 font-medium;
 }
+
+/* =================================================================== */
+/* NUEVO (v14.0): Estilos para Modal de Tienda */
+/* =================================================================== */
+
+/* Estilo para las tarjetas de artículos de la tienda */
+.tienda-item-card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col transition-all;
+}
+
+/* Estado de la tarjeta cuando está agotada */
+.tienda-item-card.agotado {
+    @apply opacity-50 bg-gray-50;
+}
+
+/* Estado de la tarjeta cuando no hay fondos */
+.tienda-item-card.sin-fondos {
+    @apply opacity-70;
+}
+
+/* Estilo para el botón de comprar dentro de la tarjeta */
+.comprar-tienda-btn {
+    @apply w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors;
+}
+
+/* Estilo para el botón de comprar cuando la tienda está ABIERTA */
+.comprar-tienda-btn.comprable {
+     @apply bg-blue-600 text-white shadow-sm hover:bg-blue-700;
+}
+
+/* Estilo para el botón de comprar cuando está DESHABILITADO (agotado, sin fondos, o tienda cerrada) */
+.comprar-tienda-btn:disabled {
+    @apply bg-gray-300 text-gray-500 cursor-not-allowed;
+}
+
+/* Estilo para el botón de comprar cuando está AGOTADO */
+.comprar-tienda-btn.agotado-btn {
+     @apply bg-gray-400 text-white cursor-not-allowed;
+}
+
+/* Estilo para el botón de comprar cuando NO HAY FONDOS */
+.comprar-tienda-btn.sin-fondos-btn {
+     @apply bg-red-200 text-red-700 cursor-not-allowed;
+}
