@@ -10,9 +10,9 @@ const AppConfig = {
     MAX_RETRIES: 5,
     CACHE_DURATION: 300000,
     
-    // CAMBIO v0.5.4: Gestión Bonos v2 (Eliminar) y fixes
+    // CAMBIO v0.5.6: Fix altura modal bonos y simetría home
     APP_STATUS: 'Beta', 
-    APP_VERSION: 'v0.5.4 (Gestión Bonos v2)', 
+    APP_VERSION: 'v0.5.6 (Fix Layout)', 
     
     // CAMBIO v0.3.0: Impuesto P2P (debe coincidir con el Backend)
     IMPUESTO_P2P_TASA: 0.10, // 10%
@@ -540,10 +540,11 @@ const AppUI = {
         }
 
         const lowerQuery = query.toLowerCase();
-        // CAMBIO v0.5.0: Filtrar alumnos de Cicla de los buscadores (excepto P2P Destino)
+        // CAMBIO v0.5.0: Filtrar alumnos de Cicla de los buscadores (excepto P2P Destino y Préstamos)
         let studentList = AppState.datosAdicionales.allStudents;
         
-        if (stateKey !== 'p2pDestino') {
+        // Permitir a Cicla en P2P Destino y en Préstamos (para rescate)
+        if (stateKey !== 'p2pDestino' && stateKey !== 'prestamo') {
             studentList = studentList.filter(s => s.grupoNombre !== 'Cicla');
         }
         
@@ -664,6 +665,7 @@ const AppUI = {
     },
 
     // Cambia entre pestañas en el modal de Bonos
+    // CAMBIO v0.5.4: Gestiona visibilidad de botones
     changeBonoTab: function(tabId) {
         document.querySelectorAll('#bonos-modal .bono-tab-btn').forEach(btn => {
             btn.classList.remove('active-tab', 'border-blue-600', 'text-blue-600');
@@ -679,7 +681,7 @@ const AppUI = {
         activeBtn.classList.remove('border-transparent', 'text-gray-600');
         document.getElementById(`bono-tab-${tabId}`).classList.remove('hidden');
 
-        // CAMBIO v0.5.3: Ocultar/mostrar el botón de canje
+        // CAMBIO v0.5.4: Ocultar/mostrar el botón de canje
         const bonoSubmitBtn = document.getElementById('bono-submit-btn');
         if (tabId === 'canjear') {
             bonoSubmitBtn.classList.remove('hidden');
@@ -1250,7 +1252,7 @@ const AppUI = {
     /**
      * Muestra la vista de "Inicio"
      */
-    // CAMBIO v0.5.3: Simetría de tarjetas
+    // CAMBIO v0.5.4: Simetría de tarjetas (h-full y flex)
     mostrarPantallaNeutral: function(grupos) {
         document.getElementById('main-header-title').textContent = "Bienvenido al Banco del Pincel Dorado";
         document.getElementById('page-subtitle').innerHTML = ''; 
@@ -1275,7 +1277,7 @@ const AppUI = {
         // Tarjeta de Tesorería
         const tesoreriaSaldo = AppState.datosAdicionales.saldoTesoreria;
         
-        // CAMBIO v0.5.3: Añadido h-full y flex flex-col justify-between
+        // CAMBIO v0.5.4: Añadido h-full y flex flex-col justify-between
         bovedaHtml = `
             <div class="bg-white rounded-lg shadow-md p-4 h-full flex flex-col justify-between">
                 <div>
@@ -1293,7 +1295,7 @@ const AppUI = {
             </div>
         `;
         
-        // CAMBIO v0.5.3: Añadido h-full y flex flex-col justify-between
+        // CAMBIO v0.5.4: Añadido h-full y flex flex-col justify-between
         tesoreriaHtml = `
             <div class="bg-white rounded-lg shadow-md p-4 h-full flex flex-col justify-between">
                 <div>
