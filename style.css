@@ -67,21 +67,8 @@ scrollbar-width: none;  /* Firefox */
 }
 
 /* =================================================================== */
-/* NUEVO (v0.4.0): Estilos para Pestañas del Fondo de Inversión */
+/* ELIMINADO (v0.4.1): Estilos para Pestañas del Fondo de Inversión */
 /* =================================================================== */
-.fondo-tab-btn {
-    border-radius: 0;
-    margin-right: 0.5rem;
-}
-/* Estilo para la pestaña activa del fondo (púrpura) */
-#fondo-inversion-modal .fondo-tab-btn.active-tab {
-    border-bottom-color: #7c3aed !important; /* purple-600 */
-    color: #7c3aed !important;
-}
-/* Contenedor de contenido para pestañas del fondo */
-.fondo-tab-content {
-    min-height: 380px; /* Altura ajustada para el modal del fondo */
-}
 
 
 /* CAMBIO v0.2.4: Estilos para el contenedor de resultados de búsqueda */
