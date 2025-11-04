@@ -147,7 +147,8 @@
                                 <button id="bonos-btn" class="flex-1 px-4 py-2 bg-yellow-400 text-yellow-900 text-sm font-medium rounded-lg hover:bg-yellow-500 transition-colors shadow-sm">
                                     Bonos
                                 </button>
-                                <button id="tienda-btn" disabled class="flex-1 px-4 py-2 bg-gray-400 text-white text-sm font-medium rounded-lg transition-colors shadow-sm cursor-not-allowed">
+                                <!-- CAMBIO v14.0: Botón de Tienda siempre habilitado para ver artículos -->
+                                <button id="tienda-btn" class="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
                                     Tienda
                                 </button>
                             </div>
@@ -703,8 +704,80 @@
     </div>
 
 
+    <!-- =================================================================== -->
+    <!-- NUEVO MODAL (v14.0): TIENDA DEL PINCEL DORADO -->
+    <!-- =================================================================== -->
+    <div id="tienda-modal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <!-- Contenedor del Modal (tamaño max-w-4xl para ver más items) -->
+        <div id="tienda-modal-dialog" class="bg-white rounded-lg shadow-xl w-full max-w-4xl transform scale-95 transition-transform duration-300 overflow-hidden">
+            
+            <!-- 1. Encabezado -->
+            <div class="bg-gray-50 border-b border-gray-200">
+                <div class="flex justify-between items-center p-4">
+                    <h2 class="text-lg font-semibold text-gray-900">
+                        Tienda del Pincel Dorado
+                    </h2>
+                    <button id="tienda-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                </div>
+            </div>
+
+            <!-- 2. Contenido (Scrollable) -->
+            <div class="p-6 max-h-[80vh] overflow-y-auto space-y-4">
+                
+                <!-- Mensaje de Estado/Contador -->
+                <div id="tienda-timer-message" class="p-3 text-center font-semibold rounded-lg text-blue-800 bg-blue-50 border border-blue-200">
+                    Cargando estado de la tienda...
+                </div>
+
+                <!-- Formulario de Compra (Alumno + Clave) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Buscador de Alumno -->
+                    <div class="relative">
+                        <label for="tienda-alumno-search" class="block text-sm font-medium text-gray-700 mb-1">Tu Nombre (Comprador)</label>
+                        <input type="text" id="tienda-alumno-search" placeholder="Busca tu nombre..." class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <div id="tienda-search-results" class="search-results-container hidden absolute z-20 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
+                            <!-- Resultados de búsqueda -->
+                        </div>
+                    </div>
+                    <!-- Clave P2P -->
+                    <div>
+                        <label for="tienda-clave-p2p" class="block text-sm font-medium text-gray-700 mb-1">Tu Clave P2P (Confirmación)</label>
+                        <input type="password" id="tienda-clave-p2p" placeholder="Ingresa tu clave de 5 dígitos" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <!-- Contenedor de Artículos -->
+                <div class="pt-4 border-t border-gray-200">
+                    <h3 class="text-base font-semibold text-gray-800 mb-3">Artículos del Mes</h3>
+                    <div id="tienda-items-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Los artículos se insertarán aquí dinámicamente -->
+                        <p class="text-sm text-gray-500 text-center col-span-full">Cargando artículos...</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 3. Footer (Mensaje de Estado y Cerrar) -->
+            <div id="tienda-modal-footer" class="bg-gray-50 p-4 border-t border-gray-200 flex justify-between gap-3 flex-shrink-0">
+                <!-- Mensaje de estado principal -->
+                <div id="tienda-status-msg" class="text-sm text-left font-medium text-red-600 h-auto min-h-[1rem] flex-1 items-center flex">
+                    <!-- Mensajes de estado de compra -->
+                </div>
+                <!-- Botón de Cerrar -->
+                <div class="flex">
+                    <button id="tienda-cancel-btn" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
     <!-- Lógica de la Aplicación -->
-    <!-- CAMBIO v0.5.6: Versión actualizada para forzar recarga de script (fix simetría) -->
-    <script src="script.js?v=0.5.6" type="module" defer></script>
+    <!-- CAMBIO v14.0: Versión actualizada para la Tienda -->
+    <script src="script.js?v=14.0" type="module" defer></script>
 </body>
 </html>
+
