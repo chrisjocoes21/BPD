@@ -146,19 +146,6 @@ scrollbar-width: none;  /* Firefox */
     opacity: 1;
 }
 
-/* =================================================================== */
-/* NUEVO (v0.4.1): Estilos para Estadísticas (Evitar doble línea) */
-/* =================================================================== */
-.stat-item span {
-    white-space: nowrap;  /* Evita que el texto dentro del span se parta */
-    overflow: hidden;     /* Oculta el texto que se desborda */
-    text-overflow: ellipsis; /* Añade "..." si el texto es muy largo */
-}
-.stat-item span:last-child {
-    flex-shrink: 0; /* Evita que el valor (número) se encoja */
-    padding-left: 0.5rem; /* Añade espacio entre etiqueta y valor */
-}
-
 /* Ocultar en móvil (donde el hover no es ideal) */
 @media (max-width: 768px) {
     .tooltip-text {
