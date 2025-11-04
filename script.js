@@ -10,9 +10,9 @@ const AppConfig = {
     MAX_RETRIES: 5,
     CACHE_DURATION: 300000,
     
-    // CAMBIO v14.0: Actualización de versión para la Tienda
+    // CAMBIO v16.0: Actualización de versión
     APP_STATUS: 'Beta', 
-    APP_VERSION: 'v14.0 (Tienda v2)', 
+    APP_VERSION: 'v16.0 (Optimización Tienda)', 
     
     // CAMBIO v0.3.0: Impuesto P2P (debe coincidir con el Backend)
     IMPUESTO_P2P_TASA: 0.10, // 10%
@@ -23,23 +23,8 @@ const AppConfig = {
     // NUEVO v0.4.2: Comisión sobre depósitos de admin
     IMPUESTO_DEPOSITO_ADMIN: 0.05, // 5%
 
-    // NUEVO v14.0: Tasa de ITBIS para la Tienda (según V2.docx)
+    // NUEVO v16.0: Tasa de ITBIS de la tienda (debe coincidir con el Backend)
     TASA_ITBIS: 0.18, // 18%
-
-    // NUEVO v14.0: Lista de artículos de la tienda (según V2.docx)
-    // Se usa para renderizar. El stock y el precio base vienen de la API,
-    // pero esto define el orden, nombre, tipo y ID.
-    tiendaItems: [
-        { id: 'exonerar_tema', nombre: 'Exonerar un Tema de Examen', tipo: 'Académico' },
-        { id: 'salto_clase', nombre: 'Salto de Clase Justificado (x1)', tipo: 'Privilegio' },
-        { id: 'revisar_proy', nombre: 'Revisión de Proyecto (Post-Entrega)', tipo: 'Académico' },
-        { id: 'veto_pregunta', nombre: 'Veto de Pregunta (Examen Parcial)', tipo: 'Académico' },
-        { id: 'inmunidad_cicla', nombre: 'Inmunidad Cicla (48 Horas)', tipo: 'Privilegio' },
-        { id: 'dia_extra', nombre: 'Día Extra en Entrega de Proyectos', tipo: 'Académico' },
-        { id: 'filantropo', nombre: 'Título de "Filántropo" (Donación)', tipo: 'Estatus' },
-        { id: 'loteria', nombre: 'Lotería "El Tesoro del BPD"', tipo: 'Riesgo' },
-        { id: 'bonus_p2p', nombre: 'Transferencia P2P Sin Impuestos (x1)', tipo: 'Económico' }
-    ]
 };
 
 // --- ESTADO DE LA APLICACIÓN ---
@@ -49,8 +34,7 @@ const AppState = {
         saldoTesoreria: 0,
         prestamosActivos: [],
         depositosActivos: [],
-        allStudents: [], // Lista plana de todos los alumnos
-        tiendaStock: {} // NUEVO v14.0: Stock de la tienda
+        allStudents: [] // Lista plana de todos los alumnos
     },
     historialUsuarios: {}, 
     actualizacionEnProceso: false,
@@ -64,15 +48,14 @@ const AppState = {
     sidebarTimer: null, 
     transaccionSelectAll: {}, 
     
-    // CAMBIO v0.4.1: Eliminado 'fondoOrigen'
-    // CAMBIO v14.0: Añadido 'tiendaAlumno'
+    // CAMBIO v16.0: 'info' almacena el objeto completo del alumno
     currentSearch: {
-        prestamo: { query: '', selected: null },
-        deposito: { query: '', selected: null },
-        p2pOrigen: { query: '', selected: null },
-        p2pDestino: { query: '', selected: null },
-        bonoAlumno: { query: '', selected: null }, // NUEVO v0.5.0
-        tiendaAlumno: { query: '', selected: null } // NUEVO v14.0
+        prestamo: { query: '', selected: null, info: null },
+        deposito: { query: '', selected: null, info: null },
+        p2pOrigen: { query: '', selected: null, info: null },
+        p2pDestino: { query: '', selected: null, info: null },
+        bonoAlumno: { query: '', selected: null, info: null }, // v0.5.0
+        tiendaAlumno: { query: '', selected: null, info: null } // NUEVO v16.0
     },
     
     // NUEVO v0.5.0: Estado de Bonos
@@ -80,6 +63,14 @@ const AppState = {
         disponibles: [], // Bonos que aún tienen usos
         canjeados: [], // Bonos que el usuario actual (hipotético) ha canjeado
         adminPanelUnlocked: false // Para el panel de admin
+    },
+
+    // NUEVO v16.0: Estado de Tienda
+    tienda: {
+        items: {}, // Almacenará los artículos de la API
+        adminPanelUnlocked: false,
+        isStoreOpen: false, // Controlado por updateCountdown
+        currentItemToConfirm: null // Para el modal de confirmación (factura)
     }
 };
 
@@ -114,16 +105,15 @@ const AppFormat = {
 };
 
 // --- BASE DE DATOS DE ANUNCIOS ---
-// CAMBIO v0.4.1: Eliminados anuncios del fondo
-// CAMBIO v14.0: Actualizado anuncio de tienda
 const AnunciosDB = {
     'AVISO': [
-        "La Tienda BPD (v2.0) abre el último Jueves de cada mes.", 
+        "La tienda de fin de mes abre el último Jueves de cada mes.", 
         "Revisen sus saldos antes del cierre de mes. No se aceptan saldos negativos.",
-        "Recuerden: 'Ver Reglas' tiene información importante sobre la economía." 
+        "Recuerden: 'Ver Reglas' tiene información importante sobre la tienda." 
     ],
     'NUEVO': [
-        // NUEVO v0.5.0: Anuncio de Bonos
+        // NUEVO v16.0: Actualizado anuncio de Tienda
+        "¡Nueva Tienda del Mes! Revisa los artículos de alto valor. Se desbloquea el último jueves.",
         "¡Nuevo Portal de Bonos! Canjea códigos por Pinceles ℙ.",
         "¡Nuevo Sistema Económico! Depósitos de admin limitados por la Tesorería.",
         "¡Nuevo Portal P2P! Transfiere pinceles a tus compañeros (con 10% de comisión).",
@@ -137,7 +127,6 @@ const AnunciosDB = {
     'ALERTA': [
         // CAMBIO v0.5.5: Actualizado por Auto-Cicla
         "¡Cuidado! Saldos negativos (incluso -1 ℙ) te moverán automáticamente a Cicla en el próximo ciclo diario.",
-        // "¡Cuidado! Saldos negativos (incluso -1 ℙ) te mueven a Cicla.", // <-- ORIGINAL
         "Alumnos en Cicla pueden solicitar préstamos de rescate (Admin).",
         "Si tienes un préstamo activo, NO puedes crear un Depósito a Plazo."
     ]
@@ -188,9 +177,7 @@ const AppData = {
                     throw new Error(`Error de API: ${data.message}`);
                 }
                 
-                // CAMBIO V0.4.0: La API devuelve un objeto con más datos
-                // CAMBIO v0.5.0: Procesa también los bonos
-                // CAMBIO v14.0: Procesa también el stock de la tienda
+                // CAMBIO v16.0: Procesa también la tienda
                 AppData.procesarYMostrarDatos(data); // Modifica AppState.datosActuales
                 AppState.cachedData = data;
                 AppState.lastCacheTime = Date.now();
@@ -225,8 +212,7 @@ const AppData = {
         // ... (Tu lógica de detección de cambios si aplica)
     },
     
-    // CAMBIO v0.5.0: Modificado para aceptar Bonos
-    // CAMBIO v14.0: Modificado para aceptar TiendaStock
+    // CAMBIO v16.0: Modificado para aceptar Tienda
     procesarYMostrarDatos: function(data) {
         // 1. Separar Tesorería y Datos Adicionales
         AppState.datosAdicionales.saldoTesoreria = data.saldoTesoreria || 0;
@@ -237,8 +223,8 @@ const AppData = {
         AppState.bonos.disponibles = data.bonosDisponibles || [];
         AppState.bonos.canjeados = data.bonosCanjeadosUsuario || []; // (Actualmente vacío, pero listo para el futuro)
         
-        // 3. NUEVO v14.0: Procesar Stock de la Tienda
-        AppState.datosAdicionales.tiendaStock = data.tiendaStock || {};
+        // 3. NUEVO v16.0: Procesar Artículos de Tienda
+        AppState.tienda.items = data.tiendaStock || {};
 
         const allGroups = data.gruposData;
         
@@ -290,10 +276,12 @@ const AppData = {
             AppUI.populateBonoList();
             AppUI.populateBonoAdminList();
         }
-        
-        // 10. NUEVO v14.0: Actualizar UI de Tienda (si está abierta)
+
+        // 10. NUEVO v16.0: Actualizar UI de Tienda (si está abierta)
         if (document.getElementById('tienda-modal').classList.contains('opacity-0') === false) {
-            AppUI.renderTiendaItems();
+            // Optimización v16.0: Solo actualiza los estados de los botones, no reconstruye todo.
+            AppUI.updateTiendaButtonStates(); 
+            AppUI.populateTiendaAdminList();
         }
 
         AppState.datosActuales = activeGroups; // Actualizar el estado al final
@@ -366,13 +354,35 @@ const AppUI = {
             AppTransacciones.crearActualizarBono();
         });
         document.getElementById('bono-admin-clear-btn').addEventListener('click', AppUI.clearBonoAdminForm);
-        
-        // NUEVO v14.0: Listeners Modal Tienda
+
+        // --- NUEVO v16.0: Listeners Modal Tienda ---
         document.getElementById('tienda-btn').addEventListener('click', () => AppUI.showTiendaModal());
         document.getElementById('tienda-modal-close').addEventListener('click', () => AppUI.hideModal('tienda-modal'));
         document.getElementById('tienda-cancel-btn').addEventListener('click', () => AppUI.hideModal('tienda-modal'));
         document.getElementById('tienda-modal').addEventListener('click', (e) => {
             if (e.target.id === 'tienda-modal') AppUI.hideModal('tienda-modal');
+        });
+        // Listeners Pestañas de Tienda
+        document.querySelectorAll('#tienda-modal .tienda-tab-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const tabId = e.target.dataset.tab;
+                AppUI.changeTiendaTab(tabId);
+            });
+        });
+        // Listeners Admin de Tienda
+        document.getElementById('tienda-admin-unlock-btn').addEventListener('click', AppUI.toggleTiendaAdminPanel);
+        document.getElementById('tienda-admin-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            AppTransacciones.crearActualizarItem();
+        });
+        document.getElementById('tienda-admin-clear-btn').addEventListener('click', AppUI.clearTiendaAdminForm);
+
+        // Listeners Modal Confirmación de Compra (Factura)
+        document.getElementById('tienda-confirm-close-btn').addEventListener('click', () => AppUI.hideModal('tienda-confirm-modal'));
+        document.getElementById('tienda-confirm-cancel-btn').addEventListener('click', () => AppUI.hideModal('tienda-confirm-modal'));
+        document.getElementById('tienda-confirm-submit-btn').addEventListener('click', AppTransacciones.comprarItem);
+        document.getElementById('tienda-confirm-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'tienda-confirm-modal') AppUI.hideModal('tienda-confirm-modal');
         });
 
 
@@ -413,12 +423,12 @@ const AppUI = {
         AppUI.mostrarVersionApp();
         
         // Listeners para los buscadores (autocomplete)
-        AppUI.setupSearchInput('prestamo-alumno-search', 'prestamo-search-results', 'prestamo', AppUI.loadPrestamoPaquetes);
-        AppUI.setupSearchInput('deposito-alumno-search', 'deposito-search-results', 'deposito', AppUI.loadDepositoPaquetes);
+        AppUI.setupSearchInput('prestamo-alumno-search', 'prestamo-search-results', 'prestamo', (student) => AppUI.loadPrestamoPaquetes(student ? student.nombre : null));
+        AppUI.setupSearchInput('deposito-alumno-search', 'deposito-search-results', 'deposito', (student) => AppUI.loadDepositoPaquetes(student ? student.nombre : null));
         AppUI.setupSearchInput('p2p-search-origen', 'p2p-origen-results', 'p2pOrigen', AppUI.selectP2PStudent);
         AppUI.setupSearchInput('p2p-search-destino', 'p2p-destino-results', 'p2pDestino', AppUI.selectP2PStudent);
         AppUI.setupSearchInput('bono-search-alumno', 'bono-search-results', 'bonoAlumno', AppUI.selectBonoStudent); // NUEVO v0.5.0
-        AppUI.setupSearchInput('tienda-alumno-search', 'tienda-search-results', 'tiendaAlumno', AppUI.selectTiendaStudent); // NUEVO v14.0
+        AppUI.setupSearchInput('tienda-search-alumno', 'tienda-search-results', 'tiendaAlumno', AppUI.selectTiendaStudent); // NUEVO v16.0
 
 
         // Carga inicial
@@ -454,9 +464,7 @@ const AppUI = {
         modal.querySelector('[class*="transform"]').classList.remove('scale-95');
     },
 
-    // CAMBIO v0.4.2: Añadida limpieza del cálculo de comisión admin
-    // CAMBIO v0.5.0: Añadida limpieza de modal de bonos
-    // CAMBIO v14.0: Añadida limpieza de modal de tienda
+    // CAMBIO v16.0: Añadida limpieza de modal de tienda y confirmación
     hideModal: function(modalId) {
         const modal = document.getElementById(modalId);
         if (!modal) return;
@@ -508,13 +516,32 @@ const AppUI = {
             document.getElementById('bono-admin-panel').classList.add('hidden');
             AppState.bonos.adminPanelUnlocked = false;
         }
-        
-        // NUEVO v14.0: Limpiar campos de Tienda
+
+        // NUEVO v16.0: Limpiar campos de Tienda
         if (modalId === 'tienda-modal') {
+            // Pestaña Comprar
             AppUI.resetSearchInput('tiendaAlumno');
             document.getElementById('tienda-clave-p2p').value = "";
+            document.getElementById('tienda-items-container').innerHTML = ''; // Limpiar artículos renderizados
             document.getElementById('tienda-status-msg').textContent = "";
-            document.getElementById('tienda-items-container').innerHTML = '<p class="text-sm text-gray-500 text-center col-span-full">Cargando artículos...</p>';
+            AppState.tienda.currentItemToConfirm = null;
+            
+            // Pestaña Admin
+            document.getElementById('tienda-admin-clave').value = "";
+            AppUI.clearTiendaAdminForm();
+            document.getElementById('tienda-admin-status-msg').textContent = "";
+            
+            // Ocultar panel de admin
+            document.getElementById('tienda-admin-gate').classList.remove('hidden');
+            document.getElementById('tienda-admin-panel').classList.add('hidden');
+            AppState.tienda.adminPanelUnlocked = false;
+        }
+        
+        // NUEVO v16.0: Limpiar modal de confirmación
+        if (modalId === 'tienda-confirm-modal') {
+            document.getElementById('tienda-confirm-content').innerHTML = '<p class="text-gray-500 text-center">Cargando detalles...</p>';
+            AppTransacciones.setLoadingState(document.getElementById('tienda-confirm-submit-btn'), document.getElementById('tienda-confirm-btn-text'), false, 'Confirmar Compra');
+            AppState.tienda.currentItemToConfirm = null;
         }
         
         if (modalId === 'gestion-modal') {
@@ -552,6 +579,7 @@ const AppUI = {
 
     // --- FUNCIONES DE BÚSQUEDA (AUTOCOMPLETE) ---
     
+    // CAMBIO v16.0: onSelectCallback ahora recibe el objeto student completo
     setupSearchInput: function(inputId, resultsId, stateKey, onSelectCallback) {
         const input = document.getElementById(inputId);
         const results = document.getElementById(resultsId);
@@ -560,9 +588,8 @@ const AppUI = {
             const query = e.target.value;
             AppState.currentSearch[stateKey].query = query;
             AppState.currentSearch[stateKey].selected = null; 
+            AppState.currentSearch[stateKey].info = null; // NUEVO v16.0
             
-            // CAMBIO v14.0: Llamar al callback con null al borrar
-            // para que se actualice la UI (ej. botones de tienda)
             if (query === '') {
                 onSelectCallback(null);
             }
@@ -592,12 +619,12 @@ const AppUI = {
         }
 
         const lowerQuery = query.toLowerCase();
-        // CAMBIO v0.5.0: Filtrar alumnos de Cicla de los buscadores (excepto P2P Destino y Préstamos)
+        // CAMBIO v0.5.0: Filtrar alumnos de Cicla de los buscadores
         let studentList = AppState.datosAdicionales.allStudents;
         
-        // Permitir a Cicla en P2P Destino y en Préstamos (para rescate)
-        // CAMBIO v14.0: No permitir a Cicla en la Tienda
-        if (stateKey !== 'p2pDestino' && stateKey !== 'prestamo') {
+        // Excepciones donde SÍ se permite a Cicla
+        const ciclaAllowed = ['p2pDestino', 'prestamo'];
+        if (!ciclaAllowed.includes(stateKey)) {
             studentList = studentList.filter(s => s.grupoNombre !== 'Cicla');
         }
         
@@ -618,9 +645,10 @@ const AppUI = {
                     const input = document.getElementById(inputId);
                     input.value = student.nombre;
                     AppState.currentSearch[stateKey].query = student.nombre;
-                    AppState.currentSearch[stateKey].selected = student; // CAMBIO v14.0: Guardar el objeto entero
+                    AppState.currentSearch[stateKey].selected = student.nombre;
+                    AppState.currentSearch[stateKey].info = student; // NUEVO v16.0: Almacenar info completa
                     resultsContainer.classList.add('hidden');
-                    onSelectCallback(student); // Llamar al callback con el objeto
+                    onSelectCallback(student); // CAMBIO v16.0: Llamar al callback con el objeto student
                 };
                 resultsContainer.appendChild(div);
             });
@@ -628,17 +656,15 @@ const AppUI = {
         resultsContainer.classList.remove('hidden');
     },
 
-    // CAMBIO v0.4.1: Eliminada lógica del fondo
-    // CAMBIO v0.5.0: Añadido 'bono'
-    // CAMBIO v14.0: Añadido 'tienda'
+    // CAMBIO v16.0: Añadido 'tienda'
     resetSearchInput: function(stateKey) {
         let inputId = '';
         if (stateKey.includes('p2p')) {
              inputId = `${stateKey.replace('p2p', 'p2p-search-')}`;
         } else if (stateKey.includes('bono')) {
              inputId = 'bono-search-alumno';
-        } else if (stateKey.includes('tienda')) { // NUEVO v14.0
-             inputId = 'tienda-alumno-search';
+        } else if (stateKey.includes('tienda')) { // NUEVO v16.0
+             inputId = 'tienda-search-alumno';
         } else {
             inputId = `${stateKey}-alumno-search`;
         }
@@ -649,6 +675,7 @@ const AppUI = {
         }
         AppState.currentSearch[stateKey].query = "";
         AppState.currentSearch[stateKey].selected = null;
+        AppState.currentSearch[stateKey].info = null; // NUEVO v16.0
     },
     
     // --- FIN FUNCIONES DE BÚSQUEDA ---
@@ -668,7 +695,7 @@ const AppUI = {
         AppUI.showModal('p2p-transfer-modal');
     },
     
-    // CAMBIO v14.0: student ahora es un objeto
+    // CAMBIO v16.0: La firma de la función cambió (recibe objeto)
     selectP2PStudent: function(student) {
         // Callback para P2P (no hace nada extra)
     },
@@ -722,7 +749,6 @@ const AppUI = {
     },
 
     // Cambia entre pestañas en el modal de Bonos
-    // CAMBIO v0.5.4: Gestiona visibilidad de botones
     changeBonoTab: function(tabId) {
         document.querySelectorAll('#bonos-modal .bono-tab-btn').forEach(btn => {
             btn.classList.remove('active-tab', 'border-blue-600', 'text-blue-600');
@@ -751,8 +777,7 @@ const AppUI = {
         document.getElementById('bono-admin-status-msg').textContent = "";
     },
     
-    // Callback para el buscador de alumno en el modal de bonos
-    // CAMBIO v14.0: student ahora es un objeto
+    // CAMBIO v16.0: La firma de la función cambió (recibe objeto)
     selectBonoStudent: function(student) {
         // No se necesita acción extra, solo seleccionar
     },
@@ -820,7 +845,6 @@ const AppUI = {
     },
     
     // Puebla la tabla de bonos configurados (Vista de Admin)
-    // CAMBIO v0.5.4: Añadido botón Eliminar
     populateBonoAdminList: function() {
         const tbody = document.getElementById('bonos-admin-lista');
         const bonos = AppState.bonos.disponibles; // La API (v13.6) envía todos (activos y agotados)
@@ -831,12 +855,18 @@ const AppUI = {
         }
 
         let html = '';
-        bonos.forEach(bono => {
+        // CAMBIO v16.0: Ordenar por clave alfabéticamente
+        const bonosOrdenados = [...bonos].sort((a, b) => a.clave.localeCompare(b.clave));
+
+        bonosOrdenados.forEach(bono => {
             const recompensa = AppFormat.formatNumber(bono.recompensa);
             const usos = `${bono.usos_actuales} / ${bono.usos_totales}`;
             const isAgotado = bono.usos_actuales >= bono.usos_totales;
             const rowClass = isAgotado ? 'opacity-60 bg-gray-50' : '';
             
+            // CAMBIO v16.0: Escapar comillas en el nombre para `handleEditBono`
+            const nombreEscapado = bono.nombre.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
             html += `
                 <tr class="${rowClass}">
                     <td class="px-4 py-2 text-sm font-semibold text-gray-800">${bono.clave}</td>
@@ -844,7 +874,7 @@ const AppUI = {
                     <td class="px-4 py-2 text-sm text-gray-800 text-right">${recompensa} ℙ</td>
                     <td class="px-4 py-2 text-sm text-gray-600 text-right">${usos}</td>
                     <td class="px-4 py-2 text-right text-sm">
-                        <button onclick="AppUI.handleEditBono('${bono.clave}', '${bono.nombre}', ${bono.recompensa}, ${bono.usos_totales})" class="font-medium text-blue-600 hover:text-blue-800 edit-bono-btn">Editar</button>
+                        <button onclick="AppUI.handleEditBono('${bono.clave}', '${nombreEscapado}', ${bono.recompensa}, ${bono.usos_totales})" class="font-medium text-blue-600 hover:text-blue-800 edit-bono-btn">Editar</button>
                         <!-- NUEVO v0.5.4: Botón Eliminar -->
                         <button onclick="AppTransacciones.eliminarBono('${bono.clave}')" class="ml-2 font-medium text-red-600 hover:text-red-800 delete-bono-btn">Eliminar</button>
                     </td>
@@ -874,140 +904,283 @@ const AppUI = {
     
     // --- FIN FUNCIONES DE BONOS ---
 
-    // --- NUEVO v14.0: FUNCIONES DE TIENDA ---
+    // --- INICIO FUNCIONES DE TIENDA (NUEVO v16.0) ---
 
-    // Callback para el buscador de alumno en el modal de tienda
-    // CAMBIO v14.0: student ahora es un objeto
-    selectTiendaStudent: function(student) {
-        // Al seleccionar/borrar un alumno, re-renderizar los items
-        // para actualizar el estado "sin-fondos" de los botones.
-        AppUI.renderTiendaItems();
-    },
-    
-    // Muestra el modal de la tienda
     showTiendaModal: function() {
         if (!AppState.datosActuales) return;
         
-        // Resetear campos
+        // Resetear pestaña de compra
         AppUI.resetSearchInput('tiendaAlumno');
         document.getElementById('tienda-clave-p2p').value = "";
         document.getElementById('tienda-status-msg').textContent = "";
+        AppState.tienda.currentItemToConfirm = null;
+
+        // Resetear pestaña de admin
+        document.getElementById('tienda-admin-clave').value = "";
+        AppUI.clearTiendaAdminForm();
+        document.getElementById('tienda-admin-status-msg').textContent = "";
+        document.getElementById('tienda-admin-gate').classList.remove('hidden');
+        document.getElementById('tienda-admin-panel').classList.add('hidden');
+        AppState.tienda.adminPanelUnlocked = false;
         
-        // Poblar artículos
+        // Resetear a la pestaña 1
+        AppUI.changeTiendaTab('comprar');
+
+        // Poblar listas
+        // Optimización v16.0: Renderizar las tarjetas de la tienda SOLO UNA VEZ
         AppUI.renderTiendaItems();
+        // Poblar la lista de admin
+        AppUI.populateTiendaAdminList();
         
-        // Mostrar modal
         AppUI.showModal('tienda-modal');
     },
 
-    // Renderiza la lista de artículos en la tienda
+    // Cambia entre pestañas en el modal de Tienda
+    changeTiendaTab: function(tabId) {
+        document.querySelectorAll('#tienda-modal .tienda-tab-btn').forEach(btn => {
+            btn.classList.remove('active-tab', 'border-blue-600', 'text-blue-600');
+            btn.classList.add('border-transparent', 'text-gray-600');
+        });
+
+        document.querySelectorAll('#tienda-modal .tienda-tab-content').forEach(content => {
+            content.classList.add('hidden');
+        });
+
+        const activeBtn = document.querySelector(`#tienda-modal [data-tab="${tabId}"]`);
+        activeBtn.classList.add('active-tab', 'border-blue-600', 'text-blue-600');
+        activeBtn.classList.remove('border-transparent', 'text-gray-600');
+        document.getElementById(`tienda-tab-${tabId}`).classList.remove('hidden');
+
+        // Limpiar mensajes
+        document.getElementById('tienda-status-msg').textContent = "";
+        document.getElementById('tienda-admin-status-msg').textContent = "";
+    },
+
+    // Callback para el buscador de alumno en la tienda
+    // Optimización v16.0: Llama a la función que solo actualiza botones
+    selectTiendaStudent: function(student) {
+        AppUI.updateTiendaButtonStates();
+    },
+
+    // Renderiza las tarjetas de la tienda (SOLO SE LLAMA UNA VEZ AL ABRIR)
     renderTiendaItems: function() {
         const container = document.getElementById('tienda-items-container');
-        if (!container) return;
+        const items = AppState.tienda.items;
         
-        const items = AppConfig.tiendaItems;
-        const stockData = AppState.datosAdicionales.tiendaStock;
-        const alumno = AppState.currentSearch.tiendaAlumno.selected;
-        const isTiendaAbierta = AppUI._isTiendaAbierta();
+        const itemKeys = Object.keys(items);
 
-        if (Object.keys(stockData).length === 0) {
-            container.innerHTML = `<p class="text-sm text-gray-500 text-center col-span-full">Cargando artículos...</p>`;
+        if (itemKeys.length === 0) {
+            container.innerHTML = `<p class="text-sm text-gray-500 text-center col-span-1 md:col-span-2">No hay artículos configurados en la tienda en este momento.</p>`;
             return;
         }
 
-        container.innerHTML = items.map(item => {
-            const itemInfo = stockData[item.id] || { precio: 0, stock: 0 };
-            const precioBase = itemInfo.precio;
-            const stock = itemInfo.stock;
-            const esIlimitado = (item.id === 'filantropo');
+        let html = '';
+        itemKeys.sort((a,b) => items[a].precio - items[b].precio).forEach(itemId => {
+            const item = items[itemId];
+            const costoFinal = Math.round(item.precio * (1 + AppConfig.TASA_ITBIS));
             
-            const itbis = Math.round(precioBase * AppConfig.TASA_ITBIS);
-            const costoFinal = precioBase + itbis;
+            // Escapar descripción para el tooltip
+            const descripcionEscapada = item.descripcion.replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
-            // --- Lógica de Estado ---
-            let isAgotado = (!esIlimitado && stock <= 0);
-            let sinFondos = (alumno && alumno.pinceles < costoFinal);
-            
-            let isDisabled = false;
-            let buttonClass = 'comprar-tienda-btn';
-            let buttonText = 'Comprar';
-            let cardClass = 'tienda-item-card';
+            html += `
+                <div class="tienda-item-card">
+                    <!-- Header de la Tarjeta (Tipo, Stock) -->
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-bold bg-blue-100 text-blue-700 rounded-full px-2 py-0.5">${item.tipo}</span>
+                        <span id="stock-${itemId}" class="text-xs font-medium text-gray-500">Stock: ${item.stock}</span>
+                    </div>
 
-            if (isAgotado) {
-                isDisabled = true;
-                buttonClass += ' agotado-btn';
-                buttonText = 'Agotado';
-                cardClass += ' agotado';
-            } else if (!isTiendaAbierta) {
-                isDisabled = true;
-                buttonText = 'Tienda Cerrada';
-            } else if (sinFondos) {
-                // No deshabilitar, pero mostrar estado visual
-                buttonClass += ' sin-fondos-btn';
-                buttonText = 'Fondos Insuficientes';
-                cardClass += ' sin-fondos';
-            } else {
-                // Comprable
-                buttonClass += ' comprable';
-            }
-            
-            return `
-                <div class="${cardClass}">
-                    <!-- Contenido de la tarjeta -->
-                    <div class="p-4 flex-1">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-xs font-semibold ${item.tipo === 'Académico' ? 'text-blue-600' : (item.tipo === 'Privilegio' ? 'text-purple-600' : (item.tipo === 'Económico' ? 'text-green-600' : (item.tipo === 'Riesgo' ? 'text-yellow-700' : 'text-gray-500')))}">
-                                ${item.tipo}
-                            </span>
-                            <span class="text-xs font-medium text-gray-500">
-                                ${esIlimitado ? 'Stock: Ilimitado' : `Quedan: ${stock}`}
-                            </span>
-                        </div>
-                        <h4 class="text-base font-semibold text-gray-900 truncate">${item.nombre}</h4>
-                        
-                        <div class="mt-3">
-                            <p class="text-xs text-gray-500">Precio Base: ${AppFormat.formatNumber(precioBase)} ℙ</p>
-                            <p class="text-xs text-gray-500">ITBIS (18%): ${AppFormat.formatNumber(itbis)} ℙ</p>
+                    <!-- Título y Tooltip -->
+                    <div class="tooltip-container relative inline-block mb-1">
+                        <h4 class="text-lg font-bold text-gray-900 truncate">
+                            ${item.nombre}
+                            <!-- Icono de Info para el tooltip -->
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 inline-block text-gray-400 ml-1">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a.75.75 0 0 0 0 1.5h.253a.25.25 0 0 1 .244.304l-.459 2.066A1.75 1.75 0 0 0 10.747 15H11a.75.75 0 0 0 0-1.5h-.253a.25.25 0 0 1-.244-.304l.459-2.066A1.75 1.75 0 0 0 9.253 9H9Z" clip-rule="evenodd" />
+                            </svg>
+                        </h4>
+                        <!-- Tooltip personalizado -->
+                        <div class="tooltip-text hidden md:block w-72">
+                            <span class="font-bold">${item.nombre}</span>
+                            <p class="text-xs mt-1">${descripcionEscapada}</p>
+                            <svg class="absolute text-gray-800 h-2 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255" xml:space="preserve"><polygon class="fill-current" points="0,0 127.5,127.5 255,0"/></svg>
                         </div>
                     </div>
                     
-                    <!-- Footer de la tarjeta (Precio y Botón) -->
-                    <div class="bg-gray-50 p-3 rounded-b-lg border-t border-gray-100">
-                        <p class="text-lg font-bold text-gray-800 text-center mb-2">${AppFormat.formatNumber(costoFinal)} ℙ</p>
-                        <button 
-                            id="buy-btn-${item.id}"
-                            class="${buttonClass}" 
-                            ${isDisabled ? 'disabled' : ''}
-                            onclick="AppTransacciones.comprarItem('${item.id}')"
-                        >
-                            ${buttonText}
+                    <!-- Footer (Precio y Botón) -->
+                    <div class="flex justify-between items-center mt-auto pt-4">
+                        <span class="text-xl font-bold text-blue-600">${AppFormat.formatNumber(costoFinal)} ℙ</span>
+                        <button id="buy-btn-${itemId}" 
+                                data-item-id="${itemId}"
+                                onclick="AppUI.showTiendaConfirmModal('${itemId}')"
+                                class="tienda-buy-btn bg-blue-600 text-white hover:bg-blue-700 w-auto">
+                            Comprar
                         </button>
                     </div>
                 </div>
             `;
-        }).join('');
+        });
+        
+        container.innerHTML = html;
+        
+        // Llamada inicial para establecer el estado de los botones
+        AppUI.updateTiendaButtonStates();
+    },
+
+    // Optimización v16.0: Solo actualiza el estado de los botones
+    updateTiendaButtonStates: function() {
+        const items = AppState.tienda.items;
+        const student = AppState.currentSearch.tiendaAlumno.info;
+        const isStoreOpen = AppState.tienda.isStoreOpen;
+
+        Object.keys(items).forEach(itemId => {
+            const item = items[itemId];
+            const btn = document.getElementById(`buy-btn-${itemId}`);
+            if (!btn) return;
+
+            const costoFinal = Math.round(item.precio * (1 + AppConfig.TASA_ITBIS));
+            
+            // Reset clases
+            btn.classList.remove('disabled-gray', 'sin-fondos-btn', 'agotado-btn', 'bg-blue-600', 'hover:bg-blue-700');
+            btn.disabled = false;
+            btn.textContent = "Comprar";
+
+            if (item.stock <= 0 && itemId !== 'filantropo') {
+                btn.classList.add('agotado-btn');
+                btn.textContent = "Agotado";
+                btn.disabled = true;
+            } else if (!isStoreOpen) {
+                btn.classList.add('disabled-gray');
+                btn.disabled = true;
+            } else if (!student) {
+                btn.classList.add('disabled-gray');
+                btn.disabled = true;
+            } else if (student.pinceles < costoFinal) {
+                btn.classList.add('sin-fondos-btn');
+                btn.disabled = true;
+            } else {
+                // Estado por defecto (Habilitado)
+                btn.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700');
+            }
+        });
+    },
+
+    // Muestra el modal de confirmación (factura)
+    showTiendaConfirmModal: function(itemId) {
+        const item = AppState.tienda.items[itemId];
+        if (!item) return;
+
+        AppState.tienda.currentItemToConfirm = itemId;
+        const container = document.getElementById('tienda-confirm-content');
+        
+        const precioBase = item.precio;
+        const itbis = Math.round(precioBase * AppConfig.TASA_ITBIS);
+        const costoTotal = precioBase + itbis;
+
+        container.innerHTML = `
+            <h3 class="text-lg font-semibold text-gray-900">${item.nombre}</h3>
+            <p class="text-sm text-gray-600">${item.descripcion}</p>
+            <div class="mt-4 pt-4 border-t border-gray-200 space-y-2">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">Precio Base:</span>
+                    <span class="font-medium text-gray-700">${AppFormat.formatNumber(precioBase)} ℙ</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">ITBIS (18%):</span>
+                    <span class="font-medium text-gray-700">${AppFormat.formatNumber(itbis)} ℙ</span>
+                </div>
+                <div class="flex justify-between text-lg">
+                    <span class="font-semibold text-gray-900">Costo Total:</span>
+                    <span class="font-bold text-blue-600">${AppFormat.formatNumber(costoTotal)} ℙ</span>
+                </div>
+            </div>
+        `;
+        
+        AppUI.showModal('tienda-confirm-modal');
+    },
+
+    // --- Funciones del Panel de Admin de Tienda ---
+    
+    toggleTiendaAdminPanel: function() {
+        const claveInput = document.getElementById('tienda-admin-clave');
+        const gate = document.getElementById('tienda-admin-gate');
+        const panel = document.getElementById('tienda-admin-panel');
+        
+        if (claveInput.value === AppConfig.CLAVE_MAESTRA) {
+            AppState.tienda.adminPanelUnlocked = true;
+            gate.classList.add('hidden');
+            panel.classList.remove('hidden');
+            claveInput.value = ""; // Limpiar
+            claveInput.classList.remove('shake', 'border-red-500');
+        } else {
+            claveInput.classList.add('shake', 'border-red-500');
+            claveInput.focus();
+            setTimeout(() => {
+                claveInput.classList.remove('shake');
+            }, 500);
+        }
     },
     
-    // Helper para verificar si la tienda está abierta
-    _isTiendaAbierta: function() {
-        const getLastThursday = (year, month) => {
-            const lastDayOfMonth = new Date(year, month + 1, 0);
-            let lastThursday = new Date(lastDayOfMonth);
-            lastThursday.setDate(lastThursday.getDate() - (lastThursday.getDay() + 3) % 7);
-            return lastThursday;
-        };
+    populateTiendaAdminList: function() {
+        const tbody = document.getElementById('tienda-admin-lista');
+        const items = AppState.tienda.items;
+        const itemKeys = Object.keys(items);
 
-        const now = new Date();
-        const storeDay = getLastThursday(now.getFullYear(), now.getMonth());
-        const storeOpen = new Date(storeDay.getFullYear(), storeDay.getMonth(), storeDay.getDate(), 0, 0, 0);
-        const storeClose = new Date(storeDay.getFullYear(), storeDay.getMonth(), storeDay.getDate(), 23, 59, 59);
+        if (itemKeys.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">No hay artículos configurados.</td></tr>`;
+            return;
+        }
 
-        return (now >= storeOpen && now <= storeClose);
+        let html = '';
+        const itemsOrdenados = itemKeys.sort((a,b) => a.localeCompare(b));
+
+        itemsOrdenados.forEach(itemId => {
+            const item = items[itemId];
+            const precio = AppFormat.formatNumber(item.precio);
+            const stock = item.stock;
+            const rowClass = (stock <= 0 && itemId !== 'filantropo') ? 'opacity-60 bg-gray-50' : '';
+            
+            // Escapar datos para los botones
+            const nombreEscapado = item.nombre.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+            const descEscapada = item.descripcion.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+            const tipoEscapado = item.tipo.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
+            html += `
+                <tr class="${rowClass}">
+                    <td class="px-4 py-2 text-sm font-semibold text-gray-800">${itemId}</td>
+                    <td class="px-4 py-2 text-sm text-gray-600 truncate" title="${item.nombre}">${item.nombre}</td>
+                    <td class="px-4 py-2 text-sm text-gray-800 text-right">${precio} ℙ</td>
+                    <td class="px-4 py-2 text-sm text-gray-600 text-right">${stock}</td>
+                    <td class="px-4 py-2 text-right text-sm">
+                        <button onclick="AppUI.handleEditItem('${itemId}', '${nombreEscapado}', '${descEscapada}', '${tipoEscapado}', ${item.precio}, ${item.stock})" class="font-medium text-blue-600 hover:text-blue-800 edit-item-btn">Editar</button>
+                        <button onclick="AppTransacciones.eliminarItem('${itemId}')" class="ml-2 font-medium text-red-600 hover:text-red-800 delete-item-btn">Eliminar</button>
+                    </td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
     },
-
+    
+    handleEditItem: function(itemId, nombre, descripcion, tipo, precio, stock) {
+        document.getElementById('tienda-admin-itemid-input').value = itemId;
+        document.getElementById('tienda-admin-nombre-input').value = nombre;
+        document.getElementById('tienda-admin-desc-input').value = descripcion;
+        document.getElementById('tienda-admin-tipo-input').value = tipo;
+        document.getElementById('tienda-admin-precio-input').value = precio;
+        document.getElementById('tienda-admin-stock-input').value = stock;
+        
+        // Hacer scroll al formulario
+        document.getElementById('tienda-admin-form-container').scrollIntoView({ behavior: 'smooth' });
+    },
+    
+    clearTiendaAdminForm: function() {
+        document.getElementById('tienda-admin-form').reset();
+        document.getElementById('tienda-admin-itemid-input').disabled = false;
+        document.getElementById('tienda-admin-status-msg').textContent = "";
+    },
+    
     // --- FIN FUNCIONES DE TIENDA ---
     
-
     // --- NUEVO v0.4.2: Cálculo de Comisión Admin ---
     updateAdminDepositoCalculo: function() {
         const cantidadInput = document.getElementById('transaccion-cantidad-input');
@@ -1157,18 +1330,20 @@ const AppUI = {
     },
 
     // --- FUNCIONES DE PRÉSTAMOS (PESTAÑA 2) ---
-    // CAMBIO v14.0: student ahora es un objeto
-    loadPrestamoPaquetes: function(student) {
+    loadPrestamoPaquetes: function(selectedStudentName) {
         const container = document.getElementById('prestamo-paquetes-container');
         const saldoSpan = document.getElementById('prestamo-alumno-saldo');
         
         document.getElementById('tesoreria-saldo-prestamo').textContent = `(Tesorería: ${AppFormat.formatNumber(AppState.datosAdicionales.saldoTesoreria)} ℙ)`;
 
-        if (!student) {
+        if (!selectedStudentName) {
             container.innerHTML = '<div class="text-sm text-gray-500">Busque y seleccione un alumno para ver las opciones.</div>';
             saldoSpan.textContent = '';
             return;
         }
+
+        const student = AppState.datosAdicionales.allStudents.find(s => s.nombre === selectedStudentName);
+        if (!student) return;
         
         saldoSpan.textContent = `(Saldo actual: ${AppFormat.formatNumber(student.pinceles)} ℙ)`;
 
@@ -1179,7 +1354,7 @@ const AppUI = {
         };
         
         let html = '';
-        let hasActiveLoan = AppState.datosAdicionales.prestamosActivos.some(p => p.alumno === student.nombre);
+        let hasActiveLoan = AppState.datosAdicionales.prestamosActivos.some(p => p.alumno === selectedStudentName);
 
         if (hasActiveLoan) {
              container.innerHTML = `<div class="p-3 text-sm font-semibold text-red-700 bg-red-100 rounded-lg">🚫 El alumno ya tiene un préstamo activo.</div>`;
@@ -1221,7 +1396,7 @@ const AppUI = {
 
             const buttonClass = isEligible ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed';
             const buttonDisabled = !isEligible ? 'disabled' : '';
-            const action = isEligible ? `AppTransacciones.realizarPrestamo('${student.nombre}', '${tipo}')` : '';
+            const action = isEligible ? `AppTransacciones.realizarPrestamo('${selectedStudentName}', '${tipo}')` : '';
 
             html += `
                 <div class="flex justify-between items-center p-3 border-b border-blue-100">
@@ -1240,18 +1415,20 @@ const AppUI = {
     },
     
     // --- FUNCIONES DE DEPÓSITOS (PESTAÑA 3) ---
-    // CAMBIO v14.0: student ahora es un objeto
-    loadDepositoPaquetes: function(student) {
+    loadDepositoPaquetes: function(selectedStudentName) {
         const container = document.getElementById('deposito-paquetes-container');
         const saldoSpan = document.getElementById('deposito-alumno-saldo');
         
         document.getElementById('deposito-info-tesoreria').textContent = `(Tesorería: ${AppFormat.formatNumber(AppState.datosAdicionales.saldoTesoreria)} ℙ)`;
 
-        if (!student) {
+        if (!selectedStudentName) {
             container.innerHTML = '<div class="text-sm text-gray-500">Busque y seleccione un alumno para ver las opciones.</div>';
             saldoSpan.textContent = '';
             return;
         }
+
+        const student = AppState.datosAdicionales.allStudents.find(s => s.nombre === selectedStudentName);
+        if (!student) return;
 
         saldoSpan.textContent = `(Saldo actual: ${AppFormat.formatNumber(student.pinceles)} ℙ)`;
 
@@ -1262,7 +1439,7 @@ const AppUI = {
         };
 
         let html = '';
-        let hasActiveLoan = AppState.datosAdicionales.prestamosActivos.some(p => p.alumno === student.nombre);
+        let hasActiveLoan = AppState.datosAdicionales.prestamosActivos.some(p => p.alumno === selectedStudentName);
 
         if (hasActiveLoan) {
              container.innerHTML = `<div class="p-3 text-sm font-semibold text-red-700 bg-red-100 rounded-lg">🚫 El alumno tiene un préstamo activo. Debe saldarlo para invertir.</div>`;
@@ -1287,7 +1464,7 @@ const AppUI = {
 
             const buttonClass = isEligible ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed';
             const buttonDisabled = !isEligible ? 'disabled' : '';
-            const action = isEligible ? `AppTransacciones.realizarDeposito('${student.nombre}', '${tipo}')` : '';
+            const action = isEligible ? `AppTransacciones.realizarDeposito('${selectedStudentName}', '${tipo}')` : '';
 
             html += `
                 <div class="flex justify-between items-center p-3 border-b border-green-100">
@@ -1377,7 +1554,6 @@ const AppUI = {
         const homeLink = document.createElement('a');
         homeLink.href = '#';
         homeLink.dataset.groupName = "home"; 
-        // CAMBIO: Eliminado 'justify-between'
         homeLink.className = "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors nav-link";
         homeLink.innerHTML = `<span class="truncate">Inicio</span>`;
         homeLink.addEventListener('click', (e) => {
@@ -1397,11 +1573,8 @@ const AppUI = {
             const link = document.createElement('a');
             link.href = '#';
             link.dataset.groupName = grupo.nombre;
-            // CAMBIO: Eliminado 'justify-between'
             link.className = "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors nav-link";
             
-            // ELIMINADO: Lógica de color de total
-            // CAMBIO: Eliminado span de total
             link.innerHTML = `
                 <span class="truncate">${grupo.nombre}</span>
             `;
@@ -1439,7 +1612,6 @@ const AppUI = {
     /**
      * Muestra la vista de "Inicio"
      */
-    // CAMBIO v0.5.4: Simetría de tarjetas (h-full y flex)
     mostrarPantallaNeutral: function(grupos) {
         document.getElementById('main-header-title').textContent = "Bienvenido al Banco del Pincel Dorado";
         document.getElementById('page-subtitle').innerHTML = ''; 
@@ -1464,7 +1636,6 @@ const AppUI = {
         // Tarjeta de Tesorería
         const tesoreriaSaldo = AppState.datosAdicionales.saldoTesoreria;
         
-        // CAMBIO v0.5.4: Añadido h-full y flex flex-col justify-between
         bovedaHtml = `
             <div class="bg-white rounded-lg shadow-md p-4 h-full flex flex-col justify-between">
                 <div>
@@ -1482,7 +1653,6 @@ const AppUI = {
             </div>
         `;
         
-        // CAMBIO v0.5.4: Añadido h-full y flex flex-col justify-between
         tesoreriaHtml = `
             <div class="bg-white rounded-lg shadow-md p-4 h-full flex flex-col justify-between">
                 <div>
@@ -1501,16 +1671,13 @@ const AppUI = {
         `;
         
         // ===================================================================
-        // INICIO DE LA MODIFICACIÓN (v0.4.1): Lógica "Alumnos Destacados" (SIN FONDOS)
+        // Lógica "Alumnos Destacados"
         // ===================================================================
         
-        // 1. Obtener datos necesarios
         const allStudents = AppState.datosAdicionales.allStudents;
         const depositosActivos = AppState.datosAdicionales.depositosActivos;
         
-        // 2. Mapear alumnos para incluir su capital total
         const studentsWithCapital = allStudents.map(student => {
-            // a) Calcular total en Depósitos (Lógica anterior)
             const totalInvertidoDepositos = depositosActivos
                 .filter(deposito => (deposito.alumno || '').trim() === (student.nombre || '').trim())
                 .reduce((sum, deposito) => {
@@ -1519,7 +1686,6 @@ const AppUI = {
                     return sum + montoNumerico;
                 }, 0);
             
-            // c) Calcular Capital Total (REVERTIDO)
             const capitalTotal = student.pinceles + totalInvertidoDepositos;
 
             return {
@@ -1529,10 +1695,8 @@ const AppUI = {
             };
         });
 
-        // 3. Ordenar por capitalTotal y tomar los 3 primeros
         const top3 = studentsWithCapital.sort((a, b) => b.capitalTotal - a.capitalTotal).slice(0, 3);
 
-        // 4. Generar el HTML para las tarjetas del Top 3
         if (top3.length > 0) {
             top3Html = top3.map((student, index) => {
                 let rankColor = 'bg-blue-100 text-blue-700';
@@ -1541,9 +1705,7 @@ const AppUI = {
                 if (index === 2) rankColor = 'bg-orange-100 text-orange-700';
                 const grupoNombre = student.grupoNombre || 'N/A';
                 
-                // Formatear números para el tooltip
                 const pincelesLiquidosF = AppFormat.formatNumber(student.pinceles);
-                // MODIFICADO (v0.4.1 REVERTIDO): Solo depósitos
                 const totalInvertidoF = AppFormat.formatNumber(student.totalInvertidoDepositos);
 
                 return `
@@ -1564,7 +1726,6 @@ const AppUI = {
                                 <!-- Tooltip personalizado -->
                                 <div class="tooltip-text hidden md:block w-48">
                                     <span class="font-bold">Capital Total</span>
-                                    <!-- LÍNEAS MODIFICADAS (v0.3.14) -->
                                     <div class="flex justify-between mt-1 text-xs"><span>Capital Líquido:</span> <span>${pincelesLiquidosF} ℙ</span></div>
                                     <div class="flex justify-between text-xs"><span>Capital Invertido:</span> <span>${totalInvertidoF} ℙ</span></div>
                                     <svg class="absolute text-gray-800 h-2 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255" xml:space="preserve"><polygon class="fill-current" points="0,0 127.5,127.5 255,0"/></svg>
@@ -1576,7 +1737,6 @@ const AppUI = {
             }).join('');
         }
         
-        // 5. Generar tarjetas de relleno (placeholders) si hay menos de 3
         for (let i = top3.length; i < 3; i++) {
             top3Html += `
                 <div class="bg-white rounded-lg shadow-md p-3 opacity-50 h-full flex flex-col justify-between">
@@ -1594,11 +1754,6 @@ const AppUI = {
             `;
         }
         
-        // ===================================================================
-        // FIN DE LA MODIFICACIÓN (v0.4.1)
-        // ===================================================================
-
-
         bovedaContainer.innerHTML = bovedaHtml;
         tesoreriaContainer.innerHTML = tesoreriaHtml;
         top3Grid.innerHTML = top3Html;
@@ -1692,7 +1847,6 @@ const AppUI = {
         
         const enRiesgo = possibleRiesgoStudents.sort((a, b) => a.pinceles - b.pinceles);
         
-        // CAMBIO: Reducido de 7 a 6
         const top6Riesgo = enRiesgo.slice(0, 6); 
 
         if (top6Riesgo.length === 0) {
@@ -1730,7 +1884,6 @@ const AppUI = {
         const pincelesPositivos = allStudents.filter(s => s.pinceles > 0).reduce((sum, user) => sum + user.pinceles, 0);
         const pincelesNegativos = allStudents.filter(s => s.pinceles < 0).reduce((sum, user) => sum + user.pinceles, 0);
         
-        // CAMBIO: Añadida la clase 'stat-item' para control de CSS
         const createStat = (label, value, valueClass = 'text-gray-900') => `
             <div class="stat-item flex justify-between items-baseline text-sm py-2 border-b border-gray-100">
                 <span class="text-gray-600">${label}:</span>
@@ -1757,7 +1910,6 @@ const AppUI = {
             ...AnunciosDB['ALERTA'].map(texto => ({ tipo: 'ALERTA', texto, bg: 'bg-red-100', text: 'text-red-700' }))
         ];
         
-        // CAMBIO: Reducido de 6 a 5
         const anuncios = [...todosLosAnuncios].sort(() => 0.5 - Math.random()).slice(0, 5);
 
         lista.innerHTML = anuncios.map(anuncio => `
@@ -1802,7 +1954,6 @@ const AppUI = {
         listaModal.innerHTML = html;
     },
 
-    // CAMBIO v0.4.1: Eliminada info del Fondo de Inversión
     showStudentModal: function(nombreGrupo, nombreUsuario, rank) {
         const student = AppState.datosAdicionales.allStudents.find(u => u.nombre === nombreUsuario);
         const grupo = AppState.datosActuales.find(g => g.nombre === nombreGrupo);
@@ -1859,9 +2010,7 @@ const AppUI = {
         AppUI.showModal('student-modal');
     },
     
-    // CORRECCIÓN v0.3.14: Eliminada declaración duplicada de tiendaBtn
-    // CAMBIO v14.0: Refactorizado para manejar el botón de tienda (siempre activo)
-    // y los mensajes de estado de la tienda (en home y en modal).
+    // CAMBIO v16.0: Lógica de Tienda añadida
     updateCountdown: function() {
         const getLastThursday = (year, month) => {
             const lastDayOfMonth = new Date(year, month + 1, 0);
@@ -1880,78 +2029,58 @@ const AppUI = {
 
         const timerEl = document.getElementById('countdown-timer');
         const messageEl = document.getElementById('store-message'); 
-        
-        // NUEVO v14.0: Referencia al mensaje del modal de la tienda
-        const tiendaTimerMsg = document.getElementById('tienda-timer-message');
-        
-        const isAbierta = (now >= storeOpen && now <= storeClose);
-        let timerMessage = ""; // Para el modal
+        const tiendaBtn = document.getElementById('tienda-btn');
+        const tiendaTimerStatus = document.getElementById('tienda-timer-status'); // NUEVO v16.0
 
-        if (isAbierta) { 
-            // --- TIENDA ABIERTA ---
+        if (now >= storeOpen && now <= storeClose) { 
             timerEl.classList.add('hidden');
             messageEl.classList.remove('hidden');
-            messageEl.textContent = "¡La tienda está abierta!"; // Mensaje principal
-            
-            timerMessage = "¡LA TIENDA ESTÁ ABIERTA! (Cierra a la medianoche)";
 
-            // V14.0: El botón de tienda principal SIEMPRE está habilitado.
-            const tiendaBtn = document.getElementById('tienda-btn');
-            if (tiendaBtn && tiendaBtn.disabled) { // Solo si estaba deshabilitado
-                tiendaBtn.disabled = false;
-                tiendaBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
-                tiendaBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            // NUEVO v16.0: Actualizar estado de la tienda
+            if (tiendaTimerStatus) { 
+                tiendaTimerStatus.innerHTML = `<span class="text-green-600 font-bold">¡TIENDA ABIERTA!</span> Oportunidad única.`;
+                tiendaTimerStatus.classList.remove('bg-gray-100', 'text-gray-700', 'bg-red-50', 'text-red-700');
+                tiendaTimerStatus.classList.add('bg-green-50', 'text-green-700');
             }
+            AppState.tienda.isStoreOpen = true;
             
         } else {
-            // --- TIENDA CERRADA ---
             timerEl.classList.remove('hidden');
             messageEl.classList.add('hidden');
             
-            // V14.0: El botón de tienda principal SIEMPRE está habilitado.
-            
+            // NUEVO v16.0: Actualizar estado de la tienda
+            if (tiendaTimerStatus) {
+                tiendaTimerStatus.innerHTML = `<span class="text-red-600 font-bold">TIENDA CERRADA.</span> Próxima apertura en:`;
+                tiendaTimerStatus.classList.remove('bg-green-50', 'text-green-700');
+                tiendaTimerStatus.classList.add('bg-red-50', 'text-red-700');
+            }
+            AppState.tienda.isStoreOpen = false;
+
             let targetDate = storeOpen; 
             if (now > storeClose) { 
-                // Si ya pasó, apuntar al próximo mes
-                const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-                targetDate = getLastThursday(nextMonth.getFullYear(), nextMonth.getMonth());
+                targetDate = getLastThursday(currentYear, currentMonth + 1);
                 targetDate.setHours(0, 0, 0, 0); 
             }
 
             const distance = targetDate - now;
             const f = (val) => String(val).padStart(2, '0');
             
-            const days = f(Math.floor(distance / (1000 * 60 * 60 * 24)));
-            const hours = f(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)));
-            const minutes = f(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)));
-            const seconds = f(Math.floor((distance % (1000 * 60)) / 1000));
-
-            document.getElementById('days').textContent = days;
-            document.getElementById('hours').textContent = hours;
-            document.getElementById('minutes').textContent = minutes;
-            document.getElementById('seconds').textContent = seconds;
-            
-            timerMessage = `La tienda abre en: ${days}d ${hours}h ${minutes}m ${seconds}s`;
+            document.getElementById('days').textContent = f(Math.floor(distance / (1000 * 60 * 60 * 24)));
+            document.getElementById('hours').textContent = f(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)));
+            document.getElementById('minutes').textContent = f(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)));
+            document.getElementById('seconds').textContent = f(Math.floor((distance % (1000 * 60)) / 1000));
         }
-        
-        // Actualizar el mensaje DENTRO del modal de la tienda
-        if (tiendaTimerMsg) {
-            tiendaTimerMsg.textContent = timerMessage;
-            if (isAbierta) {
-                tiendaTimerMsg.classList.remove('text-blue-800', 'bg-blue-50', 'border-blue-200');
-                tiendaTimerMsg.classList.add('text-green-800', 'bg-green-50', 'border-green-200');
-            } else {
-                tiendaTimerMsg.classList.add('text-blue-800', 'bg-blue-50', 'border-blue-200');
-                tiendaTimerMsg.classList.remove('text-green-800', 'bg-green-50', 'border-green-200');
-            }
+
+        // NUEVO v16.0: Actualizar estado de botones si la tienda está visible
+        // (Optimización: esto solo se ejecuta si el modal está abierto)
+        if (document.getElementById('tienda-modal').classList.contains('opacity-0') === false) {
+            AppUI.updateTiendaButtonStates();
         }
     }
 };
 
 // --- OBJETO TRANSACCIONES (Préstamos, Depósitos, P2P, Bonos, Tienda) ---
-// CAMBIO v0.5.0: Añadida lógica de Bonos
-// CAMBIO v0.5.4: Añadida lógica de Eliminar Bonos
-// CAMBIO v14.0: Añadida lógica de Comprar Item (Tienda)
+// CAMBIO v16.0: Añadida lógica de Tienda
 const AppTransacciones = {
 
     realizarTransaccionMultiple: async function() {
@@ -2057,9 +2186,7 @@ const AppTransacciones = {
             if (result.success === true) {
                 AppTransacciones.setSuccess(statusMsg, result.message || "¡Préstamo otorgado con éxito!");
                 AppData.cargarDatos(false); 
-                // CAMBIO v14.0: Recargar paquetes con el objeto alumno
-                const student = AppState.currentSearch.prestamo.selected;
-                AppUI.loadPrestamoPaquetes(student); 
+                AppUI.loadPrestamoPaquetes(alumnoNombre); 
 
             } else {
                 throw new Error(result.message || "Error al otorgar el préstamo.");
@@ -2098,9 +2225,7 @@ const AppTransacciones = {
             if (result.success === true) {
                 AppTransacciones.setSuccess(statusMsg, result.message || "¡Depósito creado con éxito!");
                 AppData.cargarDatos(false); 
-                // CAMBIO v14.0: Recargar paquetes con el objeto alumno
-                const student = AppState.currentSearch.deposito.selected;
-                AppUI.loadDepositoPaquetes(student); 
+                AppUI.loadDepositoPaquetes(alumnoNombre); 
 
             } else {
                 throw new Error(result.message || "Error al crear el depósito.");
@@ -2118,9 +2243,8 @@ const AppTransacciones = {
         const submitBtn = document.getElementById('p2p-submit-btn');
         const btnText = document.getElementById('p2p-btn-text');
         
-        // CAMBIO v14.0: Obtener nombre del objeto
-        const nombreOrigen = AppState.currentSearch.p2pOrigen.selected ? AppState.currentSearch.p2pOrigen.selected.nombre : null;
-        const nombreDestino = AppState.currentSearch.p2pDestino.selected ? AppState.currentSearch.p2pDestino.selected.nombre : null;
+        const nombreOrigen = AppState.currentSearch.p2pOrigen.selected;
+        const nombreDestino = AppState.currentSearch.p2pDestino.selected;
         const claveP2P = document.getElementById('p2p-clave').value;
         const cantidad = parseInt(document.getElementById('p2p-cantidad').value, 10);
         
@@ -2182,15 +2306,14 @@ const AppTransacciones = {
         }
     },
 
-    // --- NUEVO v0.5.0: LÓGICA DE BONOS ---
+    // --- LÓGICA DE BONOS (v0.5.0) ---
 
     canjearBono: async function() {
         const statusMsg = document.getElementById('bono-status-msg');
         const submitBtn = document.getElementById('bono-submit-btn');
         const btnText = document.getElementById('bono-btn-text');
         
-        // CAMBIO v14.0: Obtener nombre del objeto
-        const alumnoNombre = AppState.currentSearch.bonoAlumno.selected ? AppState.currentSearch.bonoAlumno.selected.nombre : null;
+        const alumnoNombre = AppState.currentSearch.bonoAlumno.selected;
         const claveP2P = document.getElementById('bono-clave-p2p').value;
         const claveBono = document.getElementById('bono-clave-input').value.toUpperCase();
 
@@ -2311,12 +2434,10 @@ const AppTransacciones = {
     eliminarBono: async function(claveBono) {
         // ADVERTENCIA: Esta función elimina directamente sin confirmación,
         // ya que `window.confirm()` está prohibido.
-        // En una app real, aquí se llamaría a un modal de confirmación.
 
         const statusMsg = document.getElementById('bono-admin-status-msg');
         AppTransacciones.setLoading(statusMsg, `Eliminando bono ${claveBono}...`);
         
-        // Deshabilitar todos los botones de eliminar para evitar doble clic
         document.querySelectorAll('.delete-bono-btn').forEach(btn => btn.disabled = true);
 
         try {
@@ -2342,40 +2463,41 @@ const AppTransacciones = {
 
         } catch (error) {
             AppTransacciones.setError(statusMsg, error.message);
-            // Rehabilitar botones solo si hay error
             document.querySelectorAll('.delete-bono-btn').forEach(btn => btn.disabled = false);
         } 
-        // No hay 'finally' para rehabilitar botones; si tiene éxito, la lista se recargará
-        // y los botones se rehabilitarán (o no existirán)
     },
 
-    // --- NUEVO v14.0: LÓGICA DE TIENDA ---
-    
-    comprarItem: async function(itemId) {
+    // --- LÓGICA DE TIENDA (NUEVO v16.0) ---
+
+    // Llamado desde el botón "Confirmar Compra" en el modal de factura
+    comprarItem: async function() {
         const statusMsg = document.getElementById('tienda-status-msg');
+        const submitBtn = document.getElementById('tienda-confirm-submit-btn');
+        const btnText = document.getElementById('tienda-confirm-btn-text');
         
-        // CAMBIO v14.0: Obtener nombre del objeto
-        const alumnoNombre = AppState.currentSearch.tiendaAlumno.selected ? AppState.currentSearch.tiendaAlumno.selected.nombre : null;
+        const alumnoNombre = AppState.currentSearch.tiendaAlumno.selected;
         const claveP2P = document.getElementById('tienda-clave-p2p').value;
+        const itemId = AppState.tienda.currentItemToConfirm;
 
         let errorValidacion = "";
         if (!alumnoNombre) {
-            errorValidacion = "Debe seleccionar su nombre (Comprador) de la lista.";
+            errorValidacion = "Debe seleccionar su nombre en la pestaña 'Comprar'.";
         } else if (!claveP2P) {
-            errorValidacion = "Debe ingresar su Clave P2P para confirmar la compra.";
+            errorValidacion = "Debe ingresar su Clave P2P en la pestaña 'Comprar'.";
         } else if (!itemId) {
-            errorValidacion = "Error de artículo. Recargue la página.";
+            errorValidacion = "Error: No se seleccionó ningún artículo.";
         }
         
         if (errorValidacion) {
+            AppUI.hideModal('tienda-confirm-modal');
             AppTransacciones.setError(statusMsg, errorValidacion);
             return;
         }
 
-        // Deshabilitar TODOS los botones de compra mientras se procesa
-        document.querySelectorAll('.comprar-tienda-btn').forEach(btn => btn.disabled = true);
-        AppTransacciones.setLoading(statusMsg, `Procesando compra de "${itemId}"...`);
-        
+        AppTransacciones.setLoadingState(submitBtn, btnText, true, 'Procesando...');
+        // Limpiar el mensaje de error principal mientras se procesa
+        statusMsg.textContent = ""; 
+
         try {
             const payload = {
                 accion: 'comprar_item_tienda',
@@ -2394,30 +2516,118 @@ const AppTransacciones = {
             if (result.success === true) {
                 AppTransacciones.setSuccess(statusMsg, result.message || "¡Compra exitosa!");
                 
-                // Limpiar clave P2P por seguridad
-                document.getElementById('tienda-clave-p2p').value = "";
+                // Cerrar ambos modales
+                AppUI.hideModal('tienda-confirm-modal');
+                AppUI.hideModal('tienda-modal');
                 
-                // Recargar datos (actualiza saldo y stock)
-                await AppData.cargarDatos(false); 
-                
-                // Forzar re-render de items (ya se hace en procesarYMostrarDatos,
-                // pero lo dejamos por si acaso)
-                // AppUI.renderTiendaItems(); 
+                AppData.cargarDatos(false); // Recargar todos los datos
 
             } else {
                 throw new Error(result.message || "Error desconocido de la API.");
             }
 
         } catch (error) {
-            AppTransacciones.setError(statusMsg, error.message);
-            // Si hay error, los botones se reactivarán cuando se re-renderice la tienda
-            // (lo cual ocurre al final de AppData.cargarDatos si el modal sigue abierto)
-            // O podemos forzar un re-render aquí:
-            AppUI.renderTiendaItems();
+            // Mostrar error en el modal de confirmación
+            const confirmStatusMsg = document.getElementById('tienda-confirm-content');
+            confirmStatusMsg.innerHTML += `<p class="text-sm text-center font-medium text-red-600 mt-4">Error: ${error.message}</p>`;
+        } finally {
+            AppTransacciones.setLoadingState(submitBtn, btnText, false, 'Confirmar Compra');
         }
-        // No hay 'finally'
+    },
+
+    crearActualizarItem: async function() {
+        const statusMsg = document.getElementById('tienda-admin-status-msg');
+        const submitBtn = document.getElementById('tienda-admin-submit-btn');
+        
+        const item = {
+            ItemID: document.getElementById('tienda-admin-itemid-input').value.trim(),
+            Nombre: document.getElementById('tienda-admin-nombre-input').value.trim(),
+            Descripcion: document.getElementById('tienda-admin-desc-input').value.trim(),
+            Tipo: document.getElementById('tienda-admin-tipo-input').value.trim(),
+            PrecioBase: parseInt(document.getElementById('tienda-admin-precio-input').value, 10),
+            Stock: parseInt(document.getElementById('tienda-admin-stock-input').value, 10)
+        };
+        
+        let errorValidacion = "";
+        if (!item.ItemID) {
+            errorValidacion = "El 'ItemID' es obligatorio.";
+        } else if (!item.Nombre) {
+            errorValidacion = "El 'Nombre' es obligatorio.";
+        } else if (isNaN(item.PrecioBase) || item.PrecioBase <= 0) {
+            errorValidacion = "El 'Precio Base' debe ser un número positivo.";
+        } else if (isNaN(item.Stock) || item.Stock < 0) {
+            errorValidacion = "El 'Stock' debe ser un número (0 o más).";
+        }
+        
+        if (errorValidacion) {
+            AppTransacciones.setError(statusMsg, errorValidacion);
+            return;
+        }
+
+        AppTransacciones.setLoadingState(submitBtn, null, true, 'Guardando...');
+        AppTransacciones.setLoading(statusMsg, `Guardando artículo ${item.ItemID}...`);
+
+        try {
+            const payload = {
+                accion: 'admin_crear_item_tienda',
+                clave: AppConfig.CLAVE_MAESTRA,
+                item: item // El backend espera este objeto
+            };
+
+            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+
+            if (result.success === true) {
+                AppTransacciones.setSuccess(statusMsg, result.message || "¡Artículo guardado con éxito!");
+                AppUI.clearTiendaAdminForm();
+                AppData.cargarDatos(false); // Recargar todos los datos
+            } else {
+                throw new Error(result.message || "Error al guardar el artículo.");
+            }
+
+        } catch (error) {
+            AppTransacciones.setError(statusMsg, error.message);
+        } finally {
+            AppTransacciones.setLoadingState(submitBtn, null, false, 'Crear / Actualizar');
+        }
     },
     
+    eliminarItem: async function(itemId) {
+        const statusMsg = document.getElementById('tienda-admin-status-msg');
+        AppTransacciones.setLoading(statusMsg, `Eliminando artículo ${itemId}...`);
+        
+        document.querySelectorAll('.delete-item-btn').forEach(btn => btn.disabled = true);
+
+        try {
+            const payload = {
+                accion: 'admin_eliminar_item_tienda',
+                clave: AppConfig.CLAVE_MAESTRA,
+                itemId: itemId
+            };
+
+            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+
+            if (result.success === true) {
+                AppTransacciones.setSuccess(statusMsg, result.message || "¡Artículo eliminado con éxito!");
+                AppData.cargarDatos(false); // Recargar todos los datos
+            } else {
+                throw new Error(result.message || "Error al eliminar el artículo.");
+            }
+
+        } catch (error) {
+            AppTransacciones.setError(statusMsg, error.message);
+            document.querySelectorAll('.delete-item-btn').forEach(btn => btn.disabled = false);
+        } 
+    },
     
 
     // --- Utilidades de Fetch y Estado ---
@@ -2476,6 +2686,14 @@ const AppTransacciones = {
 window.AppUI = AppUI;
 window.AppFormat = AppFormat;
 window.AppTransacciones = AppTransacciones;
+
+// NUEVO v16.0: Exponer funciones de admin al scope global para onclick=""
+window.AppUI.handleEditBono = AppUI.handleEditBono;
+window.AppTransacciones.eliminarBono = AppTransacciones.eliminarBono;
+window.AppUI.showTiendaConfirmModal = AppUI.showTiendaConfirmModal;
+window.AppUI.handleEditItem = AppUI.handleEditItem;
+window.AppTransacciones.eliminarItem = AppTransacciones.eliminarItem;
+
 
 window.onload = function() {
     console.log("window.onload disparado. Iniciando AppUI...");
