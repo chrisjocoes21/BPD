@@ -299,7 +299,7 @@ const AppUI = {
         // Listeners Modal P2P
         document.getElementById('p2p-portal-btn').addEventListener('click', () => AppUI.showP2PModal());
         document.getElementById('p2p-modal-close-btn').addEventListener('click', () => AppUI.hideModal('p2p-transfer-modal'));
-        document.getElementById('p2p-cancel-btn').addEventListener('click', () => AppUI.hideModal('p2t-transfer-modal'));
+        document.getElementById('p2p-cancel-btn').addEventListener('click', () => AppUI.hideModal('p2p-transfer-modal'));
         document.getElementById('p2p-transfer-modal').addEventListener('click', (e) => {
             if (e.target.id === 'p2p-transfer-modal') AppUI.hideModal('p2p-transfer-modal');
         });
@@ -1100,43 +1100,15 @@ const AppUI = {
     },
 
 
-    // ===================================================================
-    // INICIO DE LA MODIFICACIÓN (Sidebar Visual)
-    // ===================================================================
-    
-    /**
-     * Actualiza la barra lateral con los grupos y nuevos estilos.
-     */
     actualizarSidebar: function(grupos) {
         const nav = document.getElementById('sidebar-nav');
-        nav.innerHTML = ''; // Limpiar contenido anterior
+        nav.innerHTML = ''; 
         
-        // --- Iconos SVG como plantillas ---
-        const iconHome = `
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 flex-shrink-0">
-              <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-            </svg>`;
-        
-        const iconGrupo = `
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 flex-shrink-0">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0-5.655 0M15 19.128a9.38 9.38 0 0 1 5.655 0M15 19.128v-2.128A9.38 9.38 0 0 0 9.345 17v2.128M15 19.128A9.38 9.38 0 0 0 9.345 17M15 19.128a9.38 9.38 0 0 1 5.655 0M15 19.128v-2.128c0-.987.624-1.848 1.5-2.238A9.38 9.38 0 0 0 15 17M15 19.128v-2.128c0-.987-.624-1.848-1.5-2.238A9.38 9.38 0 0 0 15 17M15 19.128A9.38 9.38 0 0 1 9.345 17M4.5 19.128A9.38 9.38 0 0 1 9.345 17M4.5 19.128v-2.128c0-.987.624-1.848 1.5-2.238A9.38 9.38 0 0 0 4.5 17M4.5 19.128v-2.128c0-.987-.624-1.848-1.5-2.238A9.38 9.38 0 0 0 4.5 17M4.5 19.128A9.38 9.38 0 0 0 9.345 17M12 3c-1.82 0-3.513.734-4.745 2.055A8.995 8.995 0 0 1 12 21a8.995 8.995 0 0 1 4.745-15.945A8.98 8.98 0 0 0 12 3Z" />
-            </svg>`;
-            
-        const iconCicla = `
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 flex-shrink-0">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-            </svg>`;
-
-        // --- Crear enlace de "Inicio" ---
         const homeLink = document.createElement('a');
         homeLink.href = '#';
         homeLink.dataset.groupName = "home"; 
-        // Clases actualizadas para flex, gap, padding, etc.
-        homeLink.className = "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors nav-link";
-        homeLink.innerHTML = `
-            ${iconHome}
-            <span class="truncate flex-1">Inicio</span>
-        `;
+        homeLink.className = "flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors nav-link";
+        homeLink.innerHTML = `<span class="truncate">Inicio</span>`;
         homeLink.addEventListener('click', (e) => {
             e.preventDefault();
             if (AppState.selectedGrupo === null) {
@@ -1149,37 +1121,20 @@ const AppUI = {
             AppUI.hideSidebar();
         });
         nav.appendChild(homeLink);
-        
-        // --- Separador ---
-        const hr1 = document.createElement('hr');
-        hr1.className = "border-gray-200 my-2";
-        nav.appendChild(hr1);
 
-        // --- Crear enlaces de Grupos ---
-        let ciclaGrupo = null;
-        
         (grupos || []).forEach(grupo => {
-            
-            // Separar Cicla para mostrarlo al final
-            if (grupo.nombre === 'Cicla') {
-                ciclaGrupo = grupo;
-                return; // Saltar la iteración actual
-            }
-
             const link = document.createElement('a');
             link.href = '#';
             link.dataset.groupName = grupo.nombre;
-            // Clases actualizadas
-            link.className = "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors nav-link";
+            link.className = "flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors nav-link";
             
-            let totalColor = "text-gray-500"; // Color inactivo
-            if (grupo.total < 0) totalColor = "text-red-400";
-            if (grupo.total > 0) totalColor = "text-green-400"; // Color más suave para inactivo
+            let totalColor = "text-gray-600";
+            if (grupo.total < 0) totalColor = "text-red-600";
+            if (grupo.total > 0) totalColor = "text-green-600";
 
             link.innerHTML = `
-                ${iconGrupo}
-                <span class="truncate flex-1">${grupo.nombre}</span>
-                <span class="text-xs font-semibold ${totalColor} nav-link-total">${AppFormat.formatNumber(grupo.total)} ℙ</span>
+                <span class="truncate">${grupo.nombre}</span>
+                <span class="text-xs font-semibold ${totalColor}">${AppFormat.formatNumber(grupo.total)} ℙ</span>
             `;
             link.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -1194,99 +1149,23 @@ const AppUI = {
             });
             nav.appendChild(link);
         });
-        
-        // --- Añadir Cicla al final (si existe) ---
-        if (ciclaGrupo) {
-            // Separador antes de Cicla
-            const hr2 = document.createElement('hr');
-            hr2.className = "border-gray-200 my-2";
-            nav.appendChild(hr2);
-            
-            const link = document.createElement('a');
-            link.href = '#';
-            link.dataset.groupName = ciclaGrupo.nombre;
-            link.className = "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors nav-link";
-            
-            // Cicla siempre usa rojo
-            let totalColor = "text-red-400"; 
-
-            link.innerHTML = `
-                ${iconCicla}
-                <span class="truncate flex-1">${ciclaGrupo.nombre}</span>
-                <span class="text-xs font-semibold ${totalColor} nav-link-total">${AppFormat.formatNumber(ciclaGrupo.total)} ℙ</span>
-            `;
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (AppState.selectedGrupo === ciclaGrupo.nombre) {
-                    AppUI.hideSidebar();
-                    return;
-                }
-                AppState.selectedGrupo = ciclaGrupo.nombre;
-                AppUI.mostrarDatosGrupo(ciclaGrupo);
-                AppUI.actualizarSidebarActivo();
-                AppUI.hideSidebar();
-            });
-            nav.appendChild(link);
-        }
     },
 
-    /**
-     * Actualiza el estado visual (activo/inactivo) de los enlaces de la sidebar.
-     */
     actualizarSidebarActivo: function() {
         const links = document.querySelectorAll('#sidebar-nav .nav-link');
-        
         links.forEach(link => {
             const groupName = link.dataset.groupName;
             const isActive = (AppState.selectedGrupo === null && groupName === 'home') || (AppState.selectedGrupo === groupName);
-            
-            const totalSpan = link.querySelector('.nav-link-total');
 
             if (isActive) {
-                // --- ESTADO ACTIVO ---
-                // Fondo azul sólido, texto blanco
-                link.classList.add('bg-blue-600', 'text-white', 'font-semibold');
-                link.classList.remove('text-gray-600', 'hover:bg-blue-100', 'hover:text-blue-700');
-                
-                // Hacer que el total sea blanco también
-                if (totalSpan) {
-                    totalSpan.classList.add('text-blue-100');
-                    totalSpan.classList.remove('text-gray-500', 'text-red-400', 'text-green-400');
-                }
-                
+                link.classList.add('bg-blue-50', 'text-blue-600');
+                link.classList.remove('text-gray-700', 'hover:bg-gray-100');
             } else {
-                // --- ESTADO INACTIVO ---
-                // Quitar fondo, texto gris, hover azul pálido
-                link.classList.remove('bg-blue-600', 'text-white', 'font-semibold');
-                link.classList.add('text-gray-600', 'hover:bg-blue-100', 'hover:text-blue-700');
-                
-                // Restaurar colores originales del total
-                if (totalSpan) {
-                    totalSpan.classList.remove('text-blue-100');
-                    const grupo = AppState.datosActuales.find(g => g.nombre === groupName);
-                    
-                    if (grupo) {
-                         if (grupo.nombre === 'Cicla') {
-                             totalSpan.classList.add('text-red-400');
-                         } else if (grupo.total > 0) {
-                             totalSpan.classList.add('text-green-400');
-                         } else if (grupo.total < 0) {
-                             totalSpan.classList.add('text-red-400');
-                         } else {
-                             totalSpan.classList.add('text-gray-500');
-                         }
-                    } else if (groupName !== 'home') {
-                        // Fallback por si acaso
-                        totalSpan.classList.add('text-gray-500');
-                    }
-                }
+                link.classList.remove('bg-blue-50', 'text-blue-600');
+                link.classList.add('text-gray-700', 'hover:bg-gray-100');
             }
         });
     },
-
-    // ===================================================================
-    // FIN DE LA MODIFICACIÓN
-    // ===================================================================
 
     /**
      * Muestra la vista de "Inicio"
@@ -2197,4 +2076,3 @@ window.onload = function() {
     console.log("window.onload disparado. Iniciando AppUI...");
     AppUI.init();
 };
-
