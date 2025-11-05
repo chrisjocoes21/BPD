@@ -104,6 +104,19 @@ const AppFormat = {
     formatPincel: (num) => new Intl.NumberFormat('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num)
 };
 
+// --- INICIO CORRECCIÓN BUG TIENDA: Función de Utilidad ---
+/**
+ * Escapa las comillas simples y dobles para su uso seguro en atributos HTML onclick.
+ * @param {string} str El texto a escapar.
+ * @returns {string} El texto saneado.
+ */
+function escapeHTML(str) {
+    if (typeof str !== 'string') return str;
+    // Escapa comillas simples (para '...') y comillas dobles (para &quot;)
+    return str.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+}
+// --- FIN CORRECCIÓN BUG TIENDA ---
+
 // --- BASE DE DATOS DE ANUNCIOS ---
 const AnunciosDB = {
     'AVISO': [
@@ -522,7 +535,12 @@ const AppUI = {
             // Pestaña Comprar
             AppUI.resetSearchInput('tiendaAlumno');
             document.getElementById('tienda-clave-p2p').value = "";
-            document.getElementById('tienda-items-container').innerHTML = ''; // Limpiar artículos renderizados
+            
+            // --- INICIO CORRECCIÓN OPTIMIZACIÓN TIENDA ---
+            // Se elimina la línea que borraba los artículos para optimizar la carga.
+            // document.getElementById('tienda-items-container').innerHTML = ''; 
+            // --- FIN CORRECCIÓN OPTIMIZACIÓN TIENDA ---
+            
             document.getElementById('tienda-status-msg').textContent = "";
             AppState.tienda.currentItemToConfirm = null;
             
@@ -865,7 +883,9 @@ const AppUI = {
             const rowClass = isAgotado ? 'opacity-60 bg-gray-50' : '';
             
             // CAMBIO v16.0: Escapar comillas en el nombre para `handleEditBono`
-            const nombreEscapado = bono.nombre.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+            // CORRECCIÓN BUG TIENDA: Usar la función escapeHTML
+            const nombreEscapado = escapeHTML(bono.nombre);
+            const claveEscapada = escapeHTML(bono.clave);
 
             html += `
                 <tr class="${rowClass}">
@@ -874,9 +894,9 @@ const AppUI = {
                     <td class="px-4 py-2 text-sm text-gray-800 text-right">${recompensa} ℙ</td>
                     <td class="px-4 py-2 text-sm text-gray-600 text-right">${usos}</td>
                     <td class="px-4 py-2 text-right text-sm">
-                        <button onclick="AppUI.handleEditBono('${bono.clave}', '${nombreEscapado}', ${bono.recompensa}, ${bono.usos_totales})" class="font-medium text-blue-600 hover:text-blue-800 edit-bono-btn">Editar</button>
+                        <button onclick="AppUI.handleEditBono('${claveEscapada}', '${nombreEscapado}', ${bono.recompensa}, ${bono.usos_totales})" class="font-medium text-blue-600 hover:text-blue-800 edit-bono-btn">Editar</button>
                         <!-- NUEVO v0.5.4: Botón Eliminar -->
-                        <button onclick="AppTransacciones.eliminarBono('${bono.clave}')" class="ml-2 font-medium text-red-600 hover:text-red-800 delete-bono-btn">Eliminar</button>
+                        <button onclick="AppTransacciones.eliminarBono('${claveEscapada}')" class="ml-2 font-medium text-red-600 hover:text-red-800 delete-bono-btn">Eliminar</button>
                     </td>
                 </tr>
             `;
@@ -926,10 +946,20 @@ const AppUI = {
         // Resetear a la pestaña 1
         AppUI.changeTiendaTab('comprar');
 
+        // --- INICIO CORRECCIÓN OPTIMIZACIÓN TIENDA ---
         // Poblar listas
         // Optimización v16.0: Renderizar las tarjetas de la tienda SOLO UNA VEZ
-        AppUI.renderTiendaItems();
-        // Poblar la lista de admin
+        const container = document.getElementById('tienda-items-container');
+        if (!container.innerHTML.trim()) {
+            // Solo renderizar si está vacío
+            AppUI.renderTiendaItems();
+        } else {
+            // Si ya está renderizado, solo actualizar los botones
+            AppUI.updateTiendaButtonStates();
+        }
+        // --- FIN CORRECCIÓN OPTIMIZACIÓN TIENDA ---
+        
+        // Poblar la lista de admin (esta sí se actualiza siempre)
         AppUI.populateTiendaAdminList();
         
         AppUI.showModal('tienda-modal');
@@ -979,8 +1009,9 @@ const AppUI = {
             const item = items[itemId];
             const costoFinal = Math.round(item.precio * (1 + AppConfig.TASA_ITBIS));
             
-            // Escapar descripción para el tooltip
-            const descripcionEscapada = item.descripcion.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+            // CORRECCIÓN BUG TIENDA: Escapar descripción y ID
+            const descripcionEscapada = escapeHTML(item.descripcion);
+            const itemIdEscapado = escapeHTML(itemId);
 
             html += `
                 <div class="tienda-item-card">
@@ -1012,7 +1043,7 @@ const AppUI = {
                         <span class="text-xl font-bold text-blue-600">${AppFormat.formatNumber(costoFinal)} ℙ</span>
                         <button id="buy-btn-${itemId}" 
                                 data-item-id="${itemId}"
-                                onclick="AppUI.showTiendaConfirmModal('${itemId}')"
+                                onclick="AppUI.showTiendaConfirmModal('${itemIdEscapado}')"
                                 class="tienda-buy-btn bg-blue-600 text-white hover:bg-blue-700 w-auto">
                             Comprar
                         </button>
@@ -1140,10 +1171,11 @@ const AppUI = {
             const stock = item.stock;
             const rowClass = (stock <= 0 && itemId !== 'filantropo') ? 'opacity-60 bg-gray-50' : '';
             
-            // Escapar datos para los botones
-            const nombreEscapado = item.nombre.replace(/'/g, "\\'").replace(/"/g, "&quot;");
-            const descEscapada = item.descripcion.replace(/'/g, "\\'").replace(/"/g, "&quot;");
-            const tipoEscapado = item.tipo.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+            // CORRECCIÓN BUG TIENDA: Escapar datos para los botones
+            const nombreEscapado = escapeHTML(item.nombre);
+            const descEscapada = escapeHTML(item.descripcion);
+            const tipoEscapado = escapeHTML(item.tipo);
+            const itemIdEscapado = escapeHTML(itemId);
 
             html += `
                 <tr class="${rowClass}">
@@ -1152,8 +1184,8 @@ const AppUI = {
                     <td class="px-4 py-2 text-sm text-gray-800 text-right">${precio} ℙ</td>
                     <td class="px-4 py-2 text-sm text-gray-600 text-right">${stock}</td>
                     <td class="px-4 py-2 text-right text-sm">
-                        <button onclick="AppUI.handleEditItem('${itemId}', '${nombreEscapado}', '${descEscapada}', '${tipoEscapado}', ${item.precio}, ${item.stock})" class="font-medium text-blue-600 hover:text-blue-800 edit-item-btn">Editar</button>
-                        <button onclick="AppTransacciones.eliminarItem('${itemId}')" class="ml-2 font-medium text-red-600 hover:text-red-800 delete-item-btn">Eliminar</button>
+                        <button onclick="AppUI.handleEditItem('${itemIdEscapado}', '${nombreEscapado}', '${descEscapada}', '${tipoEscapado}', ${item.precio}, ${item.stock})" class="font-medium text-blue-600 hover:text-blue-800 edit-item-btn">Editar</button>
+                        <button onclick="AppTransacciones.eliminarItem('${itemIdEscapado}')" class="ml-2 font-medium text-red-600 hover:text-red-800 delete-item-btn">Eliminar</button>
                     </td>
                 </tr>
             `;
@@ -1396,7 +1428,11 @@ const AppUI = {
 
             const buttonClass = isEligible ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed';
             const buttonDisabled = !isEligible ? 'disabled' : '';
-            const action = isEligible ? `AppTransacciones.realizarPrestamo('${selectedStudentName}', '${tipo}')` : '';
+            
+            // CORRECCIÓN BUG TIENDA: Escapar variables para onclick
+            const studentEscapado = escapeHTML(selectedStudentName);
+            const tipoEscapado = escapeHTML(tipo);
+            const action = isEligible ? `AppTransacciones.realizarPrestamo('${studentEscapado}', '${tipoEscapado}')` : '';
 
             html += `
                 <div class="flex justify-between items-center p-3 border-b border-blue-100">
@@ -1464,7 +1500,11 @@ const AppUI = {
 
             const buttonClass = isEligible ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed';
             const buttonDisabled = !isEligible ? 'disabled' : '';
-            const action = isEligible ? `AppTransacciones.realizarDeposito('${selectedStudentName}', '${tipo}')` : '';
+            
+            // CORRECCIÓN BUG TIENDA: Escapar variables para onclick
+            const studentEscapado = escapeHTML(selectedStudentName);
+            const tipoEscapado = escapeHTML(tipo);
+            const action = isEligible ? `AppTransacciones.realizarDeposito('${studentEscapado}', '${tipoEscapado}')` : '';
 
             html += `
                 <div class="flex justify-between items-center p-3 border-b border-green-100">
@@ -1795,9 +1835,13 @@ const AppUI = {
             if (pos === 2) rankBg = 'bg-gray-200 text-gray-700';
             if (pos === 3) rankBg = 'bg-orange-100 text-orange-600';
             if (grupo.nombre === "Cicla") rankBg = 'bg-red-100 text-red-600';
+            
+            // CORRECCIÓN BUG TIENDA: Escapar variables para onclick
+            const grupoEscapado = escapeHTML(grupo.nombre);
+            const usuarioEscapado = escapeHTML(usuario.nombre);
 
             return `
-                <tr class="hover:bg-gray-50 cursor-pointer" onclick="AppUI.showStudentModal('${grupo.nombre}', '${usuario.nombre}', ${pos})">
+                <tr class="hover:bg-gray-50 cursor-pointer" onclick="AppUI.showStudentModal('${grupoEscapado}', '${usuarioEscapado}', ${pos})">
                     <td class="px-4 py-3 text-center">
                         <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${rankBg}">
                             ${pos}
@@ -2162,7 +2206,7 @@ const AppTransacciones = {
     
     realizarPrestamo: async function(alumnoNombre, tipoPrestamo) {
         const modalDialog = document.getElementById('transaccion-modal-dialog');
-        const submitBtn = modalDialog.querySelector(`button[onclick*="realizarPrestamo('${alumnoNombre}', '${tipoPrestamo}')"]`);
+        const submitBtn = modalDialog.querySelector(`button[onclick*="realizarPrestamo('${escapeHTML(alumnoNombre)}', '${escapeHTML(tipoPrestamo)}')"]`);
         const statusMsg = document.getElementById('transaccion-status-msg');
         
         AppTransacciones.setLoadingState(submitBtn, null, true, 'Procesando...');
@@ -2201,7 +2245,7 @@ const AppTransacciones = {
     
     realizarDeposito: async function(alumnoNombre, tipoDeposito) {
         const modalDialog = document.getElementById('transaccion-modal-dialog');
-        const submitBtn = modalDialog.querySelector(`button[onclick*="realizarDeposito('${alumnoNombre}', '${tipoDeposito}')"]`);
+        const submitBtn = modalDialog.querySelector(`button[onclick*="realizarDeposito('${escapeHTML(alumnoNombre)}', '${escapeHTML(tipoDeposito)}')"]`);
         const statusMsg = document.getElementById('transaccion-status-msg');
         
         AppTransacciones.setLoadingState(submitBtn, null, true, 'Procesando...');
@@ -2620,7 +2664,7 @@ const AppTransacciones = {
                 AppTransacciones.setSuccess(statusMsg, result.message || "¡Artículo eliminado con éxito!");
                 AppData.cargarDatos(false); // Recargar todos los datos
             } else {
-                throw new Error(result.message || "Error al eliminar el artículo.");
+                throw new Error(result.message || "Error al eliminar el bono.");
             }
 
         } catch (error) {
