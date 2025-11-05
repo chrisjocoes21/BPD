@@ -108,8 +108,12 @@ scrollbar-width: none;  /* Firefox */
     position: absolute;
     z-index: 50;
     
-    /* Posicionamiento */
-    bottom: 125%; /* Encima del elemento */
+    /* CORRECCIÓN v16.1 (Problema 2 Tooltip): Posicionamiento
+       Cambiado de 'bottom: 125%' (encima) a 'top: 125%' (debajo)
+       para evitar que se corte por el 'overflow' del contenedor.
+    */
+    top: 125%; /* Debajo del elemento */
+    bottom: auto; /* Asegurar que 'bottom' no interfiera */
     left: 50%;
     transform: translateX(-50%); /* Centrarlo */
     
@@ -120,7 +124,12 @@ scrollbar-width: none;  /* Firefox */
 /* Flecha del tooltip */
 .tooltip-text svg {
     position: absolute;
-    top: 100%;
+    /* CORRECCIÓN v16.1 (Problema 2 Tooltip):
+       Cambiado de 'top: 100%' a 'bottom: 100%' para que la flecha
+       aparezca arriba del cuadro de texto (apuntando hacia arriba).
+    */
+    bottom: 100%; /* Arriba del tooltip */
+    top: auto; /* Asegurar que 'top' no interfiera */
     left: 0;
     width: 100%;
     height: 0.5rem; /* h-2 */
