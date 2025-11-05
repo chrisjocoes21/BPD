@@ -1697,8 +1697,18 @@ const AppUI = {
         let tesoreriaHtml = ''; 
         let top3Html = '';
 
-        // Tarjeta de Bóveda
-        const totalGeneral = grupos.reduce((acc, g) => acc + g.total, 0);
+        // ===================================================================
+        // CORRECCIÓN 1: BÓVEDA (Total en Cuentas)
+        // Calculamos la bóveda sumando solo los pinceles positivos de todos
+        // los alumnos, para que coincida con la estadística "Pinceles Positivos".
+        // La definición de 'allStudents' se movió aquí desde más abajo.
+        // ===================================================================
+        const allStudents = AppState.datosAdicionales.allStudents;
+        
+        // Tarjeta de Bóveda (AHORA CALCULA EL BRUTO POSITIVO)
+        const totalGeneral = allStudents
+            .filter(s => s.pinceles > 0)
+            .reduce((sum, user) => sum + user.pinceles, 0);
         
         // Tarjeta de Tesorería
         const tesoreriaSaldo = AppState.datosAdicionales.saldoTesoreria;
@@ -1741,7 +1751,7 @@ const AppUI = {
         // Lógica "Alumnos Destacados"
         // ===================================================================
         
-        const allStudents = AppState.datosAdicionales.allStudents;
+        // const allStudents = AppState.datosAdicionales.allStudents; // <-- Esta línea se movió arriba
         const depositosActivos = AppState.datosAdicionales.depositosActivos;
         
         const studentsWithCapital = allStudents.map(student => {
@@ -1961,13 +1971,24 @@ const AppUI = {
         const allStudents = AppState.datosAdicionales.allStudents;
         const ciclaGrupo = grupos.find(g => g.nombre === 'Cicla');
         
-        const totalAlumnos = allStudents.length;
+        // ===================================================================
+        // CORRECCIÓN 2: ESTADÍSTICAS RÁPIDAS
+        // Definimos "Alumnos Activos" (excluyendo Cicla) y calculamos
+        // el promedio basándonos solo en ellos y los pinceles positivos.
+        // ===================================================================
+        
+        const alumnosActivos = allStudents.filter(s => s.grupoNombre !== 'Cicla');
+        const totalAlumnosActivos = alumnosActivos.length;
         const totalEnCicla = ciclaGrupo ? ciclaGrupo.usuarios.length : 0;
-        const totalBoveda = grupos.reduce((acc, g) => acc + g.total, 0);
-        const promedioPinceles = totalAlumnos > 0 ? (totalBoveda / totalAlumnos) : 0;
+        
+        // Ya no usamos totalBoveda (neto) para el promedio.
+        // const totalBoveda = grupos.reduce((acc, g) => acc + g.total, 0); 
         
         const pincelesPositivos = allStudents.filter(s => s.pinceles > 0).reduce((sum, user) => sum + user.pinceles, 0);
         const pincelesNegativos = allStudents.filter(s => s.pinceles < 0).reduce((sum, user) => sum + user.pinceles, 0);
+        
+        // El promedio ahora es (Pinceles Positivos / Alumnos Activos)
+        const promedioPinceles = totalAlumnosActivos > 0 ? (pincelesPositivos / totalAlumnosActivos) : 0;
         
         const createStat = (label, value, valueClass = 'text-gray-900') => `
             <div class="stat-item flex justify-between items-baseline text-sm py-2 border-b border-gray-100">
@@ -1977,9 +1998,9 @@ const AppUI = {
         `;
 
         statsList.innerHTML = `
-            ${createStat('Alumnos Totales', totalAlumnos)}
+            ${createStat('Alumnos Activos', totalAlumnosActivos)}
             ${createStat('Alumnos en Cicla', totalEnCicla, 'text-red-600')}
-            ${createStat('Pincel Promedio', `${AppFormat.formatNumber(promedioPinceles.toFixed(0))} ℙ`)}
+            ${createStat('Pincel Promedio (Activos)', `${AppFormat.formatNumber(promedioPinceles.toFixed(0))} ℙ`)}
             ${createStat('Pinceles Positivos', `${AppFormat.formatNumber(pincelesPositivos)} ℙ`, 'text-green-600')}
             ${createStat('Pinceles Negativos', `${AppFormat.formatNumber(pincelesNegativos)} ℙ`, 'text-red-600')}
         `;
