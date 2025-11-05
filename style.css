@@ -190,9 +190,19 @@ scrollbar-width: none;  /* Firefox */
     border-bottom-color: #3b82f6 !important; /* blue-600 */
     color: #3b82f6 !important;
 }
+
+/* CORRECCIÓN SALTO VERTICAL (Problema 4): 
+  Se aplica una altura fija a ambas pestañas ('comprar' y 'admin') 
+  para que tengan la misma altura y no haya un "salto" visual al cambiar.
+*/
+.tienda-tab-content {
+    height: 550px; /* Altura unificada (similar al modal de Bonos) */
+    overflow-y: auto; /* Permitir scroll si el contenido se pasa */
+}
+
 /* Contenedor para la pestaña de admin de la tienda */
 #tienda-tab-admin {
-    height: 600px;
+    /* height: 600px; <-- ELIMINADO (Problema 4). Ahora se controla por .tienda-tab-content */
 }
 
 /* Estilos para las tarjetas de artículos (vista de usuario) */
