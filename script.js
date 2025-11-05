@@ -12,7 +12,7 @@ const AppConfig = {
     
     // CAMBIO v16.1: Actualización de versión
     APP_STATUS: 'Beta', 
-    APP_VERSION: 'v17.0 (Tienda Optimizada)', // ACTUALIZADO
+    APP_VERSION: 'v17.1 (Tienda Limpia)', // ACTUALIZADO A v17.1
     
     // CAMBIO v0.3.0: Impuesto P2P (debe coincidir con el Backend)
     IMPUESTO_P2P_TASA: 0.10, // 10%
@@ -999,7 +999,6 @@ const AppUI = {
             const costoFinal = Math.round(item.precio * (1 + AppConfig.TASA_ITBIS));
             
             // CORRECCIÓN BUG ONCLICK: Escapar descripción y ID
-            const descripcionEscapada = escapeHTML(item.descripcion);
             const itemIdEscapado = escapeHTML(item.ItemID); // Usar ItemID real
 
             html += `
@@ -1010,32 +1009,20 @@ const AppUI = {
                         <span id="stock-${itemIdEscapado}" class="text-xs font-medium text-gray-500">Stock: ${item.stock}</span>
                     </div>
 
-                    <!-- Título y Tooltip -->
-                    <div class="tooltip-container relative inline-block mb-1">
-                        <h4 class="text-lg font-bold text-gray-900 truncate">
-                            ${item.nombre}
-                            <!-- Icono de Info para el tooltip -->
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 inline-block text-gray-400 ml-1">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a.75.75 0 0 0 0 1.5h.253a.25.25 0 0 1 .244.304l-.459 2.066A1.75 1.75 0 0 0 10.747 15H11a.75.75 0 0 0 0-1.5h-.253a.25.25 0 0 1-.244-.304l.459-2.066A1.75 1.75 0 0 0 9.253 9H9Z" clip-rule="evenodd" />
-                            </svg>
-                        </h4>
-                        <!-- Tooltip personalizado -->
-                        <div class="tooltip-text hidden md:block w-72">
-                            <span class="font-bold">${item.nombre}</span>
-                            <p class="text-xs mt-1">${descripcionEscapada}</p>
-                            <!-- CORRECCIÓN v16.1 (Problema 2 Tooltip): Invertir polígono de la flecha -->
-                            <svg class="absolute text-gray-800 h-2 w-full left-0 bottom-full" x="0px" y="0px" viewBox="0 0 255 255" xml:space="preserve"><polygon class="fill-current" points="0,255 127.5,127.5 255,255"/></svg>
-                        </div>
-                    </div>
+                    <!-- CAMBIO v17.1: Se elimina el contenedor de tooltip -->
+                    <h4 class="text-lg font-bold text-gray-900 truncate mb-3" title="${escapeHTML(item.descripcion)}">
+                        ${item.nombre}
+                    </h4>
                     
                     <!-- Footer (Precio y Botón) -->
                     <div class="flex justify-between items-center mt-auto pt-4">
                         <span class="text-xl font-bold text-blue-600">${AppFormat.formatNumber(costoFinal)} ℙ</span>
                         
+                        <!-- CORRECCIÓN v17.1: Se asegura que se usa el itemId correcto para el ID del botón -->
                         <!-- CAMBIO v17.0: Botón de compra simplificado -->
-                        <button id="buy-btn-${itemIdEscapado}" 
-                                data-item-id="${itemIdEscapado}"
-                                onclick="AppTransacciones.comprarItem('${itemIdEscapado}', this)"
+                        <button id="buy-btn-${itemId}" 
+                                data-item-id="${itemId}"
+                                onclick="AppTransacciones.comprarItem('${itemId}', this)"
                                 class="tienda-buy-btn bg-blue-600 text-white hover:bg-blue-700 w-auto min-w-[90px] text-center">
                             <span class="btn-text">Comprar</span>
                         </button>
@@ -1052,18 +1039,19 @@ const AppUI = {
 
     // Optimización v16.0: Solo actualiza el estado de los botones
     // CAMBIO v17.0: Actualiza el .btn-text interno
+    // CORRECCIÓN v17.1: Asegura que la búsqueda usa el ItemID como clave
     updateTiendaButtonStates: function() {
         const items = AppState.tienda.items;
         const student = AppState.currentSearch.tiendaAlumno.info;
         const isStoreOpen = AppState.tienda.isStoreOpen;
 
-        Object.keys(items).forEach(itemId => {
+        Object.keys(items).forEach(itemId => { // itemId es la clave del objeto, que es item.ItemID
             const item = items[itemId];
-            const btn = document.getElementById(`buy-btn-${item.ItemID}`);
+            const btn = document.getElementById(`buy-btn-${itemId}`); // Se busca por itemId (la clave)
             if (!btn) return;
             
             const btnText = btn.querySelector('.btn-text');
-            if (!btnText) return; // Si el botón aún no se ha renderizado
+            if (!btnText) return; 
 
             const costoFinal = Math.round(item.precio * (1 + AppConfig.TASA_ITBIS));
             
@@ -1078,7 +1066,7 @@ const AppUI = {
                 btn.disabled = true;
             } else if (!isStoreOpen) {
                 btn.classList.add('disabled-gray');
-                btnText.textContent = "Comprar";
+                btnText.textContent = "Cerrada"; // Cambiar a "Cerrada" para más claridad
                 btn.disabled = true;
             } else if (!student) {
                 btn.classList.add('disabled-gray');
@@ -1121,6 +1109,7 @@ const AppUI = {
     },
     
     // NUEVO v16.1 (Problema 3): Actualiza la etiqueta de estado en el panel de admin
+    // CAMBIO v17.1: Se eliminan las etiquetas "(Control Manual)"
     updateTiendaAdminStatusLabel: function() {
         const label = document.getElementById('tienda-admin-status-label');
         if (!label) return;
@@ -1930,7 +1919,7 @@ const AppUI = {
     },
 
     // ===================================================================
-    // FUNCIÓN CORREGIDA (Estadísticas v16.2)
+    // FUNCIÓN CORREGIDA (Estadísticas v17.0)
     // ===================================================================
     actualizarAlumnosEnRiesgo: function() {
         const lista = document.getElementById('riesgo-lista');
@@ -2118,6 +2107,7 @@ const AppUI = {
     },
     
     // CAMBIO v16.1: Lógica de Tienda y Control Manual
+    // CAMBIO v17.1: Se eliminan las etiquetas "(Manual)" en los mensajes
     updateCountdown: function() {
         const getLastThursday = (year, month) => {
             const lastDayOfMonth = new Date(year, month + 1, 0);
@@ -2148,9 +2138,9 @@ const AppUI = {
             // TIENDA FORZADA ABIERTA
             timerEl.classList.add('hidden');
             messageEl.classList.remove('hidden');
-            messageEl.textContent = "¡La tienda está abierta! (Manual)"; // Actualizar mensaje principal
+            messageEl.textContent = "¡La tienda está abierta!"; // Sin etiqueta (Manual)
             if (tiendaTimerStatus) { 
-                tiendaTimerStatus.innerHTML = `<span class="text-green-600 font-bold">¡TIENDA ABIERTA!</span> (Control Manual)`;
+                tiendaTimerStatus.innerHTML = `<span class="text-green-600 font-bold">¡TIENDA ABIERTA!</span>`; // Sin etiqueta (Control Manual)
                 tiendaTimerStatus.classList.remove('bg-gray-100', 'text-gray-700', 'bg-red-50', 'text-red-700');
                 tiendaTimerStatus.classList.add('bg-green-50', 'text-green-700');
             }
@@ -2162,7 +2152,7 @@ const AppUI = {
             messageEl.classList.add('hidden'); // Ocultamos el mensaje principal
             
             if (tiendaTimerStatus) {
-                tiendaTimerStatus.innerHTML = `<span class="text-red-600 font-bold">TIENDA CERRADA</span> (Control Manual)`;
+                tiendaTimerStatus.innerHTML = `<span class="text-red-600 font-bold">TIENDA CERRADA</span>`; // Sin etiqueta (Control Manual)
                 tiendaTimerStatus.classList.remove('bg-green-50', 'text-green-700', 'bg-gray-100', 'text-gray-700');
                 tiendaTimerStatus.classList.add('bg-red-50', 'text-red-700');
             }
