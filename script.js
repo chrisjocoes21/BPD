@@ -18,13 +18,13 @@ let db, auth;
 // Obtenemos las variables globales que el entorno provee (o un valor por defecto)
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-// --- CORRECCIÓN BUG ONCLICK: Función de utilidad para escapar comillas (MOVIMIENTO) ---
+// --- CORRECCIÓN BUG ONCLICK: Función de utilidad para escapar comillas ---
+// Mueve esta función aquí para que esté disponible globalmente (Fix de ReferenceError)
 function escapeHTML(str) {
     if (typeof str !== 'string') return str;
     // Escapa comillas simples y dobles para ser seguras en atributos HTML
     return str.replace(/'/g, "\\'").replace(/"/g, "&quot;");
 }
-
 
 // --- CONFIGURACIÓN DE LA APLICACIÓN ---
 const AppConfig = {
@@ -356,8 +356,26 @@ const AppData = {
             } else {
                 AppState.isOffline = false;
                 
-                const url = `${AppConfig.API_URL}?cacheBuster=${new Date().getTime()}`;
-                const response = await fetch(url, { method: 'GET', cache: 'no-cache', redirect: 'follow' });
+                let url = `${AppConfig.API_URL}?cacheBuster=${new Date().getTime()}`;
+                
+                // INYECTADO (Fix de Acceso Denegado): Agregar la clave maestra si está disponible
+                let requestOptions = { 
+                    method: 'GET', 
+                    cache: 'no-cache', 
+                    redirect: 'follow' 
+                };
+
+                if (AppConfig.CLAVE_MAESTRA) {
+                    url += `&clave=${encodeURIComponent(AppConfig.CLAVE_MAESTRA)}`;
+                    // Si tu API lo requiere en el body, usa POST, pero para lectura GET con URL es común:
+                    // requestOptions = {
+                    //     method: 'POST',
+                    //     body: JSON.stringify({ accion: 'cargar_datos', clave: AppConfig.CLAVE_MAESTRA }),
+                    //     headers: { 'Content-Type': 'application/json' }
+                    // };
+                }
+
+                const response = await fetch(url, requestOptions);
 
                 if (!response.ok) {
                     throw new Error(`Error de red: ${response.status} ${response.statusText}`);
@@ -1932,7 +1950,7 @@ const AppUI = {
         // ===================================================================
         // CORRECCIÓN 1: BÓVEDA (Total en Cuentas)
         // Calculamos la bóveda sumando solo los pinceles positivos de todos
-        // los alumnos, para que coincida con la estadística "Pinceles Positivos".
+        // los alumnos, para que coincida con la estadística "Pinceles Positivos.
         // ===================================================================
         const allStudents = AppState.datosAdicionales.allStudents;
         
