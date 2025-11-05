@@ -18,6 +18,13 @@ let db, auth;
 // Obtenemos las variables globales que el entorno provee (o un valor por defecto)
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
+// --- CORRECCIÓN BUG ONCLICK: Función de utilidad para escapar comillas (MOVIMIENTO) ---
+function escapeHTML(str) {
+    if (typeof str !== 'string') return str;
+    // Escapa comillas simples y dobles para ser seguras en atributos HTML
+    return str.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+}
+
 
 // --- CONFIGURACIÓN DE LA APLICACIÓN ---
 const AppConfig = {
