@@ -15,6 +15,54 @@
     <!-- Archivo de estilos personalizados -->
     <!-- CAMBIO v17.0: Actualizada versión de CSS -->
     <link rel="stylesheet" href="style.css?v=17.0">
+
+    <!--
+      VARIABLES DE CONFIGURACIÓN DE FIREBASE (PROVISTAS POR EL USUARIO)
+      *** CONFIGURACIÓN CORREGIDA POR EL USUARIO ***
+    -->
+    <script>
+      // Esta configuración se obtiene de tu proyecto 'login-bpd-5a76a'
+      const firebaseConfig = {
+        apiKey: "AIzaSyCrlde0uy7wr_1HRS42UePhsyh1mZS-_lI",
+        authDomain: "login-bpd-5a76a.firebaseapp.com",
+        projectId: "login-bpd-5a76a",
+        storageBucket: "login-bpd-5a76a.firebasestorage.app",
+        messagingSenderId: "2533697081",
+        appId: "1:2533697081:web:42b961bf0aa43608998fe8"
+      };
+      
+      // Declaramos las variables globales que el script espera
+      var __firebase_config = JSON.stringify(firebaseConfig);
+      var __initial_auth_token = undefined; // No se usa en este caso, se mantiene
+      // Usamos el ID de proyecto como appId, necesario para la ruta en Firestore: /artifacts/{appId}/public/...
+      var __app_id = firebaseConfig.projectId; 
+    </script>
+
+    <!--
+      SDK DE FIREBASE
+      Se importan los módulos necesarios: App, Auth, Firestore
+    -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+      import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+      import { getFirestore, doc, getDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+      // Pasa las funciones al scope global para que script.js pueda usarlas
+      window.firebase = {
+        initializeApp,
+        getAuth,
+        signInWithEmailAndPassword,
+        onAuthStateChanged,
+        getFirestore,
+        doc,
+        getDoc,
+        setLogLevel,
+        signInAnonymously,
+        signInWithCustomToken
+      };
+    </script>
+
+
 </head>
 <!-- CAMBIO v16.0 (SCROLL): 'overflow-hidden' ya estaba aquí (correcto) -->
 <body class="h-full overflow-hidden"> 
@@ -24,8 +72,12 @@
         <nav id="sidebar" class="fixed top-0 left-0 h-full z-30 flex flex-col bg-gray-50 w-64 border-r border-gray-200 flex-shrink-0 transition-transform duration-300 transform -translate-x-full">
             
             <!-- Encabezado de la Sidebar -->
-            <div class="p-4 border-b border-gray-200 flex items-center justify-center bg-white">
+            <div class="p-4 border-b border-gray-200 flex items-center justify-between bg-white">
                 <span class="text-xl font-extrabold text-blue-600">BPD</span>
+                <!-- NUEVO: Estado de Autenticación -->
+                <div id="auth-status" class="text-xs font-medium text-gray-500">
+                    Cargando...
+                </div>
             </div>
 
             <!-- Contenedor de Grupos (se llenará dinámicamente) -->
@@ -56,7 +108,8 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
-                    <span>Administración</span>
+                    <!-- CAMBIO FIREBASE: Texto dinámico -->
+                    <span id="gestion-btn-text">Login Admin</span> 
                 </button>
             </div>
         </nav>
@@ -227,17 +280,25 @@
         </div>
     </div>
 
-    <!-- Modal de Acceso (Clave) -->
-    <!-- CAMBIO v16.0: Eliminado backdrop-blur, aumentado /75 -->
+    <!-- Modal de Acceso (Login Firebase) -->
+    <!-- CAMBIO FIREBASE: Estructura para Email/Password -->
     <div id="gestion-modal" class="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform scale-95 transition-transform duration-300">
             <div class="p-6">
-                <h2 class="text-lg font-semibold text-gray-900 text-center mb-4">Acceso a Administración</h2>
-                <div class="mb-4">
-                    <label for="clave-input" class="block text-sm font-medium text-gray-700 mb-1">Clave de Acceso</label>
-                    <input type="password" id="clave-input" placeholder="Ingrese su clave" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <h2 class="text-lg font-semibold text-gray-900 text-center mb-4">Acceso de Administrador</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="email-input" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="email-input" placeholder="admin@ejemplo.com" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="password-input" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                        <input type="password" id="password-input" placeholder="••••••••" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <!-- Mensaje de error de Firebase -->
+                    <div id="auth-error-msg" class="text-sm text-red-600 text-center h-4"></div>
                 </div>
-                <div class="flex justify-end gap-3">
+                <div class="flex justify-end gap-3 mt-6">
                     <button id="modal-cancel" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">Cancelar</button>
                     <button id="modal-submit" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">Acceder</button>
                 </div>
@@ -579,17 +640,16 @@
                 <!-- PESTAÑA 2: CONFIGURACIÓN (ADMIN) -->
                 <div id="bono-tab-admin" class="bono-tab-content hidden space-y-6 h-[550px] overflow-y-auto pr-2">
                     
-                    <!-- 1. Reja de Seguridad (Gate) -->
+                    <!-- CAMBIO FIREBASE: Reja de Seguridad (Gate) actualizada -->
                     <div id="bono-admin-gate" class="w-full max-w-md mx-auto flex flex-col justify-center items-center h-full">
-                        <div> <!-- Contenedor extra para centrar el contenido -->
-                            <h3 class="text-lg font-semibold text-gray-900 text-center">Acceso de Administrador</h3>
-                            <p class="text-sm text-gray-600 text-center mb-4">Ingresa la clave maestra para gestionar los bonos.</p>
-                            <div class="flex items-center gap-3">
-                                <input type="password" id="bono-admin-clave" placeholder="Clave Maestra" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                <button id="bono-admin-unlock-btn" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
-                                    Desbloquear
-                                </button>
-                            </div>
+                        <div class="text-center p-6 bg-gray-50 rounded-lg border">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 mx-auto text-gray-400 mb-4">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                            </svg>
+                            <h3 class="text-lg font-semibold text-gray-900">Acceso Restringido</h3>
+                            <p class="text-sm text-gray-600 mt-2">
+                                Debes iniciar sesión como administrador desde el panel principal para desbloquear esta sección.
+                            </p>
                         </div>
                     </div>
 
@@ -683,7 +743,7 @@
     <!-- =================================================================== -->
     <!-- MODAL DE TIENDA (REDISENADO v16.0) -->
     <!-- =================================================================== -->
-    <!-- CAMBIO v16.0: Eliminado backdrop-blur, aumentado /75, z-index 1001 -->
+    <!-- CAMBIO v16.0: Eliminado backdrop-blur, aumentado /75 -->
     <div id="tienda-modal" class="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
         <!-- CAMBIO v16.0: Ancho aumentado a max-w-7xl -->
         <div id="tienda-modal-dialog" class="bg-white rounded-lg shadow-xl w-full max-w-7xl transform scale-95 transition-transform duration-300 overflow-hidden">
@@ -755,17 +815,16 @@
                 <!-- CORRECCIÓN SALTO: Reemplazada 'h-[550px]' por 'tienda-tab-content' -->
                 <div id="tienda-tab-admin" class="tienda-tab-content hidden space-y-6 overflow-y-auto pr-2">
                     
-                    <!-- 1. Reja de Seguridad (Gate) -->
+                    <!-- CAMBIO FIREBASE: Reja de Seguridad (Gate) actualizada -->
                     <div id="tienda-admin-gate" class="w-full max-w-md mx-auto flex flex-col justify-center items-center h-full">
-                        <div> <!-- Contenedor extra para centrar el contenido -->
-                            <h3 class="text-lg font-semibold text-gray-900 text-center">Acceso de Administrador</h3>
-                            <p class="text-sm text-gray-600 text-center mb-4">Ingresa la clave maestra para gestionar la tienda.</p>
-                            <div class="flex items-center gap-3">
-                                <input type="password" id="tienda-admin-clave" placeholder="Clave Maestra" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                <button id="tienda-admin-unlock-btn" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
-                                    Desbloquear
-                                </button>
-                            </div>
+                        <div class="text-center p-6 bg-gray-50 rounded-lg border">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 mx-auto text-gray-400 mb-4">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                            </svg>
+                            <h3 class="text-lg font-semibold text-gray-900">Acceso Restringido</h3>
+                            <p class="text-sm text-gray-600 mt-2">
+                                Debes iniciar sesión como administrador desde el panel principal para desbloquear esta sección.
+                            </p>
                         </div>
                     </div>
 
@@ -834,7 +893,7 @@
                                     <button type="button" id="tienda-force-close-btn" onclick="AppTransacciones.toggleStoreManual('closed')" class="px-3 py-2 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 transition-colors shadow-sm">
                                         Forzar Cierre
                                     </button>
-                                    <button type="button" id="tienda-force-auto-btn" onclick="AppTransacciones.toggleStoreManual('auto')" class="px-3 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                                    <button type="button" id="tienda-force-auto-btn" onclick="AppTransacciones.toggleStoreManual('auto')" class="px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
                                         Modo Automático
                                     </button>
                                 </div>
@@ -895,7 +954,7 @@
 
 
     <!-- Lógica de la Aplicación -->
-    <!-- CAMBIO v17.0: Actualizada versión de script -->
-    <script src="script.js?v=17.0" type="module" defer></script>
+    <!-- CAMBIO FIREBASE: Actualizada versión de script -->
+    <script src="script.js?v=17.2-firebase" type="module" defer></script>
 </body>
 </html>
