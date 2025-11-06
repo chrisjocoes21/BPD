@@ -12,7 +12,7 @@ const AppConfig = {
     
     // CAMBIO v16.1: Actualización de versión
     APP_STATUS: 'Beta', 
-    APP_VERSION: 'v17.1 (Tienda Limpia)', // ACTUALIZADO A v17.1
+    APP_VERSION: 'v18.1 (ISP Progresivo)', // ACTUALIZADO A v18.1
     
     // CAMBIO v0.3.0: Impuesto P2P (debe coincidir con el Backend)
     IMPUESTO_P2P_TASA: 0.10, // 10%
@@ -25,6 +25,17 @@ const AppConfig = {
 
     // NUEVO v16.0: Tasa de ITBIS de la tienda (debe coincidir con el Backend)
     TASA_ITBIS: 0.18, // 18%
+
+    // NUEVO v18.1: Definición de la escala de Impuesto Súper Progresivo (ISP)
+    // Tramos del impuesto pasivo PROGRESIVO diario (en porcentaje)
+    // ESTA LÓGICA DEBE COPIARSE A SU API DE GOOGLE APPS SCRIPT PARA QUE EL COBRO SEA AUTOMÁTICO.
+    ISP_ESCALA: [
+        { limite: 100, tasa: 0 }, // Exención base
+        { limite: 100000, tasa: 0.005 }, // 0.5% (Aplica sobre el exceso de 100 ℙ hasta 100k)
+        { limite: 500000, tasa: 0.008 }, // 0.8%
+        { limite: 1000000, tasa: 0.012 }, // 1.2%
+        { limite: Infinity, tasa: 0.015 } // 1.5%
+    ],
 };
 
 // --- CORRECCIÓN BUG ONCLICK: Función de utilidad para escapar comillas ---
@@ -82,27 +93,6 @@ const AppState = {
     }
 };
 
-// --- AUTENTICACIÓN ---
-const AppAuth = {
-    verificarClave: function() {
-        const claveInput = document.getElementById('clave-input');
-        if (claveInput.value === AppConfig.CLAVE_MAESTRA) {
-            
-            AppUI.hideModal('gestion-modal');
-            AppUI.showTransaccionModal('transaccion'); // Abrir en la pestaña 'transaccion'
-            
-            claveInput.value = '';
-            claveInput.classList.remove('shake', 'border-red-500');
-        } else {
-            claveInput.classList.add('shake', 'border-red-500');
-            claveInput.focus();
-            setTimeout(() => {
-                claveInput.classList.remove('shake');
-            }, 500);
-        }
-    }
-};
-
 // --- NÚMEROS Y FORMATO ---
 const AppFormat = {
     // CAMBIO v0.4.4: Formato de Pinceles sin decimales
@@ -110,6 +100,52 @@ const AppFormat = {
     // formatNumber: (num) => new Intl.NumberFormat('es-DO').format(num), // <-- ORIGINAL
     // NUEVO v0.4.0: Formateo de Pinceles (2 decimales) - REEMPLAZADO por formatNumber
     formatPincel: (num) => new Intl.NumberFormat('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num)
+};
+
+// --- FUNCIÓN DE CÁLCULO DEL IMPUESTO (MANTENIDA PARA REFERENCIA Y USO DEL ADMIN) ---
+const AppCalculos = {
+    
+    // Calcula el Impuesto Súper Progresivo (ISP) sobre un saldo dado (cobro diario).
+    // Esta función DEBE COPIARSE a su API de Apps Script para el cobro automático.
+    calcularISP: function(saldoNeto) {
+        if (saldoNeto <= 100) {
+            return 0; // Exención total para saldos muy bajos
+        }
+
+        let impuestoTotal = 0;
+        let baseLiquidada = 0;
+        
+        // Iteramos sobre la escala para aplicar las tasas de forma progresiva por tramos
+        for (let i = 0; i < AppConfig.ISP_ESCALA.length; i++) {
+            const tramo = AppConfig.ISP_ESCALA[i];
+            const limiteTramo = tramo.limite;
+            const tasaTramo = tramo.tasa;
+            
+            if (saldoNeto > baseLiquidada) {
+                
+                let limiteSuperiorALiquidar = Math.min(saldoNeto, limiteTramo);
+                let baseImponibleTramo = limiteSuperiorALiquidar - baseLiquidada;
+
+                // Caso especial para el primer tramo (exceso de 100)
+                if (i === 1) {
+                    baseImponibleTramo = Math.max(0, limiteSuperiorALiquidar - 100);
+                }
+
+                if (baseImponibleTramo > 0) {
+                    impuestoTotal += baseImponibleTramo * tasaTramo;
+                }
+                
+                baseLiquidada = limiteSuperiorALiquidar;
+                
+                if (saldoNeto <= limiteTramo) {
+                    break;
+                }
+            }
+        }
+        
+        // El cálculo debe ser un número entero (redondeado hacia arriba)
+        return Math.ceil(impuestoTotal);
+    }
 };
 
 // --- BASE DE DATOS DE ANUNCIOS ---
@@ -120,12 +156,12 @@ const AnunciosDB = {
         "Recuerden: 'Ver Reglas' tiene información importante sobre la tienda." 
     ],
     'NUEVO': [
-        // NUEVO v16.0: Actualizado anuncio de Tienda
+        // CAMBIO v18.1: Anuncio sobre el ISP
+        "¡Nuevo Impuesto de Patrimonio Progresivo! Las fortunas más grandes pagan una tasa mayor diariamente.",
         "¡Nueva Tienda del Mes! Revisa los artículos de alto valor. Se desbloquea el último jueves.",
         "¡Nuevo Portal de Bonos! Canjea códigos por Pinceles ℙ.",
         "¡Nuevo Sistema Económico! Depósitos de admin limitados por la Tesorería.",
-        "¡Nuevo Portal P2P! Transfiere pinceles a tus compañeros (con 10% de comisión).",
-        "La Tesorería cobra un 0.5% diario de impuesto a saldos altos."
+        "¡Nuevo Portal P2P! Transfiere pinceles a tus compañeros (con 10% de comisión)."
     ],
     'CONSEJO': [
         "Usa el botón '»' en la esquina para abrir y cerrar la barra lateral.",
@@ -329,7 +365,7 @@ const AppUI = {
         // Listener para el botón de enviar transacción
         document.getElementById('transaccion-submit-btn').addEventListener('click', AppTransacciones.realizarTransaccionMultiple);
         
-        // NUEVO v0.4.2: Listener para el cálculo de comisión de admin
+        // NUEVO v0.4.2: Listener para el cálculo de comisión de admin (RESTAURADO)
         document.getElementById('transaccion-cantidad-input').addEventListener('input', AppUI.updateAdminDepositoCalculo);
         
         // Listener para el link de DB
@@ -393,8 +429,6 @@ const AppUI = {
         
         // NUEVO v16.1: Listeners para Control Manual de Tienda
         // Los listeners ya están en el HTML con onclick="AppTransacciones.toggleStoreManual('status')"
-
-        // --- ELIMINADO v17.0: Listeners para Modal Confirmación de Compra ---
 
 
         // Listeners Modal Reglas
@@ -495,6 +529,18 @@ const AppUI = {
             document.getElementById('deposito-paquetes-container').innerHTML = '<div class="text-sm text-gray-500">Seleccione un alumno para ver las opciones de depósito.</div>';
             AppState.transaccionSelectAll = {}; 
             AppTransacciones.setLoadingState(document.getElementById('transaccion-submit-btn'), document.getElementById('transaccion-btn-text'), false, 'Realizar Transacción');
+            
+            // RESTAURACIÓN V18.1: Asegurar que el botón de submit vuelve al estado normal
+            document.getElementById('transaccion-submit-btn').dataset.accion = 'transaccion_multiple';
+            document.getElementById('transaccion-btn-text').textContent = 'Realizar Transacción';
+            document.getElementById('transaccion-cantidad-input').disabled = false;
+            document.getElementById('transaccion-cantidad-input').classList.remove('bg-gray-100');
+            document.getElementById('transaccion-cantidad-input').placeholder = "Ej: 1000 o -50";
+            document.getElementById('tesoreria-saldo-transaccion').classList.remove('hidden');
+            
+            // RESTAURACIÓN V18.1: Restaurar listener de cálculo de comisión para la pestaña normal
+            document.getElementById('transaccion-cantidad-input').removeEventListener('input', AppUI.updateAdminDepositoCalculo);
+            document.getElementById('transaccion-cantidad-input').addEventListener('input', AppUI.updateAdminDepositoCalculo);
         }
         
         // Limpiar campos de P2P
@@ -550,8 +596,6 @@ const AppUI = {
             AppState.tienda.adminPanelUnlocked = false;
         }
         
-        // --- ELIMINADO v17.0: Limpieza de modal de confirmación ---
-        
         if (modalId === 'gestion-modal') {
              document.getElementById('clave-input').value = "";
              document.getElementById('clave-input').classList.remove('shake', 'border-red-500');
@@ -573,8 +617,19 @@ const AppUI = {
         document.querySelector(`#transaccion-modal [data-tab="${tabId}"]`).classList.remove('border-transparent', 'text-gray-600');
         document.getElementById(`tab-${tabId}`).classList.remove('hidden');
         
+        // V18.1: Restaurar el estado de la pestaña de Transacción Múltiple a NORMAL
+        const submitBtn = document.getElementById('transaccion-submit-btn');
+        const btnText = document.getElementById('transaccion-btn-text');
+        const cantidadInput = document.getElementById('transaccion-cantidad-input');
+
         if (tabId === 'transaccion') {
             AppUI.populateGruposTransaccion();
+            submitBtn.dataset.accion = 'transaccion_multiple';
+            btnText.textContent = 'Realizar Transacción';
+            cantidadInput.disabled = false;
+            cantidadInput.classList.remove('bg-gray-100');
+            cantidadInput.placeholder = "Ej: 1000 o -50";
+            document.getElementById('tesoreria-saldo-transaccion').classList.remove('hidden');
         } else if (tabId === 'prestamos') {
             AppUI.loadPrestamoPaquetes(null);
         } else if (tabId === 'depositos') {
@@ -1241,10 +1296,17 @@ const AppUI = {
     
     // --- FIN FUNCIONES DE TIENDA ---
     
-    // --- NUEVO v0.4.2: Cálculo de Comisión Admin ---
+    // --- NUEVO v0.4.2: Cálculo de Comisión Admin (RESTAURADO) ---
     updateAdminDepositoCalculo: function() {
         const cantidadInput = document.getElementById('transaccion-cantidad-input');
         const calculoMsg = document.getElementById('transaccion-calculo-impuesto');
+        // Asegurar que el input está habilitado para la pestaña normal
+        cantidadInput.disabled = false;
+        cantidadInput.classList.remove('bg-gray-100');
+        cantidadInput.placeholder = "Ej: 1000 o -50";
+        document.getElementById('tesoreria-saldo-transaccion').classList.remove('hidden');
+
+
         const cantidad = parseInt(cantidadInput.value, 10);
 
         if (isNaN(cantidad) || cantidad <= 0) {
@@ -1260,9 +1322,6 @@ const AppUI = {
 
 
     // --- ELIMINADO v0.4.1: FUNCIONES FONDO DE INVERSIÓN ---
-
-    // --- FIN FUNCIONES FONDO DE INVERSIÓN ---
-
 
     // --- FUNCIÓN CENTRAL: Mostrar Modal de Administración y pestaña inicial ---
     showTransaccionModal: function(tab) {
@@ -1280,6 +1339,9 @@ const AppUI = {
         const grupoContainer = document.getElementById('transaccion-lista-grupos-container');
         grupoContainer.innerHTML = ''; 
 
+        // V18.1: Asegurar que el modo es 'transaccion_multiple' (normal)
+        document.getElementById('transaccion-submit-btn').dataset.accion = 'transaccion_multiple';
+
         AppState.datosActuales.forEach(grupo => {
             if (grupo.nombre === 'Cicla' || grupo.total === 0) return;
 
@@ -1291,6 +1353,7 @@ const AppUI = {
             input.id = `group-cb-${grupo.nombre}`;
             input.value = grupo.nombre;
             input.className = "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 group-checkbox";
+            // V18.1: Solo necesita el listener original
             input.addEventListener('change', AppUI.populateUsuariosTransaccion);
 
             const label = document.createElement('label');
@@ -1307,6 +1370,7 @@ const AppUI = {
         AppState.transaccionSelectAll = {}; 
         
         document.getElementById('tesoreria-saldo-transaccion').textContent = `(Fondos disponibles: ${AppFormat.formatNumber(AppState.datosAdicionales.saldoTesoreria)} ℙ)`;
+        document.getElementById('tesoreria-saldo-transaccion').classList.remove('hidden'); // Asegurar visible
     },
 
     // V0.2.2: Función para poblar USUARIOS de la pestaña Transacción
@@ -1353,6 +1417,7 @@ const AppUI = {
                     input.dataset.grupo = grupo.nombre; 
                     input.className = "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 user-checkbox";
                     input.dataset.checkboxGrupo = grupo.nombre; 
+                    // V18.1: No añadir listener de ISP
 
                     const label = document.createElement('label');
                     label.htmlFor = input.id;
@@ -2219,7 +2284,6 @@ const AppUI = {
 };
 
 // --- OBJETO TRANSACCIONES (Préstamos, Depósitos, P2P, Bonos, Tienda) ---
-// CAMBIO v16.0: Añadida lógica de Tienda
 const AppTransacciones = {
 
     realizarTransaccionMultiple: async function() {
@@ -2227,6 +2291,8 @@ const AppTransacciones = {
         const statusMsg = document.getElementById('transaccion-status-msg');
         const submitBtn = document.getElementById('transaccion-submit-btn');
         const btnText = document.getElementById('transaccion-btn-text');
+        
+        // ACCIÓN NORMAL: 'transaccion_multiple' (dataset.accion por defecto)
         
         const pinceles = parseInt(cantidadInput.value, 10);
 
@@ -2268,7 +2334,9 @@ const AppTransacciones = {
                 accion: 'transaccion_multiple', 
                 clave: AppConfig.CLAVE_MAESTRA,
                 cantidad: pinceles, 
-                transacciones: transacciones 
+                transacciones: transacciones,
+                // Tipo Log por defecto (ya no se usa el ISP aquí)
+                tipoLog: 'transaccion_multiple' 
             };
 
             const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.TRANSACCION_API_URL, {
@@ -2283,10 +2351,14 @@ const AppTransacciones = {
                 AppTransacciones.setSuccess(statusMsg, successMsg);
                 
                 cantidadInput.value = "";
-                document.getElementById('transaccion-calculo-impuesto').textContent = ""; // NUEVO v0.4.2
+                document.getElementById('transaccion-calculo-impuesto').textContent = ""; 
                 AppData.cargarDatos(false); 
                 AppUI.populateGruposTransaccion(); 
                 AppUI.populateUsuariosTransaccion(); 
+                // Se asegura el estado normal
+                cantidadInput.disabled = false;
+                cantidadInput.classList.remove('bg-gray-100');
+
 
             } else {
                 throw new Error(result.message || "Error desconocido de la API.");
@@ -2870,6 +2942,7 @@ const AppTransacciones = {
 window.AppUI = AppUI;
 window.AppFormat = AppFormat;
 window.AppTransacciones = AppTransacciones;
+window.AppCalculos = AppCalculos; // Mantener para futura referencia
 
 // NUEVO v16.0: Exponer funciones de admin al scope global para onclick=""
 window.AppUI.handleEditBono = AppUI.handleEditBono;
