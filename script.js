@@ -1,40 +1,9 @@
-// --- CONFIGURACIÓN DE FIREBASE (GLOBALES DISPONIBLES EN EL ENTORNO) ---
-// Estas variables y funciones se cargarán desde index.html
-const {
-    initializeApp,
-    getAuth,
-    signInWithEmailAndPassword,
-    onAuthStateChanged,
-    getFirestore,
-    doc,
-    getDoc,
-    setLogLevel,
-    signInAnonymously,
-    signInWithCustomToken // Mantenemos por si el entorno lo usa
-} = window.firebase;
-
-// --- VARIABLES GLOBALES DE FIREBASE ---
-let db, auth;
-// Obtenemos las variables globales que el entorno provee (o un valor por defecto)
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-
-// --- CORRECCIÓN BUG ONCLICK: Función de utilidad para escapar comillas ---
-// Mueve esta función aquí para que esté disponible globalmente (Fix de ReferenceError)
-function escapeHTML(str) {
-    if (typeof str !== 'string') return str;
-    // Escapa comillas simples y dobles para ser seguras en atributos HTML
-    return str.replace(/'/g, "\\'").replace(/"/g, "&quot;");
-}
-
-// --- CONFIGURACIÓN DE LA APLICACIÓN ---
+// --- CONFIGURACIÓN ---
 const AppConfig = {
     // CAMBIO V0.3.0: URL de tu API actualizada (con P2P)
     API_URL: 'https://script.google.com/macros/s/AKfycbyhPHZuRmC7_t9z20W4h-VPqVFk0z6qKFG_W-YXMgnth4BMRgi8ibAfjeOtIeR5OrFPXw/exec',
     TRANSACCION_API_URL: 'https://script.google.com/macros/s/AKfycbyhPHZuRmC7_t9z20W4h-VPqVFk0z6qKFG_W-YXMgnth4BMRgi8ibAfjeOtIeR5OrFPXw/exec',
-    
-    // --- CAMBIO FIREBASE: La clave maestra ahora se carga desde Firestore ---
-    CLAVE_MAESTRA: null, // Se rellenará después del inicio de sesión de admin
-    
+    CLAVE_MAESTRA: 'PinceladasM25-26',
     SPREADSHEET_URL: 'https://docs.google.com/spreadsheets/d/1GArB7I19uGum6awiRN6qK8HtmTWGcaPGWhOzGCdhbcs/edit?usp=sharing',
     INITIAL_RETRY_DELAY: 1000,
     MAX_RETRY_DELAY: 30000,
@@ -43,8 +12,7 @@ const AppConfig = {
     
     // CAMBIO v16.1: Actualización de versión
     APP_STATUS: 'Beta', 
-    // CAMBIO v17.1: Nueva versión para reflejar el cambio de Auth y corrección de SDK
-    APP_VERSION: 'v17.2 (Firebase Auth Corregido)', 
+    APP_VERSION: 'v17.1 (Tienda Limpia)', // ACTUALIZADO A v17.1
     
     // CAMBIO v0.3.0: Impuesto P2P (debe coincidir con el Backend)
     IMPUESTO_P2P_TASA: 0.10, // 10%
@@ -58,6 +26,13 @@ const AppConfig = {
     // NUEVO v16.0: Tasa de ITBIS de la tienda (debe coincidir con el Backend)
     TASA_ITBIS: 0.18, // 18%
 };
+
+// --- CORRECCIÓN BUG ONCLICK: Función de utilidad para escapar comillas ---
+function escapeHTML(str) {
+    if (typeof str !== 'string') return str;
+    // Escapa comillas simples y dobles para ser seguras en atributos HTML
+    return str.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+}
 
 // --- ESTADO DE LA APLICACIÓN ---
 const AppState = {
@@ -103,195 +78,36 @@ const AppState = {
         adminPanelUnlocked: false,
         isStoreOpen: false, // Controlado por updateCountdown
         storeManualStatus: 'auto', // NUEVO v16.1 (Problema 3): Control manual (auto, open, closed)
-    },
-    
-    // NUEVO FIREBASE: Estado de autenticación
-    isAdminLoggedIn: false,
-    isAuthInitialized: false,
-    
-    // INYECTADO: Bandera para saber si el login de admin acaba de ocurrir
-    isProcessingAdminSignIn: false
+        // currentItemToConfirm: null ELIMINADO V17.0
+    }
 };
 
-// --- AUTENTICACIÓN (REDISEÑADO PARA FIREBASE) ---
+// --- AUTENTICACIÓN ---
 const AppAuth = {
-    
-    /**
-     * Inicializa Firebase y establece el listener de autenticación.
-     * Se llama desde AppUI.init()
-     */
-    setupAuthListener: async () => {
-        const authStatusEl = document.getElementById('auth-status');
-        const firebaseConfig = JSON.parse(__firebase_config);
-        
-        try {
-            // 1. Inicializar Firebase
-            const app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-            setLogLevel('debug');
+    verificarClave: function() {
+        const claveInput = document.getElementById('clave-input');
+        if (claveInput.value === AppConfig.CLAVE_MAESTRA) {
             
-            // 2. Intentar loguearse de forma anónima (para cumplir con reglas de seguridad)
-            await signInAnonymously(auth);
-            
-            // 3. Establecer el listener de estado
-            onAuthStateChanged(auth, async (user) => {
-                AppState.isAuthInitialized = true;
-                
-                const justLoggedIn = AppState.isProcessingAdminSignIn; // Capturamos el estado antes de procesar
-                
-                if (user && !user.isAnonymous) {
-                    // Usuario es un admin logueado (Email/Pass)
-                    console.log("Admin user signed in:", user.email);
-                    AppState.isAdminLoggedIn = true;
-                    if (authStatusEl) {
-                        authStatusEl.textContent = "Admin Conectado";
-                        authStatusEl.className = "text-xs font-medium text-green-600";
-                    }
-                    
-                    // Si el admin está logueado, intentamos cargar la clave maestra
-                    if (!AppConfig.CLAVE_MAESTRA) {
-                        await AppAuth.fetchAdminKey();
-                    }
-                    
-                    // LÓGICA DE APERTURA DE MODAL CORREGIDA (Fix 3):
-                    // Si el login de admin acaba de terminar Y la clave está cargada, abrir el panel.
-                    if (justLoggedIn && AppConfig.CLAVE_MAESTRA) {
-                        AppUI.showTransaccionModal('transaccion');
-                    }
-                    
-                    AppState.isProcessingAdminSignIn = false; // Limpiamos la bandera una vez que hemos procesado la clave (o fallado)
-                    
-                } else if (user && user.isAnonymous) {
-                    // Usuario es anónimo (estado por defecto)
-                    console.log("Anonymous user signed in.");
-                    AppState.isAdminLoggedIn = false;
-                    if (authStatusEl) {
-                        authStatusEl.textContent = "Conectado";
-                        authStatusEl.className = "text-xs font-medium text-gray-500";
-                    }
-                    AppConfig.CLAVE_MAESTRA = null; // Limpiar clave si no es admin
-                    AppState.isProcessingAdminSignIn = false; // Limpiamos la bandera si no es admin
-                } else {
-                    // No hay usuario (debería ser raro)
-                    console.log("User is signed out.");
-                    AppState.isAdminLoggedIn = false;
-                    if (authStatusEl) {
-                        authStatusEl.textContent = "Desconectado";
-                        authStatusEl.className = "text-xs font-medium text-red-500";
-                    }
-                    AppConfig.CLAVE_MAESTRA = null;
-                    AppState.isProcessingAdminSignIn = false; // Limpiamos la bandera si no hay usuario
-                }
-                
-                // Actualizar paneles de admin (Bonos y Tienda)
-                AppUI.updateAdminPanels();
-            });
-
-        } catch (error) {
-            console.error("Firebase Auth Error (Initial Setup):", error);
-            if (authStatusEl) authStatusEl.textContent = "Error de Auth";
-            AppState.isAuthInitialized = true; // Permite que el resto de la app continúe
-        }
-    },
-
-    /**
-     * Intenta iniciar sesión como administrador usando Email y Contraseña.
-     * Se llama desde el botón "Acceder" del modal de gestión.
-     */
-    signInAdmin: async () => {
-        const emailInput = document.getElementById('email-input');
-        const passwordInput = document.getElementById('password-input');
-        const errorMsgEl = document.getElementById('auth-error-msg');
-        const submitBtn = document.getElementById('modal-submit');
-        
-        errorMsgEl.textContent = "";
-        emailInput.classList.remove('shake', 'border-red-500');
-        passwordInput.classList.remove('shake', 'border-red-500');
-
-        const email = emailInput.value;
-        const password = passwordInput.value;
-
-        if (!email || !password) {
-            errorMsgEl.textContent = "Ingrese email y contraseña.";
-            emailInput.classList.add('shake', 'border-red-500');
-            passwordInput.classList.add('shake', 'border-red-500');
-            return;
-        }
-
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Accediendo...';
-        
-        // INYECTADO: Indicamos que estamos en proceso de login de admin (Fix 3)
-        AppState.isProcessingAdminSignIn = true;
-
-        try {
-            // Esto dispara onAuthStateChanged si es exitoso
-            await signInWithEmailAndPassword(auth, email, password);
-            
-            // Si el login es exitoso, onAuthStateChanged se encarga del resto
             AppUI.hideModal('gestion-modal');
+            AppUI.showTransaccionModal('transaccion'); // Abrir en la pestaña 'transaccion'
             
-            // ELIMINADO BLOQUE setTimeout FRÁGIL (Fix 2)
-            
-        } catch (error) {
-            let userMessage = "Error de inicio de sesión. Credenciales incorrectas.";
-            console.error("Firebase Sign-in Error:", error.code, error.message);
-
-            if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                userMessage = "Email o contraseña incorrectos.";
-            } else if (error.code === 'auth/invalid-email') {
-                userMessage = "Formato de email inválido.";
-            }
-            
-            errorMsgEl.textContent = userMessage;
-            passwordInput.classList.add('shake', 'border-red-500');
-            passwordInput.focus();
-            
-            // Si falla el login, limpiamos la bandera
-            AppState.isProcessingAdminSignIn = false; 
-            
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Acceder';
-        }
-    },
-    
-    /**
-     * Obtiene la clave maestra del documento de Firestore (colección/documento: config/admin).
-     * Solo se llama si un admin ha iniciado sesión.
-     * @returns {void}
-     */
-    fetchAdminKey: async () => {
-        if (!db) return;
-
-        // La ruta de la clave maestra: /artifacts/{appId}/public/data/config/admin
-        const claveDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'admin');
-        
-        try {
-            const docSnap = await getDoc(claveDocRef);
-
-            if (docSnap.exists() && docSnap.data().masterKey) {
-                AppConfig.CLAVE_MAESTRA = docSnap.data().masterKey;
-                console.log("Master Key loaded securely from Firestore.");
-                AppUI.updateAdminPanels(); // Desbloquear Paneles
-            } else {
-                console.error("Firestore Error: Documento 'config/admin' o campo 'masterKey' no encontrado.");
-                AppConfig.CLAVE_MAESTRA = null; // Falla silenciosamente, el admin no podrá usar la API
-            }
-        } catch (error) {
-            console.error("Error fetching admin key from Firestore:", error);
-            AppConfig.CLAVE_MAESTRA = null;
+            claveInput.value = '';
+            claveInput.classList.remove('shake', 'border-red-500');
+        } else {
+            claveInput.classList.add('shake', 'border-red-500');
+            claveInput.focus();
+            setTimeout(() => {
+                claveInput.classList.remove('shake');
+            }, 500);
         }
     }
-    
-    // NOTA: Se elimina AppAuth.verificarClave, ya no es necesaria
 };
 
 // --- NÚMEROS Y FORMATO ---
 const AppFormat = {
     // CAMBIO v0.4.4: Formato de Pinceles sin decimales
     formatNumber: (num) => new Intl.NumberFormat('es-DO', { maximumFractionDigits: 0 }).format(num),
+    // formatNumber: (num) => new Intl.NumberFormat('es-DO').format(num), // <-- ORIGINAL
     // NUEVO v0.4.0: Formateo de Pinceles (2 decimales) - REEMPLAZADO por formatNumber
     formatPincel: (num) => new Intl.NumberFormat('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num)
 };
@@ -356,26 +172,8 @@ const AppData = {
             } else {
                 AppState.isOffline = false;
                 
-                let url = `${AppConfig.API_URL}?cacheBuster=${new Date().getTime()}`;
-                
-                // INYECTADO (Fix de Acceso Denegado): Agregar la clave maestra si está disponible
-                let requestOptions = { 
-                    method: 'GET', 
-                    cache: 'no-cache', 
-                    redirect: 'follow' 
-                };
-
-                if (AppConfig.CLAVE_MAESTRA) {
-                    url += `&clave=${encodeURIComponent(AppConfig.CLAVE_MAESTRA)}`;
-                    // Si tu API lo requiere en el body, usa POST, pero para lectura GET con URL es común:
-                    // requestOptions = {
-                    //     method: 'POST',
-                    //     body: JSON.stringify({ accion: 'cargar_datos', clave: AppConfig.CLAVE_MAESTRA }),
-                    //     headers: { 'Content-Type': 'application/json' }
-                    // };
-                }
-
-                const response = await fetch(url, requestOptions);
+                const url = `${AppConfig.API_URL}?cacheBuster=${new Date().getTime()}`;
+                const response = await fetch(url, { method: 'GET', cache: 'no-cache', redirect: 'follow' });
 
                 if (!response.ok) {
                     throw new Error(`Error de red: ${response.status} ${response.statusText}`);
@@ -510,16 +308,10 @@ const AppUI = {
     init: function() {
         console.log("AppUI.init() comenzando.");
         
-        // --- NUEVO FIREBASE: Setup de Auth Listener (primero) ---
-        // Esto inicializa Firebase, intenta sign-in anónimo y establece el listener.
-        AppAuth.setupAuthListener();
-        
-        // Listeners Modales de Gestión (Login)
-        // CAMBIO (Fix 1): Reemplazamos el listener fijo por una función que verifica el estado
-        document.getElementById('gestion-btn').addEventListener('click', AppUI.handleGestionClick); 
+        // Listeners Modales de Gestión (Clave)
+        document.getElementById('gestion-btn').addEventListener('click', () => AppUI.showModal('gestion-modal'));
         document.getElementById('modal-cancel').addEventListener('click', () => AppUI.hideModal('gestion-modal'));
-        // CAMBIO FIREBASE: Usar AppAuth.signInAdmin
-        document.getElementById('modal-submit').addEventListener('click', AppAuth.signInAdmin);
+        document.getElementById('modal-submit').addEventListener('click', AppAuth.verificarClave);
         document.getElementById('gestion-modal').addEventListener('click', (e) => {
             if (e.target.id === 'gestion-modal') AppUI.hideModal('gestion-modal');
         });
@@ -570,8 +362,7 @@ const AppUI = {
         // Listeners Canje de Bono (Usuario)
         document.getElementById('bono-submit-btn').addEventListener('click', AppTransacciones.canjearBono);
         // Listeners Admin de Bonos
-        // CAMBIO FIREBASE: Eliminar Listener de desbloqueo, se hace con el estado global
-        // document.getElementById('bono-admin-unlock-btn').addEventListener('click', AppUI.toggleBonoAdminPanel);
+        document.getElementById('bono-admin-unlock-btn').addEventListener('click', AppUI.toggleBonoAdminPanel);
         document.getElementById('bono-admin-form').addEventListener('submit', (e) => {
             e.preventDefault();
             AppTransacciones.crearActualizarBono();
@@ -593,8 +384,7 @@ const AppUI = {
             });
         });
         // Listeners Admin de Tienda
-        // CAMBIO FIREBASE: Eliminar Listener de desbloqueo, se hace con el estado global
-        // document.getElementById('tienda-admin-unlock-btn').addEventListener('click', AppUI.toggleTiendaAdminPanel);
+        document.getElementById('tienda-admin-unlock-btn').addEventListener('click', AppUI.toggleTiendaAdminPanel);
         document.getElementById('tienda-admin-form').addEventListener('submit', (e) => {
             e.preventDefault();
             AppTransacciones.crearActualizarItem();
@@ -603,6 +393,9 @@ const AppUI = {
         
         // NUEVO v16.1: Listeners para Control Manual de Tienda
         // Los listeners ya están en el HTML con onclick="AppTransacciones.toggleStoreManual('status')"
+
+        // --- ELIMINADO v17.0: Listeners para Modal Confirmación de Compra ---
+
 
         // Listeners Modal Reglas
         document.getElementById('reglas-btn').addEventListener('click', () => AppUI.showModal('reglas-modal'));
@@ -656,84 +449,6 @@ const AppUI = {
         setInterval(AppUI.updateCountdown, 1000);
         
         AppUI.poblarModalAnuncios();
-    },
-    
-    // INYECTADO (Fix 1): Función para manejar el clic en el botón de "Administración"
-    handleGestionClick: function() {
-        // Si estamos logueados y tenemos la clave maestra, abrimos el panel de transacciones
-        if (AppState.isAdminLoggedIn && AppConfig.CLAVE_MAESTRA) {
-            AppUI.showTransaccionModal('transaccion');
-            // Si estamos logueados pero la clave aún no está cargada (falló o es lenta)
-        } else if (AppState.isAdminLoggedIn && !AppConfig.CLAVE_MAESTRA) {
-            AppUI.showModal('gestion-modal'); 
-            const errorMsgEl = document.getElementById('auth-error-msg');
-            AppTransacciones.setLoading(errorMsgEl, "Cargando clave de administrador...");
-            
-            // Intentar forzar la recarga de la clave (en caso de fallo inicial)
-            AppAuth.fetchAdminKey().then(() => {
-                if (AppConfig.CLAVE_MAESTRA) {
-                    AppUI.hideModal('gestion-modal');
-                    AppUI.showTransaccionModal('transaccion');
-                } else {
-                    AppTransacciones.setError(errorMsgEl, "Fallo al cargar la clave maestra. Revise los logs de la consola.");
-                }
-            });
-        } else {
-            // Si no estamos logueados, mostramos el modal de login
-            AppUI.showModal('gestion-modal');
-        }
-    },
-
-    // NUEVO FIREBASE: Función para actualizar el estado de los paneles de Admin
-    updateAdminPanels: function() {
-        const isReady = AppState.isAdminLoggedIn && AppConfig.CLAVE_MAESTRA;
-        
-        // --- Panel de Bonos ---
-        const bonoGate = document.getElementById('bono-admin-gate');
-        const bonoPanel = document.getElementById('bono-admin-panel');
-        
-        if (bonoGate && bonoPanel) {
-            if (isReady) {
-                bonoGate.classList.add('hidden');
-                bonoPanel.classList.remove('hidden');
-                AppState.bonos.adminPanelUnlocked = true;
-                // Forzar un re-render de la lista de bonos
-                if (!document.getElementById('bonos-modal').classList.contains('opacity-0')) {
-                    AppUI.populateBonoAdminList();
-                }
-            } else {
-                bonoGate.classList.remove('hidden');
-                bonoPanel.classList.add('hidden');
-                AppState.bonos.adminPanelUnlocked = false;
-            }
-        }
-        
-        // --- Panel de Tienda ---
-        const tiendaGate = document.getElementById('tienda-admin-gate');
-        const tiendaPanel = document.getElementById('tienda-admin-panel');
-        
-        if (tiendaGate && tiendaPanel) {
-            if (isReady) {
-                tiendaGate.classList.add('hidden');
-                tiendaPanel.classList.remove('hidden');
-                AppState.tienda.adminPanelUnlocked = true;
-                // Forzar un re-render de la lista de tienda
-                if (!document.getElementById('tienda-modal').classList.contains('opacity-0')) {
-                    AppUI.populateTiendaAdminList();
-                }
-            } else {
-                tiendaGate.classList.remove('hidden');
-                tiendaPanel.classList.add('hidden');
-                AppState.tienda.adminPanelUnlocked = false;
-            }
-        }
-        
-        // --- Botón de Administración principal ---
-        const gestionBtn = document.getElementById('gestion-btn');
-        if (gestionBtn) {
-            gestionBtn.querySelector('span').textContent = isReady ? 'Administración' : 'Login Admin';
-        }
-        
     },
 
     showLoading: function() {
@@ -803,9 +518,14 @@ const AppUI = {
             AppTransacciones.setLoadingState(document.getElementById('bono-submit-btn'), document.getElementById('bono-btn-text'), false, 'Canjear Bono');
             
             // Pestaña Admin
-            // CAMBIO FIREBASE: Se elimina el reset de clave del admin aquí
+            document.getElementById('bono-admin-clave').value = "";
             AppUI.clearBonoAdminForm();
             document.getElementById('bono-admin-status-msg').textContent = "";
+            
+            // Ocultar panel de admin y resetear estado
+            document.getElementById('bono-admin-gate').classList.remove('hidden');
+            document.getElementById('bono-admin-panel').classList.add('hidden');
+            AppState.bonos.adminPanelUnlocked = false;
         }
 
         // NUEVO v16.0: Limpiar campos de Tienda
@@ -820,18 +540,21 @@ const AppUI = {
             document.getElementById('tienda-status-msg').textContent = "";
             
             // Pestaña Admin
-            // CAMBIO FIREBASE: Se elimina el reset de clave del admin aquí
+            document.getElementById('tienda-admin-clave').value = "";
             AppUI.clearTiendaAdminForm();
             document.getElementById('tienda-admin-status-msg').textContent = "";
+            
+            // Ocultar panel de admin
+            document.getElementById('tienda-admin-gate').classList.remove('hidden');
+            document.getElementById('tienda-admin-panel').classList.add('hidden');
+            AppState.tienda.adminPanelUnlocked = false;
         }
         
-        // CAMBIO FIREBASE: Limpiar campos del Login de Admin
+        // --- ELIMINADO v17.0: Limpieza de modal de confirmación ---
+        
         if (modalId === 'gestion-modal') {
-             document.getElementById('email-input').value = "";
-             document.getElementById('password-input').value = "";
-             document.getElementById('auth-error-msg').textContent = "";
-             document.getElementById('email-input').classList.remove('shake', 'border-red-500');
-             document.getElementById('password-input').classList.remove('shake', 'border-red-500');
+             document.getElementById('clave-input').value = "";
+             document.getElementById('clave-input').classList.remove('shake', 'border-red-500');
         }
     },
     
@@ -1016,10 +739,12 @@ const AppUI = {
         AppTransacciones.setLoadingState(document.getElementById('bono-submit-btn'), document.getElementById('bono-btn-text'), false, 'Canjear Bono');
 
         // Resetear pestaña de admin
-        // CAMBIO FIREBASE: Se elimina el reset de clave
+        document.getElementById('bono-admin-clave').value = "";
         AppUI.clearBonoAdminForm();
         document.getElementById('bono-admin-status-msg').textContent = "";
-        // CAMBIO FIREBASE: Se elimina el control del gate, se hace con updateAdminPanels
+        document.getElementById('bono-admin-gate').classList.remove('hidden');
+        document.getElementById('bono-admin-panel').classList.add('hidden');
+        AppState.bonos.adminPanelUnlocked = false;
         
         // Resetear a la pestaña 1
         AppUI.changeBonoTab('canjear');
@@ -1058,11 +783,6 @@ const AppUI = {
         // Limpiar mensajes
         document.getElementById('bono-status-msg').textContent = "";
         document.getElementById('bono-admin-status-msg').textContent = "";
-        
-        // CAMBIO FIREBASE: Si cambia a admin, actualizar el estado del panel
-        if (tabId === 'admin') {
-            AppUI.updateAdminPanels(); 
-        }
     },
     
     // CAMBIO v16.0: La firma de la función cambió (recibe objeto)
@@ -1112,7 +832,25 @@ const AppUI = {
     
     // --- Funciones del Panel de Admin de Bonos ---
     
-    // CAMBIO FIREBASE: Eliminar toggleBonoAdminPanel, ya se gestiona con updateAdminPanels
+    toggleBonoAdminPanel: function() {
+        const claveInput = document.getElementById('bono-admin-clave');
+        const gate = document.getElementById('bono-admin-gate');
+        const panel = document.getElementById('bono-admin-panel');
+        
+        if (claveInput.value === AppConfig.CLAVE_MAESTRA) {
+            AppState.bonos.adminPanelUnlocked = true;
+            gate.classList.add('hidden');
+            panel.classList.remove('hidden');
+            claveInput.value = ""; // Limpiar
+            claveInput.classList.remove('shake', 'border-red-500');
+        } else {
+            claveInput.classList.add('shake', 'border-red-500');
+            claveInput.focus();
+            setTimeout(() => {
+                claveInput.classList.remove('shake');
+            }, 500);
+        }
+    },
     
     // Puebla la tabla de bonos configurados (Vista de Admin)
     populateBonoAdminList: function() {
@@ -1186,10 +924,12 @@ const AppUI = {
         document.getElementById('tienda-status-msg').textContent = "";
         
         // Resetear pestaña de admin
-        // CAMBIO FIREBASE: Se elimina el reset de clave
+        document.getElementById('tienda-admin-clave').value = "";
         AppUI.clearTiendaAdminForm();
         document.getElementById('tienda-admin-status-msg').textContent = "";
-        // CAMBIO FIREBASE: Se elimina el control del gate, se hace con updateAdminPanels
+        document.getElementById('tienda-admin-gate').classList.remove('hidden');
+        document.getElementById('tienda-admin-panel').classList.add('hidden');
+        AppState.tienda.adminPanelUnlocked = false;
         
         // Resetear a la pestaña 1
         AppUI.changeTiendaTab('comprar');
@@ -1233,11 +973,6 @@ const AppUI = {
         // Limpiar mensajes
         document.getElementById('tienda-status-msg').textContent = "";
         document.getElementById('tienda-admin-status-msg').textContent = "";
-        
-        // CAMBIO FIREBASE: Si cambia a admin, actualizar el estado del panel
-        if (tabId === 'admin') {
-            AppUI.updateAdminPanels(); 
-        }
     },
 
     // Callback para el buscador de alumno en la tienda
@@ -1353,7 +1088,25 @@ const AppUI = {
 
     // --- Funciones del Panel de Admin de Tienda ---
     
-    // CAMBIO FIREBASE: Eliminar toggleTiendaAdminPanel, ya se gestiona con updateAdminPanels
+    toggleTiendaAdminPanel: function() {
+        const claveInput = document.getElementById('tienda-admin-clave');
+        const gate = document.getElementById('tienda-admin-gate');
+        const panel = document.getElementById('tienda-admin-panel');
+        
+        if (claveInput.value === AppConfig.CLAVE_MAESTRA) {
+            AppState.tienda.adminPanelUnlocked = true;
+            gate.classList.add('hidden');
+            panel.classList.remove('hidden');
+            claveInput.value = ""; // Limpiar
+            claveInput.classList.remove('shake', 'border-red-500');
+        } else {
+            claveInput.classList.add('shake', 'border-red-500');
+            claveInput.focus();
+            setTimeout(() => {
+                claveInput.classList.remove('shake');
+            }, 500);
+        }
+    },
     
     // NUEVO v16.1 (Problema 3): Actualiza la etiqueta de estado en el panel de admin
     // CAMBIO v17.1: Se eliminan las etiquetas "(Control Manual)"
@@ -1506,15 +1259,13 @@ const AppUI = {
     },
 
 
+    // --- ELIMINADO v0.4.1: FUNCIONES FONDO DE INVERSIÓN ---
+
+    // --- FIN FUNCIONES FONDO DE INVERSIÓN ---
+
+
     // --- FUNCIÓN CENTRAL: Mostrar Modal de Administración y pestaña inicial ---
     showTransaccionModal: function(tab) {
-        // CAMBIO FIREBASE: Comprobar clave antes de empezar
-        if (!AppState.isAdminLoggedIn || !AppConfig.CLAVE_MAESTRA) {
-            // Si por alguna razón la UI permite un clic sin clave, forzamos el login de nuevo
-            AppUI.showModal('gestion-modal');
-            return;
-        }
-        
         if (!AppState.datosActuales) {
             return;
         }
@@ -1950,7 +1701,7 @@ const AppUI = {
         // ===================================================================
         // CORRECCIÓN 1: BÓVEDA (Total en Cuentas)
         // Calculamos la bóveda sumando solo los pinceles positivos de todos
-        // los alumnos, para que coincida con la estadística "Pinceles Positivos.
+        // los alumnos, para que coincida con la estadística "Pinceles Positivos".
         // ===================================================================
         const allStudents = AppState.datosAdicionales.allStudents;
         
@@ -2008,4 +1759,1132 @@ const AppUI = {
                 .reduce((sum, deposito) => {
                     const montoStr = String(deposito.monto || '0');
                     const montoNumerico = parseInt(montoStr.replace(/[^0-9]/g, ''), 10) || 0;
-                    return
+                    return sum + montoNumerico;
+                }, 0);
+            
+            const capitalTotal = student.pinceles + totalInvertidoDepositos;
+
+            return {
+                ...student, 
+                totalInvertidoDepositos: totalInvertidoDepositos,
+                capitalTotal: capitalTotal
+            };
+        });
+
+        const top3 = studentsWithCapital.sort((a, b) => b.capitalTotal - a.capitalTotal).slice(0, 3);
+
+        if (top3.length > 0) {
+            top3Html = top3.map((student, index) => {
+                let rankColor = 'bg-blue-100 text-blue-700';
+                if (index === 0) rankColor = 'bg-yellow-100 text-yellow-700';
+                if (index === 1) rankColor = 'bg-gray-100 text-gray-700';
+                if (index === 2) rankColor = 'bg-orange-100 text-orange-700';
+                const grupoNombre = student.grupoNombre || 'N/A';
+                
+                const pincelesLiquidosF = AppFormat.formatNumber(student.pinceles);
+                const totalInvertidoF = AppFormat.formatNumber(student.totalInvertidoDepositos);
+
+                return `
+                    <div class="bg-white rounded-lg shadow-md p-3 h-full flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-500 truncate">${grupoNombre}</span>
+                                <span class="text-xs font-bold ${rankColor} rounded-full px-2 py-0.5">${index + 1}º</span>
+                            </div>
+                            <p class="text-base font-semibold text-gray-900 truncate">${student.nombre}</p>
+                        </div>
+                        
+                        <div class="text-right mt-2">
+                            <div class="tooltip-container relative inline-block">
+                                <p class="text-xl font-bold text-blue-600">
+                                    ${AppFormat.formatNumber(student.capitalTotal)} ℙ
+                                </p>
+                                <!-- Tooltip personalizado -->
+                                <div class="tooltip-text hidden md:block w-48">
+                                    <span class="font-bold">Capital Total</span>
+                                    <div class="flex justify-between mt-1 text-xs"><span>Capital Líquido:</span> <span>${pincelesLiquidosF} ℙ</span></div>
+                                    <div class="flex justify-between text-xs"><span>Capital Invertido:</span> <span>${totalInvertidoF} ℙ</span></div>
+                                    <!-- CORRECCIÓN v16.1 (Problema 2 Tooltip): Invertir polígono de la flecha -->
+                                    <svg class="absolute text-gray-800 h-2 w-full left-0 bottom-full" x="0px" y="0px" viewBox="0 0 255 255" xml:space="preserve"><polygon class="fill-current" points="0,255 127.5,127.5 255,255"/></svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        for (let i = top3.length; i < 3; i++) {
+            top3Html += `
+                <div class="bg-white rounded-lg shadow-md p-3 opacity-50 h-full flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm font-medium text-gray-400">-</span>
+                            <span class="text-xs font-bold bg-gray-100 text-gray-400 rounded-full px-2 py-0.5">${i + 1}º</span>
+                        </div>
+                        <p class="text-base font-semibold text-gray-400 truncate">-</p>
+                    </div>
+                    <div class="text-right mt-2">
+                         <p class="text-xl font-bold text-gray-400">- ℙ</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        bovedaContainer.innerHTML = bovedaHtml;
+        tesoreriaContainer.innerHTML = tesoreriaHtml;
+        top3Grid.innerHTML = top3Html;
+        
+        homeStatsContainer.classList.remove('hidden');
+        
+        // 2. MOSTRAR MÓDULOS (Idea 1 & 2)
+        document.getElementById('home-modules-grid').classList.remove('hidden');
+        AppUI.actualizarAlumnosEnRiesgo();
+        AppUI.actualizarAnuncios(); 
+        AppUI.actualizarEstadisticasRapidas(grupos);
+        
+    },
+
+    /**
+     * Muestra la tabla de un grupo específico
+     */
+    mostrarDatosGrupo: function(grupo) {
+        document.getElementById('main-header-title').textContent = grupo.nombre;
+        
+        let totalColor = "text-gray-700";
+        if (grupo.total < 0) totalColor = "text-red-600";
+        if (grupo.total > 0) totalColor = "text-green-600";
+        
+        document.getElementById('page-subtitle').innerHTML = `
+            <h2 class="text-xl font-semibold text-gray-800">Total del Grupo: 
+                <span class="${totalColor}">${AppFormat.formatNumber(grupo.total)} ℙ</span>
+            </h2>
+        `;
+        
+        const tableContainer = document.getElementById('table-container');
+        const usuariosOrdenados = [...grupo.usuarios].sort((a, b) => b.pinceles - a.pinceles);
+
+        const filas = usuariosOrdenados.map((usuario, index) => {
+            const pos = index + 1;
+            
+            let rankBg = 'bg-gray-100 text-gray-600';
+            if (pos === 1) rankBg = 'bg-yellow-100 text-yellow-600';
+            if (pos === 2) rankBg = 'bg-gray-200 text-gray-700';
+            if (pos === 3) rankBg = 'bg-orange-100 text-orange-600';
+            if (grupo.nombre === "Cicla") rankBg = 'bg-red-100 text-red-600';
+
+            // CORRECCIÓN BUG ONCLICK: Escapar nombres
+            const grupoNombreEscapado = escapeHTML(grupo.nombre);
+            const usuarioNombreEscapado = escapeHTML(usuario.nombre);
+
+            return `
+                <tr class="hover:bg-gray-50 cursor-pointer" onclick="AppUI.showStudentModal('${grupoNombreEscapado}', '${usuarioNombreEscapado}', ${pos})">
+                    <td class="px-4 py-3 text-center">
+                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${rankBg}">
+                            ${pos}
+                        </span>
+                    </td>
+                    <td class="px-6 py-3 text-sm font-medium text-gray-900 truncate">
+                        ${usuario.nombre}
+                    </td>
+                    <td class="px-6 py-3 text-sm font-semibold ${usuario.pinceles < 0 ? 'text-red-600' : 'text-gray-800'} text-right">
+                        ${AppFormat.formatNumber(usuario.pinceles)} ℙ
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        tableContainer.innerHTML = `
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Rank</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Pinceles</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        ${filas.length > 0 ? filas : '<tr><td colspan="3" class="text-center p-6 text-gray-500">No hay alumnos en este grupo.</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        tableContainer.classList.remove('hidden');
+
+        // 4. OCULTAR MÓDULOS DE HOME
+        document.getElementById('home-stats-container').classList.add('hidden');
+        document.getElementById('home-modules-grid').classList.add('hidden');
+    },
+
+    // ===================================================================
+    // FUNCIÓN CORREGIDA (Estadísticas v17.0)
+    // ===================================================================
+    actualizarAlumnosEnRiesgo: function() {
+        const lista = document.getElementById('riesgo-lista');
+        if (!lista) return;
+
+        // CORRECCIÓN: Ahora incluye a TODOS los alumnos (incluyendo Cicla)
+        // y los ordena de menor a mayor saldo para mostrar el verdadero riesgo.
+        const allStudents = AppState.datosAdicionales.allStudents;
+        
+        // Ordenar a TODOS los alumnos por sus pinceles, de menor a mayor.
+        // Usamos [...allStudents] para no modificar el array original.
+        const enRiesgo = [...allStudents].sort((a, b) => a.pinceles - b.pinceles);
+        
+        // Tomar los 6 con saldos más bajos.
+        const top6Riesgo = enRiesgo.slice(0, 6); 
+
+        if (top6Riesgo.length === 0) {
+            lista.innerHTML = `<tr><td colspan="3" class="p-4 text-sm text-gray-500 text-center">No hay alumnos en riesgo por el momento.</td></tr>`;
+            return;
+        }
+
+        lista.innerHTML = top6Riesgo.map((student, index) => {
+            const grupoNombre = student.grupoNombre || 'N/A';
+            const pinceles = AppFormat.formatNumber(student.pinceles);
+            const pincelesColor = student.pinceles <= 0 ? 'text-red-600' : 'text-gray-900';
+
+            return `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2 text-sm text-gray-700 font-medium truncate">${student.nombre}</td>
+                    <td class="px-4 py-2 text-sm text-gray-500 whitespace-nowrap">${grupoNombre}</td>
+                    <td class="px-4 py-2 text-sm font-semibold ${pincelesColor} text-right whitespace-nowrap">${pinceles} ℙ</td>
+                </tr>
+            `;
+        }).join('');
+    },
+    
+    // ===================================================================
+    // FUNCIÓN CORREGIDA (Estadísticas v17.0)
+    // ===================================================================
+    actualizarEstadisticasRapidas: function(grupos) {
+        const statsList = document.getElementById('quick-stats-list');
+        if (!statsList) return;
+
+        const allStudents = AppState.datosAdicionales.allStudents;
+        const ciclaGrupo = grupos.find(g => g.nombre === 'Cicla');
+        
+        // CORRECCIÓN 2: ESTADÍSTICAS RÁPIDAS
+        
+        // Alumnos Activos (sin Cicla)
+        const alumnosActivos = allStudents.filter(s => s.grupoNombre !== 'Cicla');
+        const totalAlumnosActivos = alumnosActivos.length;
+        const totalEnCicla = ciclaGrupo ? ciclaGrupo.usuarios.length : 0;
+        
+        // Pinceles Positivos (el valor que debe cuadrar con la Bóveda)
+        const pincelesPositivos = allStudents.filter(s => s.pinceles > 0).reduce((sum, user) => sum + user.pinceles, 0);
+        const pincelesNegativos = allStudents.filter(s => s.pinceles < 0).reduce((sum, user) => sum + user.pinceles, 0);
+        
+        // Pincel Promedio: Pinceles Positivos divididos entre Alumnos Activos (más útil)
+        const promedioPinceles = totalAlumnosActivos > 0 ? (pincelesPositivos / totalAlumnosActivos) : 0;
+        
+        const createStat = (label, value, valueClass = 'text-gray-900') => `
+            <div class="stat-item flex justify-between items-baseline text-sm py-2 border-b border-gray-100">
+                <span class="text-gray-600">${label}:</span>
+                <span class="font-semibold ${valueClass}">${value}</span>
+            </div>
+        `;
+
+        statsList.innerHTML = `
+            ${createStat('Alumnos Activos', totalAlumnosActivos)}
+            ${createStat('Alumnos en Cicla', totalEnCicla, 'text-red-600')}
+            ${createStat('Pincel Promedio (Activos)', `${AppFormat.formatNumber(promedioPinceles.toFixed(0))} ℙ`)}
+            ${createStat('Pinceles Positivos', `${AppFormat.formatNumber(pincelesPositivos)} ℙ`, 'text-green-600')}
+            ${createStat('Pinceles Negativos', `${AppFormat.formatNumber(pincelesNegativos)} ℙ`, 'text-red-600')}
+        `;
+    },
+
+    actualizarAnuncios: function() {
+        const lista = document.getElementById('anuncios-lista');
+        
+        const todosLosAnuncios = [
+            ...AnunciosDB['AVISO'].map(texto => ({ tipo: 'AVISO', texto, bg: 'bg-gray-100', text: 'text-gray-700' })),
+            ...AnunciosDB['NUEVO'].map(texto => ({ tipo: 'NUEVO', texto, bg: 'bg-blue-100', text: 'text-blue-700' })),
+            ...AnunciosDB['CONSEJO'].map(texto => ({ tipo: 'CONSEJO', texto, bg: 'bg-green-100', text: 'text-green-700' })),
+            ...AnunciosDB['ALERTA'].map(texto => ({ tipo: 'ALERTA', texto, bg: 'bg-red-100', text: 'text-red-700' }))
+        ];
+        
+        const anuncios = [...todosLosAnuncios].sort(() => 0.5 - Math.random()).slice(0, 5);
+
+        lista.innerHTML = anuncios.map(anuncio => `
+            <li class="flex items-start p-2 hover:bg-gray-50 rounded-lg transition-colors"> 
+                <span class="text-xs font-bold ${anuncio.bg} ${anuncio.text} rounded-full w-20 text-center py-0.5 mr-3 flex-shrink-0 mt-1">${anuncio.tipo}</span>
+                <span class="text-sm text-gray-700 flex-1">${anuncio.texto}</span>
+            </li>
+        `).join('');
+    },
+
+    poblarModalAnuncios: function() {
+        const listaModal = document.getElementById('anuncios-modal-lista');
+        if (!listaModal) return;
+
+        let html = '';
+        const tipos = [
+            { id: 'AVISO', titulo: 'Avisos', bg: 'bg-gray-100', text: 'text-gray-700' },
+            { id: 'NUEVO', titulo: 'Novedades', bg: 'bg-blue-100', text: 'text-blue-700' },
+            { id: 'CONSEJO', titulo: 'Consejos', bg: 'bg-green-100', text: 'text-green-700' },
+            { id: 'ALERTA', titulo: 'Alertas', bg: 'bg-red-100', text: 'text-red-700' }
+        ];
+
+        tipos.forEach(tipo => {
+            const anuncios = AnunciosDB[tipo.id];
+            if (anuncios && anuncios.length > 0) {
+                html += `
+                    <div>
+                        <h4 class="text-sm font-semibold ${tipo.text} mb-2">${tipo.titulo}</h4>
+                        <ul class="space-y-2">
+                            ${anuncios.map(texto => `
+                                <li class="flex items-start p-2 bg-gray-50 rounded-lg">
+                                    <span class="text-xs font-bold ${tipo.bg} ${tipo.text} rounded-full w-20 text-center py-0.5 mr-3 flex-shrink-0 mt-1">${tipo.id}</span>
+                                    <span class="text-sm text-gray-700 flex-1">${texto}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+        });
+
+        listaModal.innerHTML = html;
+    },
+
+    showStudentModal: function(nombreGrupo, nombreUsuario, rank) {
+        const student = AppState.datosAdicionales.allStudents.find(u => u.nombre === nombreUsuario);
+        const grupo = AppState.datosActuales.find(g => g.nombre === nombreGrupo);
+        
+        if (!student || !grupo) return;
+
+        const modalContent = document.getElementById('student-modal-content');
+        const totalPinceles = student.pinceles || 0;
+        
+        const gruposRankeados = AppState.datosActuales.filter(g => g.nombre !== 'Cicla');
+        const rankGrupo = gruposRankeados.findIndex(g => g.nombre === nombreGrupo) + 1;
+        
+        // Buscar préstamos y depósitos
+        const prestamoActivo = AppState.datosAdicionales.prestamosActivos.find(p => p.alumno === student.nombre);
+        const depositoActivo = AppState.datosAdicionales.depositosActivos.find(d => d.alumno === student.nombre);
+
+        const createStat = (label, value, valueClass = 'text-gray-900') => `
+            <div class="bg-gray-50 p-4 rounded-lg text-center">
+                <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">${label}</div>
+                <div class="text-2xl font-bold ${valueClass} truncate">${value}</div>
+            </div>
+        `;
+
+        let extraHtml = '';
+        if (prestamoActivo) {
+            extraHtml += `<p class="text-sm font-bold text-red-600 text-center mt-3 p-2 bg-red-50 rounded-lg">⚠️ Préstamo Activo</p>`;
+        }
+        if (depositoActivo) {
+            const vencimiento = new Date(depositoActivo.vencimiento);
+            const fechaString = `${vencimiento.getDate()}/${vencimiento.getMonth() + 1}`;
+            extraHtml += `<p class="text-sm font-bold text-green-600 text-center mt-3 p-2 bg-green-50 rounded-lg">🏦 Depósito Activo (Vence: ${fechaString})</p>`;
+        }
+        
+        modalContent.innerHTML = `
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-900">${student.nombre}</h2>
+                        <p class="text-sm font-medium text-gray-500">${grupo.nombre}</p>
+                    </div>
+                    <button onclick="AppUI.hideModal('student-modal')" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    ${createStat('Rank en Grupo', `${rank}º`, 'text-blue-600')}
+                    ${createStat('Rank de Grupo', `${rankGrupo > 0 ? rankGrupo + 'º' : 'N/A'}`, 'text-blue-600')}
+                    ${createStat('Total Pinceles', `${AppFormat.formatNumber(totalPinceles)} ℙ`, totalPinceles < 0 ? 'text-red-600' : 'text-green-600')}
+                    ${createStat('Total Grupo', `${AppFormat.formatNumber(grupo.total)} ℙ`)}
+                    ${createStat('% del Grupo', `${grupo.total !== 0 ? ((totalPinceles / grupo.total) * 100).toFixed(1) : 0}%`)}
+                    ${createStat('Grupo Original', student.grupoNombre || 'N/A' )}
+                </div>
+                ${extraHtml}
+            </div>
+        `;
+        AppUI.showModal('student-modal');
+    },
+    
+    // CAMBIO v16.1: Lógica de Tienda y Control Manual
+    // CAMBIO v17.1: Se eliminan las etiquetas "(Manual)" en los mensajes
+    updateCountdown: function() {
+        const getLastThursday = (year, month) => {
+            const lastDayOfMonth = new Date(year, month + 1, 0);
+            let lastThursday = new Date(lastDayOfMonth);
+            lastThursday.setDate(lastThursday.getDate() - (lastThursday.getDay() + 3) % 7);
+            return lastThursday;
+        };
+
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth();
+        let storeDay = getLastThursday(currentYear, currentMonth); 
+
+        const storeOpen = new Date(storeDay.getFullYear(), storeDay.getMonth(), storeDay.getDate(), 0, 0, 0); 
+        const storeClose = new Date(storeDay.getFullYear(), storeDay.getMonth(), storeDay.getDate(), 23, 59, 59); 
+
+        const timerEl = document.getElementById('countdown-timer');
+        const messageEl = document.getElementById('store-message'); 
+        const tiendaBtn = document.getElementById('tienda-btn');
+        const tiendaTimerStatus = document.getElementById('tienda-timer-status');
+        
+        const f = (val) => String(val).padStart(2, '0');
+
+        // NUEVO v16.1 (Problema 3): Lógica de Control Manual
+        const manualStatus = AppState.tienda.storeManualStatus;
+        
+        if (manualStatus === 'open') {
+            // TIENDA FORZADA ABIERTA
+            timerEl.classList.add('hidden');
+            messageEl.classList.remove('hidden');
+            messageEl.textContent = "¡La tienda está abierta!"; // Sin etiqueta (Manual)
+            if (tiendaTimerStatus) { 
+                tiendaTimerStatus.innerHTML = `<span class="text-green-600 font-bold">¡TIENDA ABIERTA!</span>`; // Sin etiqueta (Control Manual)
+                tiendaTimerStatus.classList.remove('bg-gray-100', 'text-gray-700', 'bg-red-50', 'text-red-700');
+                tiendaTimerStatus.classList.add('bg-green-50', 'text-green-700');
+            }
+            AppState.tienda.isStoreOpen = true;
+
+        } else if (manualStatus === 'closed') {
+            // TIENDA FORZADA CERRADA
+            timerEl.classList.add('hidden'); // Ocultamos el timer principal
+            messageEl.classList.add('hidden'); // Ocultamos el mensaje principal
+            
+            if (tiendaTimerStatus) {
+                tiendaTimerStatus.innerHTML = `<span class="text-red-600 font-bold">TIENDA CERRADA</span>`; // Sin etiqueta (Control Manual)
+                tiendaTimerStatus.classList.remove('bg-green-50', 'text-green-700', 'bg-gray-100', 'text-gray-700');
+                tiendaTimerStatus.classList.add('bg-red-50', 'text-red-700');
+            }
+            AppState.tienda.isStoreOpen = false;
+
+        } else {
+            // MODO AUTOMÁTICO (lógica original)
+            if (now >= storeOpen && now <= storeClose) { 
+                timerEl.classList.add('hidden');
+                messageEl.classList.remove('hidden');
+                messageEl.textContent = "¡La tienda está abierta!"; // Mensaje original
+                if (tiendaTimerStatus) { 
+                    tiendaTimerStatus.innerHTML = `<span class="text-green-600 font-bold">¡TIENDA ABIERTA!</span> Oportunidad única.`;
+                    tiendaTimerStatus.classList.remove('bg-gray-100', 'text-gray-700', 'bg-red-50', 'text-red-700');
+                    tiendaTimerStatus.classList.add('bg-green-50', 'text-green-700');
+                }
+                AppState.tienda.isStoreOpen = true;
+            } else {
+                timerEl.classList.remove('hidden');
+                messageEl.classList.add('hidden');
+                
+                let targetDate = storeOpen; 
+                if (now > storeClose) { 
+                    targetDate = getLastThursday(currentYear, currentMonth + 1);
+                    targetDate.setHours(0, 0, 0, 0); 
+                }
+
+                const distance = targetDate - now;
+                
+                const days = f(Math.floor(distance / (1000 * 60 * 60 * 24)));
+                const hours = f(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)));
+                const minutes = f(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)));
+                const seconds = f(Math.floor((distance % (1000 * 60)) / 1000));
+                
+                document.getElementById('days').textContent = days;
+                document.getElementById('hours').textContent = hours;
+                document.getElementById('minutes').textContent = minutes;
+                document.getElementById('seconds').textContent = seconds;
+
+                // CORRECCIÓN BUG TIMER (Problema 1): Actualizar también el timer del modal
+                if (tiendaTimerStatus) {
+                    tiendaTimerStatus.innerHTML = `<span class="text-red-600 font-bold">TIENDA CERRADA.</span> Próxima apertura en:
+                        <div class="flex items-baseline justify-center gap-2 mt-2">
+                            <span class="text-xl font-bold text-blue-600 w-8 text-right">${days}</span><span class="text-xs text-gray-500 uppercase -ml-1">Días</span>
+                            <span class="text-xl font-bold text-blue-600 w-8 text-right">${hours}</span><span class="text-xs text-gray-500 uppercase -ml-1">Horas</span>
+                            <span class="text-xl font-bold text-blue-600 w-8 text-right">${minutes}</span><span class="text-xs text-gray-500 uppercase -ml-1">Minutos</span>
+                        </div>
+                    `;
+                    tiendaTimerStatus.classList.remove('bg-green-50', 'text-green-700', 'bg-gray-100', 'text-gray-700');
+                    tiendaTimerStatus.classList.add('bg-red-50', 'text-red-700');
+                }
+                AppState.tienda.isStoreOpen = false;
+            }
+        }
+
+
+        // NUEVO v16.0: Actualizar estado de botones si la tienda está visible
+        // (Optimización: esto solo se ejecuta si el modal está abierto)
+        if (document.getElementById('tienda-modal').classList.contains('opacity-0') === false) {
+            AppUI.updateTiendaButtonStates();
+            AppUI.updateTiendaAdminStatusLabel(); // v16.1
+        }
+    }
+};
+
+// --- OBJETO TRANSACCIONES (Préstamos, Depósitos, P2P, Bonos, Tienda) ---
+// CAMBIO v16.0: Añadida lógica de Tienda
+const AppTransacciones = {
+
+    realizarTransaccionMultiple: async function() {
+        const cantidadInput = document.getElementById('transaccion-cantidad-input');
+        const statusMsg = document.getElementById('transaccion-status-msg');
+        const submitBtn = document.getElementById('transaccion-submit-btn');
+        const btnText = document.getElementById('transaccion-btn-text');
+        
+        const pinceles = parseInt(cantidadInput.value, 10);
+
+        let errorValidacion = "";
+        if (isNaN(pinceles) || pinceles === 0) {
+            errorValidacion = "La cantidad debe ser un número distinto de cero.";
+        }
+
+        const groupedSelections = {};
+        const checkedUsers = document.querySelectorAll('#transaccion-lista-usuarios-container input[type="checkbox"]:checked');
+        
+        if (!errorValidacion && checkedUsers.length === 0) {
+            errorValidacion = "Debe seleccionar al menos un usuario.";
+        } else {
+             checkedUsers.forEach(cb => {
+                const nombre = cb.value;
+                const grupo = cb.dataset.grupo; 
+                if (!groupedSelections[grupo]) {
+                    groupedSelections[grupo] = [];
+                }
+                groupedSelections[grupo].push(nombre);
+            });
+        }
+        
+        const transacciones = Object.keys(groupedSelections).map(grupo => {
+            return { grupo: grupo, nombres: groupedSelections[grupo] };
+        });
+
+        if (errorValidacion) {
+            AppTransacciones.setError(statusMsg, errorValidacion);
+            return;
+        }
+
+        AppTransacciones.setLoadingState(submitBtn, btnText, true, 'Procesando...');
+        AppTransacciones.setLoading(statusMsg, `Procesando ${checkedUsers.length} transacción(es)...`);
+        
+        try {
+            const payload = {
+                accion: 'transaccion_multiple', 
+                clave: AppConfig.CLAVE_MAESTRA,
+                cantidad: pinceles, 
+                transacciones: transacciones 
+            };
+
+            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.TRANSACCION_API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload), 
+            });
+
+            const result = await response.json();
+
+            if (result.success === true) {
+                const successMsg = result.message || "¡Transacción(es) exitosa(s)!";
+                AppTransacciones.setSuccess(statusMsg, successMsg);
+                
+                cantidadInput.value = "";
+                document.getElementById('transaccion-calculo-impuesto').textContent = ""; // NUEVO v0.4.2
+                AppData.cargarDatos(false); 
+                AppUI.populateGruposTransaccion(); 
+                AppUI.populateUsuariosTransaccion(); 
+
+            } else {
+                throw new Error(result.message || "Error desconocido de la API.");
+            }
+
+        } catch (error) {
+            AppTransacciones.setError(statusMsg, error.message);
+        } finally {
+            AppTransacciones.setLoadingState(submitBtn, btnText, false, 'Realizar Transacción');
+        }
+    },
+    
+    realizarPrestamo: async function(alumnoNombre, tipoPrestamo) {
+        const modalDialog = document.getElementById('transaccion-modal-dialog');
+        const submitBtn = modalDialog.querySelector(`button[onclick*="realizarPrestamo('${escapeHTML(alumnoNombre)}', '${escapeHTML(tipoPrestamo)}')"]`);
+        const statusMsg = document.getElementById('transaccion-status-msg');
+        
+        AppTransacciones.setLoadingState(submitBtn, null, true, 'Procesando...');
+        AppTransacciones.setLoading(statusMsg, `Otorgando préstamo ${tipoPrestamo}...`);
+        
+        try {
+            const payload = {
+                accion: 'otorgar_prestamo', 
+                clave: AppConfig.CLAVE_MAESTRA,
+                alumnoNombre: alumnoNombre,
+                tipoPrestamo: tipoPrestamo 
+            };
+
+            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.TRANSACCION_API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload), 
+            });
+
+            const result = await response.json();
+
+            if (result.success === true) {
+                AppTransacciones.setSuccess(statusMsg, result.message || "¡Préstamo otorgado con éxito!");
+                AppData.cargarDatos(false); 
+                AppUI.loadPrestamoPaquetes(alumnoNombre); 
+
+            } else {
+                throw new Error(result.message || "Error al otorgar el préstamo.");
+            }
+
+        } catch (error) {
+            AppTransacciones.setError(statusMsg, error.message);
+        } finally {
+            AppTransacciones.setLoadingState(submitBtn, null, false);
+        }
+    },
+    
+    realizarDeposito: async function(alumnoNombre, tipoDeposito) {
+        const modalDialog = document.getElementById('transaccion-modal-dialog');
+        const submitBtn = modalDialog.querySelector(`button[onclick*="realizarDeposito('${escapeHTML(alumnoNombre)}', '${escapeHTML(tipoDeposito)}')"]`);
+        const statusMsg = document.getElementById('transaccion-status-msg');
+        
+        AppTransacciones.setLoadingState(submitBtn, null, true, 'Procesando...');
+        AppTransacciones.setLoading(statusMsg, `Creando depósito ${tipoDeposito}...`);
+        
+        try {
+            const payload = {
+                accion: 'crear_deposito', 
+                clave: AppConfig.CLAVE_MAESTRA,
+                alumnoNombre: alumnoNombre,
+                tipoDeposito: tipoDeposito 
+            };
+
+            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.TRANSACCION_API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload), 
+            });
+
+            const result = await response.json();
+
+            if (result.success === true) {
+                AppTransacciones.setSuccess(statusMsg, result.message || "¡Depósito creado con éxito!");
+                AppData.cargarDatos(false); 
+                AppUI.loadDepositoPaquetes(alumnoNombre); 
+
+            } else {
+                throw new Error(result.message || "Error al crear el depósito.");
+            }
+
+        } catch (error) {
+            AppTransacciones.setError(statusMsg, error.message);
+        } finally {
+            AppTransacciones.setLoadingState(submitBtn, null, false);
+        }
+    },
+    
+    realizarTransferenciaP2P: async function() {
+        const statusMsg = document.getElementById('p2p-status-msg');
+        const submitBtn = document.getElementById('p2p-submit-btn');
+        const btnText = document.getElementById('p2p-btn-text');
+        
+        const nombreOrigen = AppState.currentSearch.p2pOrigen.selected;
+        const nombreDestino = AppState.currentSearch.p2pDestino.selected;
+        const claveP2P = document.getElementById('p2p-clave').value;
+        const cantidad = parseInt(document.getElementById('p2p-cantidad').value, 10);
+        
+        let errorValidacion = "";
+        if (!nombreOrigen) {
+            errorValidacion = "Debe seleccionar su nombre (Remitente) de la lista.";
+        } else if (!claveP2P) {
+            errorValidacion = "Debe ingresar su Clave P2P.";
+        } else if (!nombreDestino) {
+            errorValidacion = "Debe seleccionar un Destinatario de la lista.";
+        } else if (isNaN(cantidad) || cantidad <= 0) {
+            errorValidacion = "La cantidad debe ser un número positivo.";
+        } else if (nombreOrigen === nombreDestino) {
+            errorValidacion = "No puedes enviarte pinceles a ti mismo.";
+        }
+        
+        if (errorValidacion) {
+            AppTransacciones.setError(statusMsg, errorValidacion);
+            return;
+        }
+
+        AppTransacciones.setLoadingState(submitBtn, btnText, true, 'Procesando...');
+        AppTransacciones.setLoading(statusMsg, `Transfiriendo ${AppFormat.formatNumber(cantidad)} ℙ a ${nombreDestino}...`);
+        
+        try {
+            const payload = {
+                accion: 'transferir_p2p',
+                nombre_origen: nombreOrigen,
+                clave_p2p_origen: claveP2P,
+                nombre_destino: nombreDestino,
+                cantidad: cantidad
+            };
+
+            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload), 
+            });
+
+            const result = await response.json();
+
+            if (result.success === true) {
+                AppTransacciones.setSuccess(statusMsg, result.message || "¡Transferencia exitosa!");
+                
+                AppUI.resetSearchInput('p2pDestino');
+                document.getElementById('p2p-clave').value = "";
+                document.getElementById('p2p-cantidad').value = "";
+                document.getElementById('p2p-calculo-impuesto').textContent = "";
+                
+                AppData.cargarDatos(false); 
+
+            } else {
+                throw new Error(result.message || "Error desconocido de la API.");
+            }
+
+        } catch (error) {
+            AppTransacciones.setError(statusMsg, error.message);
+        } finally {
+            AppTransacciones.setLoadingState(submitBtn, btnText, false, 'Realizar Transferencia');
+        }
+    },
+
+    // --- LÓGICA DE BONOS (v0.5.0) ---
+
+    canjearBono: async function() {
+        const statusMsg = document.getElementById('bono-status-msg');
+        const submitBtn = document.getElementById('bono-submit-btn');
+        const btnText = document.getElementById('bono-btn-text');
+        
+        const alumnoNombre = AppState.currentSearch.bonoAlumno.selected;
+        const claveP2P = document.getElementById('bono-clave-p2p').value;
+        const claveBono = document.getElementById('bono-clave-input').value.toUpperCase();
+
+        let errorValidacion = "";
+        if (!alumnoNombre) {
+            errorValidacion = "Debe seleccionar su nombre de la lista.";
+        } else if (!claveP2P) {
+            errorValidacion = "Debe ingresar su Clave P2P.";
+        } else if (!claveBono) {
+            errorValidacion = "Debe ingresar la clave del bono.";
+        }
+        
+        if (errorValidacion) {
+            AppTransacciones.setError(statusMsg, errorValidacion);
+            return;
+        }
+
+        AppTransacciones.setLoadingState(submitBtn, btnText, true, 'Canjeando...');
+        AppTransacciones.setLoading(statusMsg, `Procesando bono ${claveBono}...`);
+
+        try {
+            const payload = {
+                accion: 'canjear_bono',
+                alumnoNombre: alumnoNombre,
+                claveP2P: claveP2P,
+                claveBono: claveBono
+            };
+
+            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+
+            if (result.success === true) {
+                AppTransacciones.setSuccess(statusMsg, result.message || "¡Bono canjeado con éxito!");
+                
+                // Limpiar campos
+                document.getElementById('bono-clave-input').value = "";
+                
+                AppData.cargarDatos(false); // Recargar todos los datos
+
+            } else {
+                throw new Error(result.message || "Error desconocido de la API.");
+            }
+
+        } catch (error) {
+            AppTransacciones.setError(statusMsg, error.message);
+        } finally {
+            AppTransacciones.setLoadingState(submitBtn, btnText, false, 'Canjear Bono');
+        }
+    },
+
+    crearActualizarBono: async function() {
+        const statusMsg = document.getElementById('bono-admin-status-msg');
+        const submitBtn = document.getElementById('bono-admin-submit-btn');
+        
+        const clave = document.getElementById('bono-admin-clave-input').value.toUpperCase();
+        const nombre = document.getElementById('bono-admin-nombre-input').value;
+        const recompensa = parseInt(document.getElementById('bono-admin-recompensa-input').value, 10);
+        const usos_totales = parseInt(document.getElementById('bono-admin-usos-input').value, 10);
+        
+        let errorValidacion = "";
+        if (!clave) {
+            errorValidacion = "La 'Clave' es obligatoria.";
+        } else if (!nombre) {
+            errorValidacion = "El 'Nombre' es obligatorio.";
+        } else if (isNaN(recompensa) || recompensa <= 0) {
+            errorValidacion = "La 'Recompensa' debe ser un número positivo.";
+        } else if (isNaN(usos_totales) || usos_totales < 0) {
+            errorValidacion = "Los 'Usos Totales' deben ser un número (0 o más).";
+        }
+        
+        if (errorValidacion) {
+            AppTransacciones.setError(statusMsg, errorValidacion);
+            return;
+        }
+
+        AppTransacciones.setLoadingState(submitBtn, null, true, 'Guardando...');
+        AppTransacciones.setLoading(statusMsg, `Guardando bono ${clave}...`);
+
+        try {
+            const payload = {
+                accion: 'admin_crear_bono',
+                clave: AppConfig.CLAVE_MAESTRA,
+                bono: {
+                    clave: clave,
+                    nombre: nombre,
+                    recompensa: recompensa,
+                    usos_totales: usos_totales
+                }
+            };
+
+            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+
+            if (result.success === true) {
+                AppTransacciones.setSuccess(statusMsg, result.message || "¡Bono guardado con éxito!");
+                AppUI.clearBonoAdminForm();
+                AppData.cargarDatos(false); // Recargar todos los datos
+            } else {
+                throw new Error(result.message || "Error al guardar el bono.");
+            }
+
+        } catch (error) {
+            AppTransacciones.setError(statusMsg, error.message);
+        } finally {
+            AppTransacciones.setLoadingState(submitBtn, null, false, 'Crear / Actualizar Bono');
+        }
+    },
+    
+    // NUEVO v0.5.4: Eliminar Bono
+    eliminarBono: async function(claveBono) {
+        // ADVERTENCIA: Esta función elimina directamente sin confirmación,
+        // ya que `window.confirm()` está prohibido.
+
+        const statusMsg = document.getElementById('bono-admin-status-msg');
+        AppTransacciones.setLoading(statusMsg, `Eliminando bono ${claveBono}...`);
+        
+        document.querySelectorAll('.delete-bono-btn').forEach(btn => btn.disabled = true);
+
+        try {
+            const payload = {
+                accion: 'admin_eliminar_bono',
+                clave: AppConfig.CLAVE_MAESTRA,
+                claveBono: claveBono
+            };
+
+            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+
+            if (result.success === true) {
+                AppTransacciones.setSuccess(statusMsg, result.message || "¡Bono eliminado con éxito!");
+                AppData.cargarDatos(false); // Recargar todos los datos
+            } else {
+                throw new Error(result.message || "Error al eliminar el bono.");
+            }
+
+        } catch (error) {
+            AppTransacciones.setError(statusMsg, error.message);
+            document.querySelectorAll('.delete-bono-btn').forEach(btn => btn.disabled = false);
+        } 
+    },
+
+    // --- LÓGICA DE TIENDA (NUEVO v16.0) ---
+
+    // CAMBIO v17.0: Simplificado. Se llama directamente desde el botón Comprar.
+    // Acepta el elemento del botón para mostrar el estado de carga.
+    comprarItem: async function(itemId, btnElement) {
+        const statusMsg = document.getElementById('tienda-status-msg'); // Mensaje en el footer del modal
+        const btnText = btnElement ? btnElement.querySelector('.btn-text') : null;
+        
+        const alumnoNombre = AppState.currentSearch.tiendaAlumno.selected;
+        const claveP2P = document.getElementById('tienda-clave-p2p').value;
+
+        // Limpiar mensajes de error anteriores
+        statusMsg.textContent = ""; 
+
+        let errorValidacion = "";
+        if (!alumnoNombre) {
+            errorValidacion = "Debe seleccionar su nombre en la pestaña 'Comprar'.";
+        } else if (!claveP2P) {
+            errorValidacion = "Debe ingresar su Clave P2P en la pestaña 'Comprar'.";
+        } else if (!itemId) {
+            errorValidacion = "Error: No se seleccionó ningún artículo.";
+        }
+        
+        if (errorValidacion) {
+            AppTransacciones.setError(statusMsg, errorValidacion);
+            return;
+        }
+
+        AppTransacciones.setLoadingState(btnElement, btnText, true, '...');
+        
+        try {
+            const payload = {
+                accion: 'comprar_item_tienda',
+                alumnoNombre: alumnoNombre,
+                claveP2P: claveP2P,
+                itemId: itemId
+            };
+
+            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+
+            if (result.success === true) {
+                AppTransacciones.setSuccess(statusMsg, result.message || "¡Compra exitosa!");
+                
+                // NO cerrar el modal, solo recargar datos
+                // Esto actualizará el stock y el saldo del alumno (si está visible)
+                AppData.cargarDatos(false); 
+
+            } else {
+                throw new Error(result.message || "Error desconocido de la API.");
+            }
+
+        } catch (error) {
+            AppTransacciones.setError(statusMsg, error.message);
+        } finally {
+            // El estado de carga se reinicia automáticamente cuando 
+            // AppData.cargarDatos() llama a AppUI.updateTiendaButtonStates()
+            // Si la carga de datos falla, el estado se resetea aquí.
+            AppTransacciones.setLoadingState(btnElement, btnText, false, 'Comprar');
+        }
+    },
+
+    crearActualizarItem: async function() {
+        const statusMsg = document.getElementById('tienda-admin-status-msg');
+        const submitBtn = document.getElementById('tienda-admin-submit-btn');
+        
+        const item = {
+            ItemID: document.getElementById('tienda-admin-itemid-input').value.trim(),
+            Nombre: document.getElementById('tienda-admin-nombre-input').value.trim(),
+            Descripcion: document.getElementById('tienda-admin-desc-input').value.trim(),
+            Tipo: document.getElementById('tienda-admin-tipo-input').value.trim(),
+            PrecioBase: parseInt(document.getElementById('tienda-admin-precio-input').value, 10),
+            Stock: parseInt(document.getElementById('tienda-admin-stock-input').value, 10)
+        };
+        
+        let errorValidacion = "";
+        if (!item.ItemID) {
+            errorValidacion = "El 'ItemID' es obligatorio.";
+        } else if (!item.Nombre) {
+            errorValidacion = "El 'Nombre' es obligatorio.";
+        } else if (isNaN(item.PrecioBase) || item.PrecioBase <= 0) {
+            errorValidacion = "El 'Precio Base' debe ser un número positivo.";
+        } else if (isNaN(item.Stock) || item.Stock < 0) {
+            errorValidacion = "El 'Stock' debe ser un número (0 o más).";
+        }
+        
+        if (errorValidacion) {
+            AppTransacciones.setError(statusMsg, errorValidacion);
+            return;
+        }
+
+        AppTransacciones.setLoadingState(submitBtn, null, true, 'Guardando...');
+        AppTransacciones.setLoading(statusMsg, `Guardando artículo ${item.ItemID}...`);
+
+        try {
+            const payload = {
+                accion: 'admin_crear_item_tienda',
+                clave: AppConfig.CLAVE_MAESTRA,
+                item: item // El backend espera este objeto
+            };
+
+            // CORRECCIÓN BUG ADMIN (Problema 3): Usar la URL de TRANSACCION
+            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.TRANSACCION_API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+
+            if (result.success === true) {
+                AppTransacciones.setSuccess(statusMsg, result.message || "¡Artículo guardado con éxito!");
+                AppUI.clearTiendaAdminForm();
+                AppData.cargarDatos(false); // Recargar todos los datos
+            } else {
+                throw new Error(result.message || "Error al guardar el artículo.");
+            }
+
+        } catch (error) {
+            AppTransacciones.setError(statusMsg, error.message);
+        } finally {
+            AppTransacciones.setLoadingState(submitBtn, null, false, 'Crear / Actualizar');
+        }
+    },
+    
+    // CAMBIO v17.0: Esta función ahora es llamada por el botón "Confirmar" en la tabla.
+    eliminarItem: async function(itemId) {
+        const statusMsg = document.getElementById('tienda-admin-status-msg');
+        AppTransacciones.setLoading(statusMsg, `Eliminando artículo ${itemId}...`);
+        
+        // Deshabilitar todos los botones de la fila durante el proceso
+        document.getElementById(`tienda-item-row-${itemId}`).querySelectorAll('button').forEach(btn => btn.disabled = true);
+
+        try {
+            const payload = {
+                accion: 'admin_eliminar_item_tienda',
+                clave: AppConfig.CLAVE_MAESTRA,
+                itemId: itemId
+            };
+
+            // CORRECCIÓN BUG ADMIN (Problema 3): Usar la URL de TRANSACCION
+            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.TRANSACCION_API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+
+            if (result.success === true) {
+                AppTransacciones.setSuccess(statusMsg, result.message || "¡Artículo eliminado con éxito!");
+                AppData.cargarDatos(false); // Recargar todos los datos
+            } else {
+                throw new Error(result.message || "Error al eliminar el artículo.");
+            }
+
+        } catch (error) {
+            AppTransacciones.setError(statusMsg, error.message);
+            // Si hay un error, al menos reactivar la interfaz global (aunque la fila quede mal)
+            AppData.cargarDatos(false); 
+        } 
+    },
+    
+    // NUEVO v16.1 (Problema 3): Control Manual de la Tienda
+    toggleStoreManual: async function(status) {
+        const statusMsg = document.getElementById('tienda-admin-status-msg');
+        AppTransacciones.setLoading(statusMsg, `Cambiando estado a: ${status}...`);
+        
+        // Deshabilitar botones temporalmente
+        document.getElementById('tienda-force-open-btn').disabled = true;
+        document.getElementById('tienda-force-close-btn').disabled = true;
+        document.getElementById('tienda-force-auto-btn').disabled = true;
+
+        try {
+            const payload = {
+                accion: 'admin_toggle_store', // Nueva acción para el backend
+                clave: AppConfig.CLAVE_MAESTRA,
+                status: status // 'open', 'closed', o 'auto'
+            };
+
+            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.TRANSACCION_API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+
+            if (result.success === true) {
+                AppTransacciones.setSuccess(statusMsg, result.message || "¡Estado de la tienda actualizado!");
+                AppData.cargarDatos(false); // Recargar todos los datos para obtener el nuevo estado
+            } else {
+                throw new Error(result.message || "Error al cambiar estado.");
+            }
+
+        } catch (error) {
+            AppTransacciones.setError(statusMsg, error.message);
+        } finally {
+            // Rehabilitar botones (se actualizarán con el próximo 'cargarDatos')
+            document.getElementById('tienda-force-open-btn').disabled = false;
+            document.getElementById('tienda-force-close-btn').disabled = false;
+            document.getElementById('tienda-force-auto-btn').disabled = false;
+        }
+    },
+
+    // --- Utilidades de Fetch y Estado ---
+
+    fetchWithExponentialBackoff: async function(url, options, maxRetries = 5, initialDelay = 1000) {
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+            try {
+                const response = await fetch(url, options);
+                if (response.status !== 429) {
+                    return response;
+                }
+                console.warn(`Attempt ${attempt + 1}: Rate limit exceeded (429). Retrying...`);
+            } catch (error) {
+                if (attempt === maxRetries - 1) throw error;
+            }
+            const delay = initialDelay * Math.pow(2, attempt) + Math.random() * 1000;
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+        throw new Error('Failed to fetch after multiple retries.');
+    },
+
+    // CAMBIO v17.0: Texto de carga modificado
+    setLoadingState: function(btn, btnTextEl, isLoading, defaultText) {
+        if (isLoading) {
+            if (btnTextEl) btnTextEl.textContent = '...'; // Texto de carga más corto
+            if (btn) btn.disabled = true;
+        } else {
+            if (btnTextEl && defaultText) btnTextEl.textContent = defaultText;
+            if (btn) btn.disabled = false;
+        }
+    },
+    
+    setLoading: function(statusMsgEl, message) {
+        if (statusMsgEl) {
+            statusMsgEl.textContent = message;
+            statusMsgEl.className = "text-sm text-center font-medium text-blue-600 h-auto min-h-[1rem]";
+        }
+    },
+
+    setSuccess: function(statusMsgEl, message) {
+        if (statusMsgEl) {
+            statusMsgEl.textContent = message;
+            statusMsgEl.className = "text-sm text-center font-medium text-green-600 h-auto min-h-[1rem]";
+        }
+    },
+
+    setError: function(statusMsgEl, message) {
+        if (statusMsgEl) {
+            statusMsgEl.textContent = `Error: ${message}`;
+            statusMsgEl.className = "text-sm text-center font-medium text-red-600 h-auto min-h-[1em]";
+        }
+    }
+};
+
+
+// --- INICIALIZACIÓN ---
+window.AppUI = AppUI;
+window.AppFormat = AppFormat;
+window.AppTransacciones = AppTransacciones;
+
+// NUEVO v16.0: Exponer funciones de admin al scope global para onclick=""
+window.AppUI.handleEditBono = AppUI.handleEditBono;
+window.AppTransacciones.eliminarBono = AppTransacciones.eliminarBono;
+window.AppUI.handleEditItem = AppUI.handleEditItem;
+// CAMBIO v17.0: Exponer funciones de confirmación de borrado
+window.AppUI.handleDeleteConfirmation = AppUI.handleDeleteConfirmation;
+window.AppUI.cancelDeleteConfirmation = AppUI.cancelDeleteConfirmation;
+window.AppTransacciones.eliminarItem = AppTransacciones.eliminarItem;
+// NUEVO v16.1 (Problema 3): Exponer control manual de la tienda
+window.AppTransacciones.toggleStoreManual = AppTransacciones.toggleStoreManual;
+// CAMBIO v17.0: Exponer la nueva función de compra
+window.AppTransacciones.comprarItem = AppTransacciones.comprarItem;
+
+
+window.onload = function() {
+    console.log("window.onload disparado. Iniciando AppUI...");
+    AppUI.init();
+};
