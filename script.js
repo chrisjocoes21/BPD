@@ -2476,8 +2476,9 @@ const AppTransacciones = {
         try {
             const payload = {
                 accion: 'canjear_bono',
-                alumnoNombre: alumnoNombre,
-                claveP2P: claveP2P,
+                // CORRECCIÓN: Usar las mismas claves que P2P para la autenticación
+                nombre_origen: alumnoNombre, // Antes era 'alumnoNombre'
+                clave_p2p_origen: claveP2P,  // Antes era 'claveP2P'
                 claveBono: claveBono
             };
 
