@@ -12,7 +12,7 @@ const AppConfig = {
     
     // CAMBIO v16.1: Actualización de versión
     APP_STATUS: 'Beta', 
-    APP_VERSION: 'v18.1.1 (Crecimiento)', // ACTUALIZADO A v18.1.1
+    APP_VERSION: 'v18.1.3 (Fix Bonos & Estética)', // ACTUALIZADO A v18.1.3
     
     // CAMBIO v0.3.0: Impuesto P2P (debe coincidir con el Backend)
     IMPUESTO_P2P_TASA: 0.10, // 10%
@@ -124,9 +124,6 @@ const AppFormat = {
     formatPincel: (num) => new Intl.NumberFormat('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num)
 };
 
-// --- BASE DE DATOS DE ANUNCIOS (ELIMINADO Y REEMPLAZADO) ---
-// const AnunciosDB = { ... };
-
 // --- MANEJO de datos ---
 const AppData = {
     
@@ -220,6 +217,7 @@ const AppData = {
         // --- CÁLCULOS DE TESORERÍA ---
         const histTesoreria = AppState.crecimientoHistorico.tesoreria.anterior;
         let cambioNetoT = actualTesoreria - histTesoreria;
+        // CORRECCIÓN BUG 1: Asegurar que el denominador no sea 0 para el porcentaje
         let cambioPorcentualT = histTesoreria === 0 ? 0 : (cambioNetoT / histTesoreria) * 100;
         
         AppState.crecimientoHistorico.tesoreria.cambioNeto = cambioNetoT;
@@ -228,6 +226,7 @@ const AppData = {
         // --- CÁLCULOS DE BÓVEDA ---
         const histBoveda = AppState.crecimientoHistorico.boveda.anterior;
         let cambioNetoB = actualBoveda - histBoveda;
+        // CORRECCIÓN BUG 1: Asegurar que el denominador no sea 0 para el porcentaje
         let cambioPorcentualB = histBoveda === 0 ? 0 : (cambioNetoB / histBoveda) * 100;
         
         AppState.crecimientoHistorico.boveda.cambioNeto = cambioNetoB;
@@ -238,22 +237,29 @@ const AppData = {
     procesarYMostrarDatos: function(data) {
         
         // --- INICIO: Guardar el estado ANTERIOR para el cálculo de crecimiento ---
-        if (AppState.datosAdicionales.allStudents.length > 0) {
-            // Calcular Bóveda anterior (solo si ya tenemos datos)
-            const anteriorBoveda = AppState.datosAdicionales.allStudents
-                .filter(s => s.pinceles > 0)
-                .reduce((sum, user) => sum + user.pinceles, 0);
-                
-            AppState.crecimientoHistorico.tesoreria.anterior = AppState.datosAdicionales.saldoTesoreria;
-            AppState.crecimientoHistorico.boveda.anterior = anteriorBoveda;
+        
+        // Calcular la bóveda anterior ANTES de actualizar AppState.datosAdicionales
+        const anteriorBoveda = AppState.datosAdicionales.allStudents.length > 0
+            ? AppState.datosAdicionales.allStudents.filter(s => s.pinceles > 0).reduce((sum, user) => sum + user.pinceles, 0)
+            : 0;
+            
+        // CORRECCIÓN BUG 1: Guardar el saldo anterior de la Tesorería de forma segura
+        // Si no hay datos actuales (primera carga), usamos el valor entrante como el "anterior"
+        const anteriorTesoreria = AppState.datosAdicionales.saldoTesoreria || 0;
+
+        // Si es la primera carga y no hay valor en el estado, usamos el valor del API como "anterior"
+        // para que la próxima carga muestre la variación desde este punto.
+        if (AppState.datosActuales === null) {
+            AppState.crecimientoHistorico.tesoreria.anterior = data.saldoTesoreria || 0;
+            AppState.crecimientoHistorico.boveda.anterior = anteriorBoveda; // (aunque será 0)
         } else {
-             // Caso inicial: Si no hay datos, inicializamos con 0 o el valor entrante
-             AppState.crecimientoHistorico.tesoreria.anterior = data.saldoTesoreria || 0;
-             AppState.crecimientoHistorico.boveda.anterior = 0; // Se recalcula más abajo
+            AppState.crecimientoHistorico.tesoreria.anterior = anteriorTesoreria;
+            AppState.crecimientoHistorico.boveda.anterior = anteriorBoveda;
         }
+        
         // --- FIN: Guardar estado anterior ---
 
-        // 1. Separar Tesorería y Datos Adicionales
+        // 1. Separar Tesorería y Datos Adicionales (ACTUALIZAR CON DATOS NUEVOS)
         AppState.datosAdicionales.saldoTesoreria = data.saldoTesoreria || 0;
         AppState.datosAdicionales.prestamosActivos = data.prestamosActivos || [];
         AppState.datosAdicionales.depositosActivos = data.depositosActivos || [];
@@ -295,7 +301,7 @@ const AppData = {
         // 7. Detectar cambios antes de actualizar el estado
         AppData.detectarCambios(activeGroups);
         
-        // NUEVA LLAMADA: Calcular el crecimiento después de procesar los datos
+        // LLAMADA CLAVE: Calcular el crecimiento después de procesar los datos
         AppData.calcularCrecimiento();
 
         // 8. Actualizar UI
@@ -432,13 +438,6 @@ const AppUI = {
             if (e.target.id === 'reglas-modal') AppUI.hideModal('reglas-modal');
         });
 
-        // ELIMINADO: Listeners Modal Anuncios
-        // document.getElementById('anuncios-modal-btn').addEventListener('click', () => AppUI.showModal('anuncios-modal'));
-        // document.getElementById('anuncios-modal-close').addEventListener('click', () => AppUI.hideModal('anuncios-modal'));
-        // document.getElementById('anuncios-modal').addEventListener('click', (e) => {
-        //     if (e.target.id === 'anuncios-modal') AppUI.hideModal('anuncios-modal');
-        // });
-
         // Listener Sidebar
         document.getElementById('toggle-sidebar-btn').addEventListener('click', AppUI.toggleSidebar);
         
@@ -476,9 +475,6 @@ const AppUI = {
         setInterval(() => AppData.cargarDatos(false), 10000); 
         AppUI.updateCountdown();
         setInterval(AppUI.updateCountdown, 1000);
-        
-        // ELIMINADO: Lógica de anuncios
-        // AppUI.poblarModalAnuncios();
     },
 
     showLoading: function() {
@@ -549,7 +545,7 @@ const AppUI = {
             
             // Pestaña Admin
             document.getElementById('bono-admin-clave').value = "";
-            AppUI.clearBonoAdminForm();
+            AppUI.clearBonoAdminForm(); // Esto ya habilita la clave si está deshabilitada
             document.getElementById('bono-admin-status-msg').textContent = "";
             
             // Ocultar panel de admin y resetear estado
@@ -584,9 +580,6 @@ const AppUI = {
              document.getElementById('clave-input').value = "";
              document.getElementById('clave-input').classList.remove('shake', 'border-red-500');
         }
-        
-        // ELIMINADO: Limpieza de Modal Anuncios
-        // if (modalId === 'anuncios-modal') { ... }
     },
     
     // Función para cambiar entre pestañas del modal de administración
@@ -771,8 +764,10 @@ const AppUI = {
 
         // Resetear pestaña de admin
         document.getElementById('bono-admin-clave').value = "";
-        AppUI.clearBonoAdminForm();
+        AppUI.clearBonoAdminForm(); // Esto ahora habilita el input de clave si está deshabilitado
         document.getElementById('bono-admin-status-msg').textContent = "";
+        
+        // Ocultar panel de admin y resetear estado
         document.getElementById('bono-admin-gate').classList.remove('hidden');
         document.getElementById('bono-admin-panel').classList.add('hidden');
         AppState.bonos.adminPanelUnlocked = false;
@@ -931,6 +926,9 @@ const AppUI = {
         document.getElementById('bono-admin-recompensa-input').value = recompensa;
         document.getElementById('bono-admin-usos-input').value = usosTotales;
         
+        // CORRECCIÓN BUG 2 (Bonos): Deshabilitar la clave al editar.
+        document.getElementById('bono-admin-clave-input').disabled = true;
+
         // Hacer scroll al formulario
         document.getElementById('bono-admin-form-container').scrollIntoView({ behavior: 'smooth' });
     },
@@ -938,6 +936,7 @@ const AppUI = {
     // Limpia el formulario de admin de bonos
     clearBonoAdminForm: function() {
         document.getElementById('bono-admin-form').reset();
+        // CORRECCIÓN BUG 2 (Bonos): Habilitar la clave al limpiar/crear nuevo.
         document.getElementById('bono-admin-clave-input').disabled = false;
         document.getElementById('bono-admin-status-msg').textContent = "";
     },
@@ -1817,13 +1816,13 @@ const AppUI = {
         // 2. MOSTRAR MÓDULOS (Idea 1 & 2)
         document.getElementById('home-modules-grid').classList.remove('hidden');
         AppUI.actualizarAlumnosEnRiesgo();
-        // LLAMADA REEMPLAZADA: Llamamos al nuevo resumen de bolsa en lugar de los anuncios
+        // LLAMADA CLAVE: Llamamos al nuevo resumen de bolsa en lugar de los anuncios
         AppUI.actualizarResumenBolsa(); 
         AppUI.actualizarEstadisticasRapidas(grupos);
         
     },
     
-    // NUEVA FUNCIÓN: Genera el resumen de crecimiento de la Tesorería y Bóveda
+    // NUEVA FUNCIÓN: Genera el resumen de crecimiento de la Tesorería y Bóveda (REDESIGN)
     actualizarResumenBolsa: function() {
         const container = document.getElementById('resumen-bolsa-container');
         if (!container) return;
@@ -1834,63 +1833,79 @@ const AppUI = {
         // La Tesorería es el saldo actual, no el anterior
         const actualTesoreria = AppState.datosAdicionales.saldoTesoreria;
         
-        // La Bóveda actual la calculamos de nuevo (aunque ya se hizo en mostrarPantallaNeutral)
+        // La Bóveda actual la calculamos de nuevo
         const actualBoveda = AppState.datosAdicionales.allStudents
             .filter(s => s.pinceles > 0)
             .reduce((sum, user) => sum + user.pinceles, 0);
 
-        // Helper para generar una tarjeta de resumen
-        const generateCard = (titulo, saldoActual, data, color) => {
+        // Helper para generar una tarjeta de resumen (Mejora estética)
+        const generateCard = (titulo, saldoActual, data, badgeText, badgeColor) => {
             const isPositive = data.cambioNeto >= 0;
-            const arrow = isPositive ? 
-                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M12 21a.75.75 0 0 0 .75-.75V5.626l4.295 4.195a.75.75 0 0 0 1.054-1.07l-5.75-5.625a.75.75 0 0 0-1.074 0l-5.75 5.625a.75.75 0 1 0 1.054 1.07l4.295-4.195V20.25a.75.75 0 0 0 .75.75Z" clip-rule="evenodd" /></svg>' : 
-                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M12 3a.75.75 0 0 1 .75.75v14.624l4.295-4.195a.75.75 0 1 1 1.054 1.07l-5.75 5.625a.75.75 0 0 1-1.074 0l-5.75-5.625a.75.75 0 0 1 1.054-1.07l4.295 4.195V3.75A.75.75 0 0 1 12 3Z" clip-rule="evenodd" /></svg>';
+            const isNeutral = data.cambioNeto === 0;
+            
+            // Iconos SVG (más limpios y estéticos que los unicode)
+            const arrowUp = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M12 21a.75.75 0 0 0 .75-.75V5.626l4.295 4.195a.75.75 0 0 0 1.054-1.07l-5.75-5.625a.75.75 0 0 0-1.074 0l-5.75 5.625a.75.75 0 1 0 1.054 1.07l4.295-4.195V20.25a.75.75 0 0 0 .75.75Z" clip-rule="evenodd" /></svg>`;
+            const arrowDown = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M12 3a.75.75 0 0 1 .75.75v14.624l4.295-4.195a.75.75 0 1 1 1.054 1.07l-5.75 5.625a.75.75 0 0 1-1.074 0l-5.75-5.625a.75.75 0 0 1 1.054-1.07l4.295 4.195V3.75A.75.75 0 0 1 12 3Z" clip-rule="evenodd" /></svg>`;
 
             const trendColor = isPositive ? 'text-green-600' : 'text-red-600';
-            const trendBg = isPositive ? 'bg-green-100' : 'bg-red-100';
-            const signNeto = isPositive ? '+' : '';
+            const signNeto = isPositive ? '+' : '-';
+            const arrowIcon = isPositive ? arrowUp : arrowDown;
             
-            // Si es la primera carga (anterior = 0), no mostramos crecimiento
-            const isInitialLoad = data.anterior === 0 && data.cambioNeto === 0;
+            // Si es la primera carga (anterior = 0), mostramos el valor actual como "sin cambio"
+            const isInitialLoad = data.anterior === 0 && actualTesoreria !== 0;
 
-            const growthHtml = isInitialLoad ? 
-                `<span class="text-sm font-semibold text-gray-500">Esperando datos...</span>` :
+            const currentChangeHtml = isInitialLoad ? 
                 `
-                <div class="flex items-center text-sm font-semibold ${trendColor}">
-                    <span class="mr-1">${arrow}</span>
-                    <!-- Porcentaje de Cambio -->
-                    <span class="mr-2">${AppFormat.formatPercent(data.cambioPorcentual)}</span> 
-                    <!-- Cambio Neto -->
-                    <span class="text-xs text-gray-700">${signNeto}${AppFormat.formatNumber(Math.abs(data.cambioNeto))} ℙ</span>
+                <div class="flex items-center text-xl font-semibold text-gray-500">
+                    <span class="text-sm font-medium">Cargando histórico...</span>
                 </div>
+                ` :
+                `
+                <!-- Porcentaje de Cambio (Grande y con Color) -->
+                <div class="flex items-center space-x-1">
+                    <span class="${trendColor} w-4 h-4 flex-shrink-0">${arrowIcon}</span>
+                    <span class="text-2xl font-bold ${trendColor}">${AppFormat.formatPercent(data.cambioPorcentual)}</span>
+                </div>
+                <!-- Cambio Neto (Secundario) -->
+                <span class="text-base font-semibold ${trendColor} whitespace-nowrap">
+                    ${signNeto}${AppFormat.formatNumber(Math.abs(data.cambioNeto))} ℙ
+                </span>
                 `;
-
+            
             return `
-                <div class="bg-white rounded-lg shadow-md p-4">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-sm font-medium text-gray-500 uppercase tracking-wider">${titulo}</span>
-                        <span class="text-xs font-bold ${color} rounded-full px-2 py-0.5">ACTUALIZACIÓN</span>
+                <div class="bg-white rounded-lg border-2 ${trendColor.replace('text-', 'border-')} p-6 flex flex-col justify-between h-full min-h-[160px]">
+                    
+                    <!-- Fila Superior: Título y Badge -->
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-sm font-semibold text-gray-600 uppercase">${titulo}</span>
+                        <span class="text-xs font-bold ${badgeColor} rounded-full px-2 py-0.5">${badgeText}</span>
                     </div>
-                    <div class="flex justify-between items-baseline mt-3">
-                        <p class="text-3xl font-bold text-gray-900">${AppFormat.formatNumber(saldoActual)} ℙ</p>
+                    
+                    <!-- Fila Central: Saldo Actual y Variación -->
+                    <div class="flex justify-between items-center mb-4">
+                        <p class="text-4xl font-extrabold text-gray-900 truncate">${AppFormat.formatNumber(saldoActual)} ℙ</p>
+                        
                         <!-- Indicador de Crecimiento -->
-                        ${growthHtml}
+                        <div class="text-right">
+                            ${currentChangeHtml}
+                        </div>
                     </div>
-                    <!-- Footer con el valor anterior -->
-                    <div class="mt-4 pt-3 border-t border-gray-100">
-                        <span class="text-xs text-gray-500">
-                            Valor Anterior: ${AppFormat.formatNumber(data.anterior)} ℙ 
-                            ${isInitialLoad ? '' : `<span class="${trendColor} ml-1">(${isPositive ? 'Aumento' : 'Reducción'})</span>`}
-                        </span>
+                    
+                    <!-- Fila Inferior: Valor Anterior -->
+                    <div class="mt-auto pt-3 border-t border-gray-100">
+                        <p class="text-xs text-gray-500">
+                            Valor Anterior: <span class="font-medium text-gray-700">${AppFormat.formatNumber(data.anterior)} ℙ</span>
+                        </p>
                     </div>
                 </div>
             `;
         };
         
         container.innerHTML = `
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                ${generateCard('TESORERÍA (CAPITAL OPERATIVO)', actualTesoreria, tesoreriaData, 'bg-blue-100 text-blue-700')}
-                ${generateCard('BÓVEDA (PINCELES POSITIVOS)', actualBoveda, bovedaData, 'bg-green-100 text-green-700')}
+            <h3 class="text-base font-semibold text-gray-800 border-b pb-3 mb-4">Crecimiento del Capital (Minuto a Minuto)</h3>
+            <div id="bolsa-dynamic-content" class="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
+                ${generateCard('TESORERÍA', actualTesoreria, tesoreriaData, 'OPERATIVO', 'bg-blue-100 text-blue-700')}
+                ${generateCard('BÓVEDA', actualBoveda, bovedaData, 'LÍQUIDO', 'bg-green-100 text-green-700')}
             </div>
         `;
     },
@@ -2045,10 +2060,6 @@ const AppUI = {
             ${createStat('Pinceles Negativos', `${AppFormat.formatNumber(pincelesNegativos)} ℙ`, 'text-red-600')}
         `;
     },
-
-    // ELIMINADO: Lógica de Anuncios
-    // actualizarAnuncios: function() { ... },
-    // poblarModalAnuncios: function() { ... },
 
     showStudentModal: function(nombreGrupo, nombreUsuario, rank) {
         const student = AppState.datosAdicionales.allStudents.find(u => u.nombre === nombreUsuario);
