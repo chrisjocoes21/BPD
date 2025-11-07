@@ -13,6 +13,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏦</text></svg>">
 
     <!-- Archivo de estilos personalizados -->
+    <!-- CAMBIO v17.0: Actualizada versión de CSS -->
     <link rel="stylesheet" href="style.css?v=17.0">
 </head>
 <!-- CAMBIO v16.0 (SCROLL): 'overflow-hidden' ya estaba aquí (correcto) -->
@@ -35,7 +36,7 @@
                 </div>
             </div>
             
-            <!-- Footer de la Sidebar (Botón Admin y Versión) - VUELVE A LA ESTRUCTURA ORIGINAL -->
+            <!-- Footer de la Sidebar (Botón Admin y Versión) -->
             <div class="p-2 border-t border-gray-200 bg-white flex-shrink-0 space-y-2">
                 <!-- V0.2.2: Contenedor de la Versión -->
                 <div id="app-version-container" class="text-center py-1 text-xs text-gray-400">
@@ -139,11 +140,7 @@
                                 <button id="bonos-btn" class="flex-1 px-4 py-2 bg-yellow-400 text-yellow-900 text-sm font-medium rounded-lg hover:bg-yellow-500 transition-colors shadow-sm">
                                     Bonos
                                 </button>
-                                <!-- CORREGIDO v20.0: Botón de Mercado Volátil en Home -->
-                                <button id="mercado-btn" class="flex-1 px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors shadow-sm">
-                                    Fondo Ícaro
-                                </button>
-                                <!-- Botón de tienda -->
+                                <!-- CAMBIO v16.0: Botón de tienda siempre habilitado -->
                                 <button id="tienda-btn" class="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
                                     Tienda
                                 </button>
@@ -200,62 +197,6 @@
                     </div>
                 </div>
 
-                <!-- NUEVO v20.0: MÓDULO MERCADO VOLÁTIL -->
-                <div id="mercado-volatil-container" class="hidden">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 mr-2 text-purple-600">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.519l2.74-1.22M5.25 7.5l3.811-3.811c.921-.921 2.396-.921 3.317 0l3.812 3.812m-9 0h9" />
-                        </svg>
-                        Mercado Volátil BPD (Fondo Ícaro)
-                    </h2>
-
-                    <!-- Pestañas de Navegación del Módulo -->
-                    <div class="flex border-b border-gray-200 mb-6 bg-white rounded-lg shadow-sm">
-                        <button data-mercado-tab="ofertas" class="mercado-tab-btn active-tab px-6 py-3 text-sm font-semibold border-b-4 border-purple-600 text-purple-600 transition-colors hover:bg-gray-50">
-                            Ofertas Recaudando
-                        </button>
-                        <button data-mercado-tab="cartera" class="mercado-tab-btn px-6 py-3 text-sm font-semibold border-b-4 border-transparent text-gray-600 transition-colors hover:bg-gray-50">
-                            Tu Cartera Activa
-                        </button>
-                        <button data-mercado-tab="historial" class="mercado-tab-btn px-6 py-3 text-sm font-semibold border-b-4 border-transparent text-gray-600 transition-colors hover:bg-gray-50">
-                            Historial Diario
-                        </button>
-                    </div>
-
-                    <!-- Contenido de Pestañas -->
-                    <div id="mercado-tab-ofertas" class="mercado-tab-content space-y-6">
-                        <div id="ofertas-list-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <!-- Ofertas se insertarán aquí -->
-                            <p class="md:col-span-3 text-center text-gray-500 p-8 bg-white rounded-lg shadow-sm">Cargando ofertas semanales...</p>
-                        </div>
-                    </div>
-                    
-                    <div id="mercado-tab-cartera" class="mercado-tab-content hidden space-y-6">
-                         <!-- Tu Cartera Activa se insertará aquí -->
-                         <div id="cartera-list-container" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                              <p class="lg:col-span-2 xl:col-span-3 text-center text-gray-500 p-8 bg-white rounded-lg shadow-sm">Cargando tus inversiones activas...</p>
-                         </div>
-                    </div>
-                    
-                    <div id="mercado-tab-historial" class="mercado-tab-content hidden space-y-4">
-                        <div id="historial-diario-select" class="w-full max-w-sm">
-                             <label for="historial-lote-select" class="block text-sm font-medium text-gray-700">Seleccionar Lote (ID)</label>
-                             <select id="historial-lote-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md">
-                                <option value="">Selecciona un lote operado...</option>
-                             </select>
-                        </div>
-                        <div id="historial-diario-log" class="bg-white rounded-lg shadow-sm p-4 h-[400px] overflow-y-auto">
-                           <p class="text-sm text-gray-500">Selecciona un lote del historial para ver sus logs.</p>
-                        </div>
-                    </div>
-                    
-                    <div id="mercado-status-msg" class="mt-4 p-3 text-sm text-center font-medium bg-gray-100 rounded-lg hidden">
-                        <!-- Mensaje de estado (éxito/error) -->
-                    </div>
-                    
-                </div>
-                
-    
             </main>
 
             <!-- Copyright (Anclado al fondo del contenedor principal) -->
@@ -266,7 +207,7 @@
     </div>
 
     <!-- Overlay de Carga (Rediseñado con Animación) -->
-    <div id="loading-overlay" class="fixed inset-0 bg-gray-900/75 backdrop-blur-sm flex items-center justify-center z-[10000] transition-opacity duration-300">
+    <div id="loading-overlay" class="fixed inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-[10000] transition-opacity duration-300">
         <!-- Contenedor del Título, Eslogan y Puntos -->
         <div class="text-center">
             <!-- Título Grande y Azul -->
@@ -316,7 +257,7 @@
                     </h2>
                     <button id="transaccion-modal-close-btn" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
                 </div>
-                <!-- V18.1: Se eliminó la pestaña de Impuesto Patrimonio -->
+                <!-- V18.1: Se elimina la pestaña de Impuesto Patrimonio, volviendo al estado original -->
                 <div class="flex border-b border-gray-200 px-4">
                     <button data-tab="transaccion" class="tab-btn active-tab px-4 py-2 text-sm font-medium border-b-2 border-blue-600 text-blue-600 transition-colors hover:bg-gray-100">
                         Transacción Múltiple
@@ -506,8 +447,6 @@
                             <!-- FIN CAMBIO -->
                             <!-- NUEVO v16.0: Añadido ITBIS de tienda -->
                             <p class="text-sm text-gray-700"><strong class="font-medium text-gray-800">ITBIS de Tienda:</strong> Cobro del 18% sobre todas las compras de artículos en la tienda.</p>
-                            <!-- NUEVO v20.0: Ingreso por confiscaciones del Mercado Volátil -->
-                            <p class="text-sm text-gray-700"><strong class="font-medium text-gray-800">Confiscación de Riesgo:</strong> El 100% de los fondos de lotes en Mora o que resultaron ser Estafa se transfieren a la Tesorería.</p>
                         </div>
                     </div>
 
@@ -544,21 +483,6 @@
                             <strong class="font-medium text-gray-800">Comisión:</strong> Cada transferencia tiene un impuesto fijo del <strong class="text-gray-900">10%</strong> sobre el monto enviado. Este impuesto se suma al costo total para el remitente (Ej: Para enviar 1,000 ℙ, se debitarán 1,100 ℙ de la cuenta origen).
                         </p>
                     </div>
-                    
-                    <!-- NUEVO v20.0: Sección Mercado Volátil -->
-                    <div class="space-y-3 pt-4 border-t">
-                        <h4 class="text-lg font-semibold text-gray-800">Mercado Volátil BPD (Fondo Ícaro)</h4>
-                        <p class="text-gray-600 text-justify">
-                            Simulador de inversión de alto riesgo, donde las empresas cotizan con una volatilidad diaria extrema (alrededor de $\pm 4.3\%$).
-                        </p>
-                        <ul class="list-disc list-inside space-y-1 text-sm text-gray-600">
-                            <li><strong class="font-medium text-purple-700">Riesgo de Estafa:</strong> Una de cada tres ofertas semanales está garantizada a ser una estafa.</li>
-                            <li><strong class="font-medium text-purple-700">Plazo y Mora:</strong> El ciclo de operación es de 7 días. Si no se retira antes del inicio del Día 8, la inversión completa (capital + ganancias/pérdidas) es confiscada y enviada a la Tesorería.</li>
-                            <li><strong class="font-medium text-purple-700">Comisión por Ganancia:</strong> Si el retiro es exitoso, se aplica una comisión del $\mathbf{25\%}$ sobre la ganancia bruta.</li>
-                            <li><strong class="font-medium text-purple-700">Exención Fiscal:</strong> El capital invertido en el Fondo Ícaro está exento del Impuesto Súper Progresivo (ISP).</li>
-                        </ul>
-                    </div>
-
                 </div>
             </div>
         </div>
@@ -969,53 +893,14 @@
 
         </div>
     </div>
-    
-    <!-- NUEVO v20.0: MODAL DE INVERSIÓN (FONDO ÍCARO) -->
-    <div id="inversion-modal" class="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform scale-95 transition-transform duration-300 overflow-hidden"> 
-            <div class="bg-gray-50 border-b border-gray-200">
-                <div class="flex justify-between items-center p-4">
-                    <h2 class="text-lg font-semibold text-gray-900">
-                        Invertir en Fondo Volátil
-                    </h2>
-                    <button id="inversion-modal-close-btn" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
-                </div>
-            </div>
-            <div class="p-6 space-y-4">
-                <!-- Data Lote Seleccionado -->
-                <h3 id="inversion-target-info" class="text-md font-semibold text-purple-600"></h3>
-                <p id="inversion-monto-min" class="text-xs text-gray-500"></p>
-                <!-- Formulario -->
-                <div class="relative">
-                    <label for="inversion-search-alumno" class="block text-sm font-medium text-gray-700 mb-1">Tu Nombre</label>
-                    <input type="text" id="inversion-search-alumno" placeholder="Busca tu nombre..." class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
-                    <div id="inversion-origen-results" class="search-results-container hidden absolute z-20 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
-                    </div>
-                </div>
-                <div>
-                    <label for="inversion-clave-p2p" class="block text-sm font-medium text-gray-700 mb-1">Tu Clave P2P</label>
-                    <input type="password" id="inversion-clave-p2p" placeholder="Ingresa tu clave de 5 dígitos" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
-                </div>
-                <div>
-                    <label for="inversion-monto" class="block text-sm font-medium text-gray-700 mb-1">Monto a Invertir</label>
-                    <input type="number" id="inversion-monto" placeholder="Ej: 10000" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
-                    <p id="inversion-alumno-saldo" class="text-xs text-gray-500 mt-1"></p>
-                </div>
-                <div id="inversion-status-msg" class="text-sm text-center font-medium px-6 pt-2 h-auto min-h-[1rem]">
-                </div>
-            </div>
-            <div class="bg-gray-50 p-4 border-t border-gray-200 flex justify-end gap-3 flex-shrink-0">
-                <button id="inversion-cancel-btn" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">Cancelar</button>
-                <button id="inversion-submit-btn" class="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors shadow-sm">
-                    <span id="inversion-btn-text">Confirmar Inversión</span>
-                </button>
-            </div>
-        </div>
-    </div>
+
+    <!-- =================================================================== -->
+    <!-- MODAL DE CONFIRMACIÓN DE TIENDA (ELIMINADO v17.0) -->
+    <!-- =================================================================== -->
 
 
     <!-- Lógica de la Aplicación -->
-    <!-- CAMBIO v18.2: Apuntando a la nueva versión de script (con el fix de Auth) -->
-    <script src="script.js?v=20.0" type="module" defer></script>
+    <!-- CAMBIO v18.1: Apuntando a la nueva versión de script -->
+    <script src="script.js?v=18.1" type="module" defer></script>
 </body>
 </html>
