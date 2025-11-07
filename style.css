@@ -66,17 +66,12 @@ scrollbar-width: none;  /* Firefox */
     min-height: 540px; 
 }
 
-
 /* =================================================================== */
-/* NUEVO: ESTILOS PARA INDICADORES DE CRECIMIENTO (Resumen Bolsa) */
+/* ELIMINADO (v0.4.1): Estilos para Pestañas del Fondo de Inversión */
 /* =================================================================== */
 
-#resumen-bolsa-container .grid {
-    /* Asegurar que las tarjetas estén bien alineadas y espaciadas */
-    align-items: stretch;
-}
 
-/* Estilos para el contenedor de resultados de búsqueda */
+/* CAMBIO v0.2.4: Estilos para el contenedor de resultados de búsqueda */
 .search-results-container {
     /* Estilos para el dropdown de autocomplete */
     position: absolute;
