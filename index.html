@@ -186,10 +186,16 @@
                     </div>
                     
                     <!-- NUEVO: Panel de Resumen de Crecimiento (Reemplaza el Tablón de Anuncios) (lg:col-span-6) -->
-                    <div id="resumen-bolsa-container" class="bg-white rounded-lg shadow-md lg:col-span-6 p-4 space-y-4">
-                         <h3 class="text-base font-semibold text-gray-800 border-b pb-3">Crecimiento del Capital (Minuto a Minuto)</h3>
-                         <!-- Las tarjetas de Tesorería y Bóveda se insertarán aquí por JS -->
-                         <div class="p-4 text-sm text-gray-500 text-center">Esperando datos de crecimiento...</div>
+                    <div id="resumen-bolsa-container" class="bg-white rounded-lg shadow-md lg:col-span-6 h-full flex flex-col">
+                         <!-- El título ahora es parte del JS, pero lo mantendremos fijo aquí para consistencia visual -->
+                         <!-- Se cambia para que el JS renderice todo el contenido del panel, incluyendo el título, para un control total -->
+                         
+                         <!-- Contenedor del Título y del contenido dinámico. El h-full es CLAVE aquí. -->
+                         <div id="bolsa-contenido-completo" class="p-4 h-full">
+                            <!-- Todo el contenido (Título, Tarjetas) se insertará aquí por JS -->
+                            <div class="p-4 text-sm text-gray-500 text-center">Esperando datos de crecimiento...</div>
+                         </div>
+                         
                     </div>
                     
                     <!-- ELIMINADO: Tablón de Anuncios (lg:col-span-6) -->
@@ -487,21 +493,6 @@
         </div>
     </div>
 
-    <!-- ELIMINADO: Modal de Todos los Anuncios -->
-    <!-- <div id="anuncios-modal" class="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl transform scale-95 transition-transform duration-300">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold text-gray-900">Todos los Anuncios</h2>
-                    <button id="anuncios-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
-                </div>
-                <div id="anuncios-modal-lista" class="max-h-[60vh] overflow-y-auto space-y-4 pr-2">
-                    <p class="text-gray-500 text-center">Cargando anuncios...</p>
-                </div>
-            </div>
-        </div>
-    </div> -->
-
     <!-- Modal de Información del Alumno -->
     <!-- CAMBIO v16.0: Eliminado backdrop-blur, aumentado /75 -->
     <div id="student-modal" class="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-[1002] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
@@ -604,7 +595,7 @@
                             <form id="bono-admin-form" class="space-y-4">
                                 <div>
                                     <label for="bono-admin-clave-input" class="block text-sm font-medium text-gray-700 mb-1">Clave (ID Único)</label>
-                                    <input type="text" id="bono-admin-clave-input" placeholder="Ej: BONONUEVO" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase">
+                                    <input type="text" id="bono-admin-clave-input" placeholder="Ej: BONONUEVO" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase disabled:bg-gray-100">
                                     <p class="text-xs text-gray-500 mt-1">Si la clave ya existe, se actualizará el bono.</p>
                                 </div>
                                 <div>
