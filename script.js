@@ -10,9 +10,9 @@ const AppConfig = {
     MAX_RETRIES: 5,
     CACHE_DURATION: 300000,
     
-    // CAMBIO v16.1: Actualización de versión
+    // CAMBIO v18.2: Corrección del bug de autenticación
     APP_STATUS: 'Beta', 
-    APP_VERSION: 'v18.1 (ISP Progresivo)', // ACTUALIZADO A v18.1
+    APP_VERSION: 'v18.2 (Corrección Auth)', // ACTUALIZADO A v18.2
     
     // CAMBIO v0.3.0: Impuesto P2P (debe coincidir con el Backend)
     IMPUESTO_P2P_TASA: 0.10, // 10%
@@ -89,7 +89,6 @@ const AppState = {
         adminPanelUnlocked: false,
         isStoreOpen: false, // Controlado por updateCountdown
         storeManualStatus: 'auto', // NUEVO v16.1 (Problema 3): Control manual (auto, open, closed)
-        // currentItemToConfirm: null ELIMINADO V17.0
     }
 };
 
@@ -369,7 +368,7 @@ const AppUI = {
         // Listeners Modales de Gestión (Clave)
         document.getElementById('gestion-btn').addEventListener('click', () => AppUI.showModal('gestion-modal'));
         document.getElementById('modal-cancel').addEventListener('click', () => AppUI.hideModal('gestion-modal'));
-        document.getElementById('modal-submit').addEventListener('click', AppAuth.verificarClave);
+        document.getElementById('modal-submit').addEventListener('click', AppAuth.verificarClave); // CORRECCIÓN V18.2
         document.getElementById('gestion-modal').addEventListener('click', (e) => {
             if (e.target.id === 'gestion-modal') AppUI.hideModal('gestion-modal');
         });
@@ -617,6 +616,8 @@ const AppUI = {
             document.getElementById('tienda-admin-panel').classList.add('hidden');
             AppState.tienda.adminPanelUnlocked = false;
         }
+        
+        // --- ELIMINADO v17.0: Limpieza de modal de confirmación ---
         
         if (modalId === 'gestion-modal') {
              document.getElementById('clave-input').value = "";
@@ -1341,9 +1342,6 @@ const AppUI = {
 
         calculoMsg.textContent = `Monto a depositar: ${AppFormat.formatNumber(cantidad)} ℙ | Costo Neto Tesorería: ${AppFormat.formatNumber(costoNeto)} ℙ (Comisión: ${AppFormat.formatNumber(comision)} ℙ)`;
     },
-
-
-    // --- ELIMINADO v0.4.1: FUNCIONES FONDO DE INVERSIÓN ---
 
     // --- FUNCIÓN CENTRAL: Mostrar Modal de Administración y pestaña inicial ---
     showTransaccionModal: function(tab) {
@@ -2095,10 +2093,11 @@ const AppUI = {
         
         const anuncios = [...todosLosAnuncios].sort(() => 0.5 - Math.random()).slice(0, 5);
 
+        // V18.2: Corrección de CLS (salto de layout)
         lista.innerHTML = anuncios.map(anuncio => `
-            <li class="flex items-start p-2 hover:bg-gray-50 rounded-lg transition-colors"> 
-                <span class="text-xs font-bold ${anuncio.bg} ${anuncio.text} rounded-full w-20 text-center py-0.5 mr-3 flex-shrink-0 mt-1">${anuncio.tipo}</span>
-                <span class="text-sm text-gray-700 flex-1">${anuncio.texto}</span>
+            <li class="flex items-center p-2 hover:bg-gray-50 rounded-lg transition-colors h-10"> 
+                <span class="text-xs font-bold ${anuncio.bg} ${anuncio.text} rounded-full w-20 text-center py-0.5 mr-3 flex-shrink-0">${anuncio.tipo}</span>
+                <span class="text-sm text-gray-700 flex-1 truncate">${anuncio.texto}</span>
             </li>
         `).join('');
     },
