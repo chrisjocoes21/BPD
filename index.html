@@ -9,14 +9,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Carga de Fuente Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- NUEVO v18.2: Carga de Chart.js para gráficos de inversión -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏦</text></svg>">
 
     <!-- Archivo de estilos personalizados -->
-    <!-- CAMBIO v18.2: Actualizada versión de CSS -->
-    <link rel="stylesheet" href="style.css?v=18.2">
+    <!-- CAMBIO v17.0: Actualizada versión de CSS -->
+    <link rel="stylesheet" href="style.css?v=17.0">
 </head>
 <!-- CAMBIO v16.0 (SCROLL): 'overflow-hidden' ya estaba aquí (correcto) -->
 <body class="h-full overflow-hidden"> 
@@ -186,32 +184,6 @@
                             <div class="text-center p-4 text-sm text-gray-500">Cargando datos...</div>
                         </div>
                     </div>
-                    
-                    <!-- NUEVO v18.2: Panel de "Rendimiento de Inversiones" (lg:col-span-6) -->
-                    <div id="inversiones-container" class="bg-white rounded-lg shadow-md lg:col-span-6">
-                        <h3 class="text-base font-semibold text-gray-800 p-4 border-b border-gray-200">
-                            Rendimiento de Inversiones de Capital (Simulado)
-                        </h3>
-                        <div class="p-4">
-                            <!-- Mini-stats -->
-                            <div class="grid grid-cols-2 gap-4 mb-4">
-                                <!-- Stat 1: Total Invertido -->
-                                <div class="p-2 bg-gray-50 rounded-lg border border-gray-200">
-                                    <p class="text-xs font-medium text-gray-500">Inversión Acumulada</p>
-                                    <p id="inversion-total-stat" class="text-lg font-bold text-blue-600">0 ℙ</p>
-                                </div>
-                                <!-- Stat 2: Rendimiento Anualizado -->
-                                <div class="p-2 bg-gray-50 rounded-lg border border-gray-200">
-                                    <p class="text-xs font-medium text-gray-500">Rendimiento (Sim.)</p>
-                                    <p id="inversion-rendimiento-stat" class="text-lg font-bold text-green-600">+0.00%</p>
-                                </div>
-                            </div>
-                            <!-- Contenedor de la gráfica (altura fija) -->
-                            <div class="relative h-64 w-full">
-                                <canvas id="inversiones-chart"></canvas>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Tablón de Anuncios (lg:col-span-6) -->
                     <div id="anuncios-container" class="bg-white rounded-lg shadow-md lg:col-span-6">
@@ -223,7 +195,6 @@
                             <!-- Anuncios dinámicos se insertarán aquí -->
                         </ul>
                     </div>
-                    
                 </div>
 
             </main>
@@ -471,8 +442,9 @@
                             <!-- V18.1: Actualizado el texto de la regla con la nueva política -->
                             <p class="text-sm text-gray-700"><strong class="font-medium text-gray-800">Impuesto Pasivo Progresivo (ISP):</strong> Cobro diario con escala progresiva sobre saldos altos para desincentivar la acumulación (el cobro inicia a partir de 101 ℙ).</p>
                             <p class="text-sm text-gray-700"><strong class="font-medium text-gray-800">Impuesto a Depósitos:</strong> Cobro del 5% sobre los intereses generados por los depósitos a plazo.</p>
-                            <!-- NUEVO v18.2: INGRESO PASIVO POR RENDIMIENTO DE INVERSIONES DE CAPITAL -->
+                            <!-- INICIO CAMBIO: INGRESO PASIVO POR RENDIMIENTO DE INVERSIONES DE CAPITAL -->
                             <p class="text-sm text-gray-700"><strong class="font-medium text-gray-800">Rendimiento de Inversiones de Capital:</strong> Rendimiento obtenido al invertir capital excedente para inyectar liquidez y mantener el crecimiento.</p>
+                            <!-- FIN CAMBIO -->
                             <!-- NUEVO v16.0: Añadido ITBIS de tienda -->
                             <p class="text-sm text-gray-700"><strong class="font-medium text-gray-800">ITBIS de Tienda:</strong> Cobro del 18% sobre todas las compras de artículos en la tienda.</p>
                         </div>
@@ -922,8 +894,13 @@
         </div>
     </div>
 
+    <!-- =================================================================== -->
+    <!-- MODAL DE CONFIRMACIÓN DE TIENDA (ELIMINADO v17.0) -->
+    <!-- =================================================================== -->
+
+
     <!-- Lógica de la Aplicación -->
-    <!-- CAMBIO v18.2: Apuntando a la nueva versión de script -->
-    <script src="script.js?v=18.2" type="module" defer></script>
+    <!-- CAMBIO v18.1: Apuntando a la nueva versión de script -->
+    <script src="script.js?v=18.1" type="module" defer></script>
 </body>
 </html>
