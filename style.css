@@ -1,84 +1,83 @@
 /* Estilo base para que Inter sea la fuente por defecto */
 body {
-font-family: 'Inter', sans-serif;
+    font-family: 'Inter', sans-serif;
+    /* NUEVO: Forzar texto claro por defecto para el modo oscuro */
+    color: #e5e7eb; /* text-gray-200 */
 }
 
 /* Animación de Shake para el modal de clave */
 @keyframes shake {
-0%, 100% { transform: translateX(0); }
-10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
-20%, 40%, 60%, 80% { transform: translateX(10px); }
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+    20%, 40%, 60%, 80% { transform: translateX(10px); }
 }
 .shake {
-animation: shake 0.5s;
+    animation: shake 0.5s;
 }
 
-/* NUEVO: Animación de puntos de carga (para el indicador de estado) */
+/* Animación de puntos de carga (para el indicador de estado) */
 @keyframes pulse-dot-animation {
-0%, 100% {
-opacity: 1;
-}
-50% {
-opacity: 0.3; /* Hacemos el pulso más sutil */
-}
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.3; /* Hacemos el pulso más sutil */
+    }
 }
 .animate-pulse-dot {
-animation: pulse-dot-animation 1.4s infinite ease-in-out;
+    animation: pulse-dot-animation 1.4s infinite ease-in-out;
 }
 
-/* Estilos para el scrollbar (opcional pero le da un toque moderno) */
+/* Estilos para el scrollbar (MODO OSCURO) */
 ::-webkit-scrollbar {
-width: 6px;
-height: 6px;
+    width: 8px;
+    height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-background: #cbd5e1; /* gris de tailwind */
-border-radius: 3px;
+    background: #374151; /* gray-700 */
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-background: #94a3b8; /* gris más oscuro */
+    background: #4b5563; /* gray-600 */
 }
 ::-webkit-scrollbar-track {
-background: #f1f5f9; /* gris claro */
+    background: #111827; /* gray-900 */
+    border-radius: 4px;
 }
 
 /* Ocultar scrollbar */
 .no-scrollbar::-webkit-scrollbar {
-display: none;
+    display: none;
 }
 .no-scrollbar {
--ms-overflow-style: none;  /* IE y Edge */
-scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;  /* IE y Edge */
+    scrollbar-width: none;  /* Firefox */
 }
 
-/* Estilos para las Pestañas (Tabs) en el modal de administración */
+/* Estilos para las Pestañas (Tabs) en el modal de administración (MODO NEÓN) */
 .tab-btn {
     border-radius: 0;
     margin-right: 0.5rem;
 }
-/* CAMBIO v0.4.0: Selector más específico para evitar conflictos */
+/* CAMBIO vNeón: Color de acento a cian */
 #transaccion-modal .tab-btn.active-tab {
-    border-bottom-color: #3b82f6 !important; /* blue-600 */
-    color: #3b82f6 !important;
+    border-bottom-color: #06b6d4 !important; /* cyan-500 */
+    color: #06b6d4 !important; /* cyan-500 */
 }
 .tab-content {
-    /* CAMBIO v0.3.1: Aumentado a 540px para eliminar 100% el "jiggle" */
     min-height: 540px; 
 }
 
-/* =================================================================== */
-/* ELIMINADO (v0.4.1): Estilos para Pestañas del Fondo de Inversión */
-/* =================================================================== */
-
-
-/* CAMBIO v0.2.4: Estilos para el contenedor de resultados de búsqueda */
+/* Estilos para el contenedor de resultados de búsqueda (MODO OSCURO) */
 .search-results-container {
-    /* Estilos para el dropdown de autocomplete */
     position: absolute;
     z-index: 10;
     width: 100%;
-    background-color: white;
-    border: 1px solid #d1d5db; /* border-gray-300 */
+    /* CAMBIO vNeón: Fondo y borde oscuros */
+    background-color: #374151; /* bg-gray-700 */
+    border: 1px solid #4b5563; /* border-gray-600 */
     border-radius: 0.5rem; /* rounded-lg */
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
     margin-top: 0.25rem; /* mt-1 */
@@ -87,7 +86,7 @@ scrollbar-width: none;  /* Firefox */
 }
 
 /* =================================================================== */
-/* NUEVO (v0.3.9): Estilos para Tooltip Personalizado */
+/* ESTILOS DE TOOLTIP (Ya son oscuros, se mantienen) */
 /* =================================================================== */
 
 .tooltip-container {
@@ -108,26 +107,17 @@ scrollbar-width: none;  /* Firefox */
     position: absolute;
     z-index: 50;
     
-    /* CORRECCIÓN v16.1 (Problema 2 Tooltip): Posicionamiento
-       Cambiado de 'bottom: 125%' (encima) a 'top: 125%' (debajo)
-       para evitar que se corte por el 'overflow' del contenedor.
-    */
     top: 125%; /* Debajo del elemento */
     bottom: auto; /* Asegurar que 'bottom' no interfiera */
     left: 50%;
     transform: translateX(-50%); /* Centrarlo */
     
-    /* Evitar que se oculte en pantallas pequeñas (donde usamos 'hidden') */
     display: block !important;
 }
 
 /* Flecha del tooltip */
 .tooltip-text svg {
     position: absolute;
-    /* CORRECCIÓN v16.1 (Problema 2 Tooltip):
-       Cambiado de 'top: 100%' a 'bottom: 100%' para que la flecha
-       aparezca arriba del cuadro de texto (apuntando hacia arriba).
-    */
     bottom: 100%; /* Arriba del tooltip */
     top: auto; /* Asegurar que 'top' no interfiera */
     left: 0;
@@ -151,98 +141,41 @@ scrollbar-width: none;  /* Firefox */
 
 
 /* =================================================================== */
-/* NUEVO (v0.5.0): Estilos para Modal de Bonos */
+/* Estilos para Pestañas de Bonos (MODO NEÓN) */
 /* =================================================================== */
-
-/* Estilos para las Pestañas (Tabs) en el modal de bonos */
 .bono-tab-btn {
     border-radius: 0;
     margin-right: 0.5rem;
 }
+/* CAMBIO vNeón: Color de acento a cian */
 #bonos-modal .bono-tab-btn.active-tab {
-    border-bottom-color: #3b82f6 !important; /* blue-600 */
-    color: #3b82f6 !important;
+    border-bottom-color: #06b6d4 !important; /* cyan-500 */
+    color: #06b6d4 !important; /* cyan-500 */
 }
-
-/* Estilos para las tarjetas de bonos (vista de usuario) */
-.bono-item-card {
-    @apply bg-white rounded-lg shadow-md p-4 border border-gray-200 transition-all;
-}
-/* Estado visual para bonos ya canjeados (a futuro) */
-.bono-item-card.canjeado {
-    @apply opacity-60 bg-gray-50;
-}
-/* Estado visual para bonos agotados */
-.bono-item-card.agotado {
-    @apply opacity-60 bg-gray-50 line-through;
-}
-
-/* Estilos para la tabla de admin de bonos */
-.edit-bono-btn {
-    @apply text-blue-600 hover:text-blue-800 font-medium;
-}
-.delete-bono-btn {
-    @apply text-red-600 hover:text-red-800 font-medium;
-}
-
 
 /* =================================================================== */
-/* NUEVO (v16.0): Estilos para Modal de Tienda */
+/* Estilos para Pestañas de Tienda (MODO NEÓN) */
 /* =================================================================== */
 
-/* Estilos para las Pestañas (Tabs) en el modal de tienda */
 .tienda-tab-btn {
     border-radius: 0;
     margin-right: 0.5rem;
 }
+/* CAMBIO vNeón: Color de acento a cian */
 #tienda-modal .tienda-tab-btn.active-tab {
-    border-bottom-color: #3b82f6 !important; /* blue-600 */
-    color: #3b82f6 !important;
+    border-bottom-color: #06b6d4 !important; /* cyan-500 */
+    color: #06b6d4 !important; /* cyan-500 */
 }
 
-/* CORRECCIÓN SALTO VERTICAL (Problema 4): 
-  Se aplica una altura fija a ambas pestañas ('comprar' y 'admin') 
-  para que tengan la misma altura y no haya un "salto" visual al cambiar.
-*/
+/* CORRECCIÓN SALTO VERTICAL (Problema 4): */
 .tienda-tab-content {
-    height: 550px; /* Altura unificada (similar al modal de Bonos) */
+    height: 550px; /* Altura unificada */
     overflow-y: auto; /* Permitir scroll si el contenido se pasa */
 }
 
-/* Contenedor para la pestaña de admin de la tienda */
-#tienda-tab-admin {
-    /* height: 600px; <-- ELIMINADO (Problema 4). Ahora se controla por .tienda-tab-content */
-}
 
-/* Estilos para las tarjetas de artículos (vista de usuario) */
-.tienda-item-card {
-    @apply bg-white rounded-lg shadow-md border border-gray-200 transition-all flex flex-col p-4;
-}
-
-/* Botón de compra (genérico) */
-.tienda-buy-btn {
-     @apply w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors shadow-sm;
-}
-
-/* Botón de compra deshabilitado (gris) - Tienda cerrada */
-.tienda-buy-btn.disabled-gray {
-    @apply bg-gray-200 text-gray-500 cursor-not-allowed shadow-none;
-}
-
-/* Botón de compra sin fondos (rojo) */
-.tienda-buy-btn.sin-fondos-btn {
-    @apply bg-red-100 text-red-700 border border-red-200 cursor-not-allowed shadow-none hover:bg-red-200;
-}
-
-/* Botón de compra Agotado */
-.tienda-buy-btn.agotado-btn {
-     @apply bg-gray-50 text-gray-500 border border-gray-200 cursor-not-allowed line-through shadow-none;
-}
-
-/* Estilos para la tabla de admin de tienda */
-.edit-item-btn {
-    @apply text-blue-600 hover:text-blue-800 font-medium;
-}
-.delete-item-btn {
-    @apply text-red-600 hover:text-red-800 font-medium;
-}
+/* NOTA: Todas las reglas de @apply fueron eliminadas.
+  Esos estilos (como .bono-item-card, .tienda-item-card, etc.)
+  se aplicarán directamente en el script.js y el index.html
+  para que el rediseño "Neón / Gamer" funcione.
+*/
