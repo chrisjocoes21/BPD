@@ -46,17 +46,19 @@ html {
     @apply bg-indigo-50 text-indigo-700 font-semibold;
 }
 
-/* Estilo para los botones secundarios (unificado) */
-/* CAMBIO vFintech: Base blanca, borde gris, hover con acento Índigo */
+/* * CLASE DE BOTÓN UNIFICADA (btn-base)
+ * Característica: Fondo blanco, borde gris, hover con realce ÍNDIGO.
+ * ESTA CLASE AHORA SE APLICARÁ A *TODOS* LOS BOTONES.
+ */
 .btn-base {
     @apply px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 shadow-sm
-           hover:bg-gray-50 hover:border-indigo-500 hover:text-indigo-700 transition-colors duration-200;
+           hover:bg-indigo-50 hover:border-indigo-500 hover:text-indigo-700 transition-colors duration-200;
 }
 
 /* Estilo para los botones en las tablas (editar/eliminar) */
-/* CAMBIO vFintech: Botones pequeños con ícono, realce índigo */
+/* Botones pequeños unificados, solo cambian de color a Índigo en hover. */
 .icon-btn-sm {
-    @apply p-1.5 rounded-md text-gray-500 hover:bg-gray-100 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-colors duration-200;
+    @apply p-1.5 rounded-md text-gray-500 hover:bg-indigo-100 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-colors duration-200;
 }
 
 /* Estilos para los resultados de búsqueda (modales) */
