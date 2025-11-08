@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<!-- CAMBIO v16.0 (SCROLL): Añadido 'overflow-hidden' al HTML -->
-<html lang="es" class="h-full bg-gray-100 overflow-hidden">
+<!-- CAMBIO vNeón: Fondo principal oscuro -->
+<html lang="es" class="h-full bg-slate-900 overflow-hidden">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,38 +13,43 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏦</text></svg>">
 
     <!-- Archivo de estilos personalizados -->
-    <!-- CAMBIO v17.0: Actualizada versión de CSS -->
-    <link rel="stylesheet" href="style.css?v=17.0">
+    <!-- CAMBIO vNeón: Actualizada versión de CSS -->
+    <link rel="stylesheet" href="style.css?v=19.0">
 </head>
-<!-- CAMBIO v16.0 (SCROLL): 'overflow-hidden' ya estaba aquí (correcto) -->
-<body class="h-full overflow-hidden"> 
-    <!-- CAMBIO v16.0 (SCROLL): Reemplazado 'h-screen' por 'h-full' para que coincida con el HTML -->
+<!-- CAMBIO vNeón: Añadido color de texto base -->
+<body class="h-full overflow-hidden text-gray-200"> 
     <div id="app-container" class="flex h-full">
         <!-- 1. Barra Lateral de Navegación (Fija y Ocultable) -->
-        <nav id="sidebar" class="fixed top-0 left-0 h-full z-30 flex flex-col bg-gray-50 w-64 border-r border-gray-200 flex-shrink-0 transition-transform duration-300 transform -translate-x-full">
+        <!-- CAMBIO vNeón: Fondo y borde oscuros -->
+        <nav id="sidebar" class="fixed top-0 left-0 h-full z-30 flex flex-col bg-slate-900 w-64 border-r border-slate-700 flex-shrink-0 transition-transform duration-300 transform -translate-x-full">
             
             <!-- Encabezado de la Sidebar -->
-            <div class="p-4 border-b border-gray-200 flex items-center justify-center bg-white">
-                <span class="text-xl font-extrabold text-blue-600">BPD</span>
+            <!-- CAMBIO vNeón: Fondo y borde oscuros -->
+            <div class="p-4 border-b border-slate-700 flex items-center justify-center bg-slate-900">
+                <!-- CAMBIO vNeón: Acento cian -->
+                <span class="text-xl font-extrabold text-cyan-400">BPD</span>
             </div>
 
             <!-- Contenedor de Grupos (se llenará dinámicamente) -->
             <div id="sidebar-nav" class="flex-1 overflow-y-auto p-2 space-y-1 pt-4">
                 <!-- Links de "Inicio" y grupos se insertarán aquí -->
-                <div class="text-center p-4 text-gray-500 text-sm">
+                <!-- CAMBIO vNeón: Texto de placeholder más claro -->
+                <div class="text-center p-4 text-gray-400 text-sm">
                     Cargando grupos...
                 </div>
             </div>
             
             <!-- Footer de la Sidebar (Botón Admin y Versión) -->
-            <div class="p-2 border-t border-gray-200 bg-white flex-shrink-0 space-y-2">
+            <!-- CAMBIO vNeón: Fondo y borde oscuros -->
+            <div class="p-2 border-t border-slate-700 bg-slate-900 flex-shrink-0 space-y-2">
                 <!-- V0.2.2: Contenedor de la Versión -->
-                <div id="app-version-container" class="text-center py-1 text-xs text-gray-400">
+                <div id="app-version-container" class="text-center py-1 text-xs text-gray-500">
                     <!-- Versión se inyecta aquí -->
                 </div>
                 
                 <!-- Botón P2P -->
-                <button id="p2p-portal-btn" class="p2p-btn flex items-center justify-center w-full px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors shadow-md">
+                <!-- CAMBIO vNeón: Estilo secundario "gamer" (Lima) -->
+                <button id="p2p-portal-btn" class="p2p-btn flex items-center justify-center w-full px-4 py-2 bg-lime-500 text-lime-900 text-sm font-medium rounded-lg hover:bg-lime-600 transition-colors shadow-md shadow-lime-500/10">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
                     </svg>
@@ -52,7 +57,8 @@
                 </button>
                 
                 <!-- Botón de Gestión -->
-                <button id="gestion-btn" class="flex items-center justify-center w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-md">
+                <!-- CAMBIO vNeón: Estilo primario (Cian) -->
+                <button id="gestion-btn" class="flex items-center justify-center w-full px-4 py-2 bg-cyan-400 text-cyan-900 text-sm font-medium rounded-lg hover:bg-cyan-500 transition-colors shadow-md shadow-cyan-400/10">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
@@ -65,13 +71,16 @@
         <div id="main-content-container" class="flex-1 flex flex-col overflow-hidden ml-0">
             
             <!-- Barra Superior (para Toggle y Título) -->
-            <header class="h-16 bg-white border-b border-gray-200 flex-shrink-0 flex items-center px-4">
+            <!-- CAMBIO vNeón: Fondo y borde oscuros -->
+            <header class="h-16 bg-slate-800 border-b border-slate-700 flex-shrink-0 flex items-center px-4">
                 <!-- Botón para ocultar/mostrar sidebar -->
-                <button id="toggle-sidebar-btn" class="p-2 -ml-2 mr-2 rounded-full text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                <!-- CAMBIO vNeón: Colores de hover oscuros -->
+                <button id="toggle-sidebar-btn" class="p-2 -ml-2 mr-2 rounded-full text-gray-400 hover:bg-slate-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-slate-600">
                     <span class="font-bold text-lg">»</span>
                 </button>
                 <!-- Título principal (se actualiza dinámicamente) -->
-                <h1 id="main-header-title" class="text-lg font-semibold text-gray-900 truncate">
+                <!-- CAMBIO vNeón: Texto claro -->
+                <h1 id="main-header-title" class="text-lg font-semibold text-white truncate">
                     Cargando...
                 </h1>
 
@@ -82,14 +91,16 @@
             </header>
             
             <!-- Contenido (scrollable) -->
-            <main id="main-content-area" class="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6 lg:p-8 overflow-x-hidden">
+            <!-- CAMBIO vNeón: Fondo principal oscuro -->
+            <main id="main-content-area" class="flex-1 overflow-y-auto bg-slate-900 p-4 md:p-6 lg:p-8 overflow-x-hidden">
                 <!-- Subtítulo (para total de grupo o bienvenida) -->
                 <div id="page-subtitle" class="mb-6">
                     <!-- Contenido se inserta aquí (Ej. "Total del Grupo: ...") -->
                 </div>
                 
                 <!-- Contenedor de la Tabla (se actualizará) -->
-                <div id="table-container" class="bg-white rounded-lg shadow-md overflow-hidden hidden">
+                <!-- CAMBIO vNeón: Fondo oscuro -->
+                <div id="table-container" class="bg-slate-800 rounded-lg shadow-md overflow-hidden hidden">
                     <!-- Contenido neutral o tabla de grupo irá aquí -->
                 </div>
 
@@ -97,9 +108,10 @@
                 <div id="home-stats-container" class="mb-6 hidden">
     
                     <!-- Títulos -->
+                    <!-- CAMBIO vNeón: Texto claro -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-2">
-                        <h3 class="text-base font-semibold text-gray-800">Resumen del Banco</h3>
-                        <h3 class="text-base font-semibold text-gray-800">Alumnos Destacados</h3>
+                        <h3 class="text-base font-semibold text-gray-100">Resumen del Banco</h3>
+                        <h3 class="text-base font-semibold text-gray-100">Alumnos Destacados</h3>
                     </div>
                     
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -120,28 +132,33 @@
                         </div>
                         
                         <!-- Fila 2, Col 2: Contador/Botones -->
-                        <div class="flex flex-col justify-between gap-4 px-3 bg-white rounded-lg shadow-md p-3 h-full">
+                        <!-- CAMBIO vNeón: Fondo oscuro -->
+                        <div class="flex flex-col justify-between gap-4 px-3 bg-slate-800 rounded-lg shadow-md p-3 h-full">
                             <!-- Timer -->
-                            <div id="countdown-timer" class="flex-shrink-0 text-sm font-medium text-gray-700 flex items-baseline gap-2">
-                                <span id="days" class="text-xl font-bold text-blue-600 w-8 text-right">00</span><span class="text-xs text-gray-500 uppercase -ml-1">Días</span>
-                                <span id="hours" class="text-xl font-bold text-blue-600 w-8 text-right">00</span><span class="text-xs text-gray-500 uppercase -ml-1">Horas</span>
-                                <span id="minutes" class="text-xl font-bold text-blue-600 w-8 text-right">00</span><span class="text-xs text-gray-500 uppercase -ml-1">Minutos</span>
-                                <span id="seconds" class="text-xl font-bold text-blue-600 w-8 text-right">00</span><span class="text-xs text-gray-500 uppercase -ml-1">Segundos</span>
+                            <!-- CAMBIO vNeón: Colores de texto -->
+                            <div id="countdown-timer" class="flex-shrink-0 text-sm font-medium text-gray-300 flex items-baseline gap-2">
+                                <span id="days" class="text-xl font-bold text-cyan-400 w-8 text-right">00</span><span class="text-xs text-gray-400 uppercase -ml-1">Días</span>
+                                <span id="hours" class="text-xl font-bold text-cyan-400 w-8 text-right">00</span><span class="text-xs text-gray-400 uppercase -ml-1">Horas</span>
+                                <span id="minutes" class="text-xl font-bold text-cyan-400 w-8 text-right">00</span><span class="text-xs text-gray-400 uppercase -ml-1">Minutos</span>
+                                <span id="seconds" class="text-xl font-bold text-cyan-400 w-8 text-right">00</span><span class="text-xs text-gray-400 uppercase -ml-1">Segundos</span>
                             </div>
                             <!-- Mensaje -->
-                            <div id="store-message" class="hidden w-full text-center text-green-600 font-semibold">
+                            <!-- CAMBIO vNeón: Color neón lima -->
+                            <div id="store-message" class="hidden w-full text-center text-lime-400 font-semibold">
                                 ¡La tienda está abierta!
                             </div>
                             <!-- Botones -->
                             <div class="flex gap-3 flex-shrink-0 w-full">
-                                <button id="reglas-btn" class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
+                                <!-- CAMBIO vNeón: Botón oscuro -->
+                                <button id="reglas-btn" class="flex-1 px-4 py-2 bg-slate-700 text-gray-300 text-sm font-medium rounded-lg hover:bg-slate-600 transition-colors">
                                     Ver Reglas
                                 </button>
-                                <button id="bonos-btn" class="flex-1 px-4 py-2 bg-yellow-400 text-yellow-900 text-sm font-medium rounded-lg hover:bg-yellow-500 transition-colors shadow-sm">
+                                <!-- CAMBIO vNeón: Acento rosa neón -->
+                                <button id="bonos-btn" class="flex-1 px-4 py-2 bg-pink-500 text-white text-sm font-medium rounded-lg hover:bg-pink-600 transition-colors shadow-sm shadow-pink-500/10">
                                     Bonos
                                 </button>
-                                <!-- CAMBIO v16.0: Botón de tienda siempre habilitado -->
-                                <button id="tienda-btn" class="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                                <!-- CAMBIO vNeón: Acento cian -->
+                                <button id="tienda-btn" class="flex-1 px-4 py-2 bg-cyan-400 text-cyan-900 text-sm font-medium rounded-lg hover:bg-cyan-500 transition-colors shadow-sm shadow-cyan-400/10">
                                     Tienda
                                 </button>
                             </div>
@@ -154,22 +171,27 @@
                 <div id="home-modules-grid" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
                     
                     <!-- Panel de "Alumnos en Riesgo" (lg:col-span-3) -->
-                    <div id="riesgo-container" class="bg-white rounded-lg shadow-md lg:col-span-3">
-                        <h3 class="text-base font-semibold text-gray-800 p-4 border-b border-gray-200">Alumnos en Riesgo</h3>
+                    <!-- CAMBIO vNeón: Fondo oscuro -->
+                    <div id="riesgo-container" class="bg-slate-800 rounded-lg shadow-md lg:col-span-3">
+                        <!-- CAMBIO vNeón: Texto y borde oscuros -->
+                        <h3 class="text-base font-semibold text-gray-100 p-4 border-b border-slate-700">Alumnos en Riesgo</h3>
                         
                         <div class="overflow-x-auto">
                             <table class="min-w-full">
-                                <thead class="bg-gray-50">
+                                <!-- CAMBIO vNeón: Fondo y texto oscuros -->
+                                <thead class="bg-slate-700">
                                     <tr>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap w-1/4">Grupo</th>
-                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap w-1/4">Pinceles</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Nombre</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap w-1/4">Grupo</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap w-1/4">Pinceles</th>
                                     </tr>
                                 </thead>
-                                <tbody id="riesgo-lista" class="bg-white divide-y divide-gray-200">
+                                <!-- CAMBIO vNeón: Fondo y borde oscuros -->
+                                <tbody id="riesgo-lista" class="bg-slate-800 divide-y divide-slate-700">
                                     <!-- Items de alumnos en riesgo se insertarán aquí -->
                                     <tr>
-                                        <td colspan="3" class="p-4 text-sm text-gray-500 text-center">Cargando datos...</td>
+                                        <!-- CAMBIO vNeón: Texto de placeholder -->
+                                        <td colspan="3" class="p-4 text-sm text-gray-400 text-center">Cargando datos...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -177,21 +199,28 @@
                     </div>
 
                     <!-- Panel de "Estadísticas Rápidas" (lg:col-span-3) -->
-                    <div id="quick-stats-container" class="bg-white rounded-lg shadow-md lg:col-span-3">
-                        <h3 class="text-base font-semibold text-gray-800 p-4 border-b border-gray-200">Estadísticas</h3>
+                    <!-- CAMBIO vNeón: Fondo oscuro -->
+                    <div id="quick-stats-container" class="bg-slate-800 rounded-lg shadow-md lg:col-span-3">
+                        <!-- CAMBIO vNeón: Texto y borde oscuros -->
+                        <h3 class="text-base font-semibold text-gray-100 p-4 border-b border-slate-700">Estadísticas</h3>
                         <div id="quick-stats-list" class="p-4 space-y-3">
                             <!-- Stats will be injected here -->
-                            <div class="text-center p-4 text-sm text-gray-500">Cargando datos...</div>
+                            <!-- CAMBIO vNeón: Texto de placeholder -->
+                            <div class="text-center p-4 text-sm text-gray-400">Cargando datos...</div>
                         </div>
                     </div>
 
                     <!-- Tablón de Anuncios (lg:col-span-6) -->
-                    <div id="anuncios-container" class="bg-white rounded-lg shadow-md lg:col-span-6">
-                        <div class="flex justify-between items-center p-4 border-b border-gray-200">
-                            <h3 class="text-base font-semibold text-gray-800">Tablón de Anuncios</h3>
-                            <button id="anuncios-modal-btn" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Ver Todos</button>
+                    <!-- CAMBIO vNeón: Fondo oscuro -->
+                    <div id="anuncios-container" class="bg-slate-800 rounded-lg shadow-md lg:col-span-6">
+                        <!-- CAMBIO vNeón: Texto y borde oscuros -->
+                        <div class="flex justify-between items-center p-4 border-b border-slate-700">
+                            <h3 class="text-base font-semibold text-gray-100">Tablón de Anuncios</h3>
+                            <!-- CAMBIO vNeón: Acento cian -->
+                            <button id="anuncios-modal-btn" class="text-sm text-cyan-400 hover:text-cyan-300 font-medium">Ver Todos</button>
                         </div>
-                        <ul id="anuncios-lista" class="divide-y divide-gray-100 p-4 space-y-1">
+                        <!-- CAMBIO vNeón: Borde oscuro -->
+                        <ul id="anuncios-lista" class="divide-y divide-slate-700 p-4 space-y-1">
                             <!-- Anuncios dinámicos se insertarán aquí -->
                         </ul>
                     </div>
@@ -200,72 +229,84 @@
             </main>
 
             <!-- Copyright (Anclado al fondo del contenedor principal) -->
-            <p id="copyright-footer" class="flex-shrink-0 bg-gray-100 p-4 text-xs text-gray-400 text-center">
+            <!-- CAMBIO vNeón: Fondo oscuro, texto más sutil -->
+            <p id="copyright-footer" class="flex-shrink-0 bg-slate-900 p-4 text-xs text-gray-600 text-center">
                 © 2025 Banco del Pincel Dorado | Desarrollado por Didac-Click Group.
             </p>
         </div>
     </div>
 
     <!-- Overlay de Carga (Rediseñado con Animación) -->
-    <div id="loading-overlay" class="fixed inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-[10000] transition-opacity duration-300">
+    <!-- CAMBIO vNeón: Fondo oscuro -->
+    <div id="loading-overlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-[10000] transition-opacity duration-300">
         <!-- Contenedor del Título, Eslogan y Puntos -->
         <div class="text-center">
             <!-- Título Grande y Azul -->
-            <h1 class="text-5xl font-bold text-blue-600 mb-2">
+            <!-- CAMBIO vNeón: Acento cian -->
+            <h1 class="text-5xl font-bold text-cyan-400 mb-2">
                 Banco del Pincel Dorado
             </h1>
             <!-- Eslogan con Comillas -->
-            <p class="text-lg text-gray-600 mb-6">
+            <!-- CAMBIO vNeón: Texto claro -->
+            <p class="text-lg text-gray-300 mb-6">
                 "Donde el esfuerzo académico tiene su recompensa"
             </p>
             <!-- Animación de Puntos Pulsantes -->
+            <!-- CAMBIO vNeón: Acento cian -->
             <div class="flex justify-center items-center space-x-2">
-                <span class="w-3 h-3 bg-blue-600 rounded-full animate-pulse-dot" style="animation-delay: 0s;"></span>
-                <span class="w-3 h-3 bg-blue-600 rounded-full animate-pulse-dot" style="animation-delay: 0.2s;"></span>
-                <span class="w-3 h-3 bg-blue-600 rounded-full animate-pulse-dot" style="animation-delay: 0.4s;"></span>
+                <span class="w-3 h-3 bg-cyan-400 rounded-full animate-pulse-dot" style="animation-delay: 0s;"></span>
+                <span class="w-3 h-3 bg-cyan-400 rounded-full animate-pulse-dot" style="animation-delay: 0.2s;"></span>
+                <span class="w-3 h-3 bg-cyan-400 rounded-full animate-pulse-dot" style="animation-delay: 0.4s;"></span>
             </div>
         </div>
     </div>
 
     <!-- Modal de Acceso (Clave) -->
-    <!-- CAMBIO v16.0: Eliminado backdrop-blur, aumentado /75 -->
-    <div id="gestion-modal" class="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform scale-95 transition-transform duration-300">
+    <!-- CAMBIO vNeón: Fondo más oscuro, diálogo oscuro -->
+    <div id="gestion-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-slate-800 rounded-lg shadow-xl w-full max-w-md transform scale-95 transition-transform duration-300">
             <div class="p-6">
-                <h2 class="text-lg font-semibold text-gray-900 text-center mb-4">Acceso a Administración</h2>
+                <!-- CAMBIO vNeón: Texto claro -->
+                <h2 class="text-lg font-semibold text-gray-100 text-center mb-4">Acceso a Administración</h2>
                 <div class="mb-4">
-                    <label for="clave-input" class="block text-sm font-medium text-gray-700 mb-1">Clave de Acceso</label>
-                    <input type="password" id="clave-input" placeholder="Ingrese su clave" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <!-- CAMBIO vNeón: Texto claro -->
+                    <label for="clave-input" class="block text-sm font-medium text-gray-300 mb-1">Clave de Acceso</label>
+                    <!-- CAMBIO vNeón: Input oscuro -->
+                    <input type="password" id="clave-input" placeholder="Ingrese su clave" class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 bg-slate-700 text-white">
                 </div>
                 <div class="flex justify-end gap-3">
-                    <button id="modal-cancel" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">Cancelar</button>
-                    <button id="modal-submit" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">Acceder</button>
+                    <!-- CAMBIO vNeón: Botón oscuro -->
+                    <button id="modal-cancel" class="px-4 py-2 bg-slate-700 text-gray-300 text-sm font-medium rounded-lg hover:bg-slate-600 transition-colors">Cancelar</button>
+                    <!-- CAMBIO vNeón: Botón cian -->
+                    <button id="modal-submit" class="px-4 py-2 bg-cyan-400 text-cyan-900 text-sm font-medium rounded-lg hover:bg-cyan-500 transition-colors shadow-sm shadow-cyan-400/10">Acceder</button>
                 </div>
             </div>
         </div>
     </div>
     
     <!-- MODAL DE ADMINISTRACIÓN -->
-    <!-- CAMBIO v16.0: Eliminado backdrop-blur, aumentado /75 -->
-    <div id="transaccion-modal" class="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <!-- Contenido... (sin cambios) -->
-        <div id="transaccion-modal-dialog" class="bg-white rounded-lg shadow-xl w-full max-w-4xl transform scale-95 transition-transform duration-300 overflow-hidden"> 
-            <div class="bg-gray-50 border-b border-gray-200">
+    <!-- CAMBIO vNeón: Fondo más oscuro, diálogo oscuro -->
+    <div id="transaccion-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <!-- CAMBIO vNeón: Fondo y bordes oscuros -->
+        <div id="transaccion-modal-dialog" class="bg-slate-800 rounded-lg shadow-xl w-full max-w-4xl transform scale-95 transition-transform duration-300 overflow-hidden"> 
+            <div class="bg-slate-700 border-b border-slate-600">
                 <div class="flex justify-between items-center p-4">
-                    <h2 class="text-lg font-semibold text-gray-900">
+                    <!-- CAMBIO vNeón: Texto claro -->
+                    <h2 class="text-lg font-semibold text-gray-100">
                         Panel de Administración
                     </h2>
-                    <button id="transaccion-modal-close-btn" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                    <!-- CAMBIO vNeón: Texto claro -->
+                    <button id="transaccion-modal-close-btn" class="text-gray-400 hover:text-gray-200 text-2xl">&times;</button>
                 </div>
-                <!-- V18.1: Se elimina la pestaña de Impuesto Patrimonio, volviendo al estado original -->
-                <div class="flex border-b border-gray-200 px-4">
-                    <button data-tab="transaccion" class="tab-btn active-tab px-4 py-2 text-sm font-medium border-b-2 border-blue-600 text-blue-600 transition-colors hover:bg-gray-100">
+                <!-- CAMBIO vNeón: Borde oscuro, texto de pestaña claro -->
+                <div class="flex border-b border-slate-600 px-4">
+                    <button data-tab="transaccion" class="tab-btn active-tab px-4 py-2 text-sm font-medium border-b-2 border-cyan-500 text-cyan-500 transition-colors hover:bg-slate-600">
                         Transacción Múltiple
                     </button>
-                    <button data-tab="prestamos" class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-600 transition-colors hover:bg-gray-100">
+                    <button data-tab="prestamos" class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-400 transition-colors hover:bg-slate-600">
                         Préstamos
                     </button>
-                    <button data-tab="depositos" class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-600 transition-colors hover:bg-gray-100">
+                    <button data-tab="depositos" class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-400 transition-colors hover:bg-slate-600">
                         Depósitos
                     </button>
                 </div>
@@ -274,137 +315,165 @@
                 <div id="tab-transaccion" class="tab-content active"> 
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Grupos</label>
-                            <div id="transaccion-lista-grupos-container" class="w-full h-72 overflow-y-auto bg-gray-50 border border-gray-300 rounded-lg p-2 space-y-1">
-                                <span class="text-sm text-gray-500 p-2">Cargando grupos...</span>
+                            <!-- CAMBIO vNeón: Texto claro -->
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Grupos</label>
+                            <!-- CAMBIO vNeón: Fondo y borde oscuros -->
+                            <div id="transaccion-lista-grupos-container" class="w-full h-72 overflow-y-auto bg-slate-700 border border-slate-600 rounded-lg p-2 space-y-1">
+                                <!-- CAMBIO vNeón: Texto claro -->
+                                <span class="text-sm text-gray-400 p-2">Cargando grupos...</span>
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Usuarios</label>
-                            <div id="transaccion-lista-usuarios-container" class="w-full h-72 overflow-y-auto bg-gray-50 border border-gray-300 rounded-lg p-2 space-y-1">
-                                <span class="text-sm text-gray-500 p-2">Seleccione un grupo...</span>
+                            <!-- CAMBIO vNeón: Texto claro -->
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Usuarios</label>
+                            <!-- CAMBIO vNeón: Fondo y borde oscuros -->
+                            <div id="transaccion-lista-usuarios-container" class="w-full h-72 overflow-y-auto bg-slate-700 border border-slate-600 rounded-lg p-2 space-y-1">
+                                <!-- CAMBIO vNeón: Texto claro -->
+                                <span class="text-sm text-gray-400 p-2">Seleccione un grupo...</span>
                             </div>
                         </div>
                     </div>
                     <div class="mt-4">
-                        <label for="transaccion-cantidad-input" class="block text-sm font-medium text-gray-700 mb-1">
+                        <!-- CAMBIO vNeón: Texto claro -->
+                        <label for="transaccion-cantidad-input" class="block text-sm font-medium text-gray-300 mb-1">
                             Cantidad (para cada usuario seleccionado)
-                            <span id="tesoreria-saldo-transaccion" class="text-xs text-blue-600 ml-2 font-normal">
+                            <!-- CAMBIO vNeón: Texto acento claro -->
+                            <span id="tesoreria-saldo-transaccion" class="text-xs text-cyan-400 ml-2 font-normal">
                             </span>
                         </label>
-                        <!-- ESTADO NORMAL: Input habilitado y con placeholder simple -->
-                        <input type="number" id="transaccion-cantidad-input" placeholder="Ej: 1000 o -50" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <!-- CAMBIO vNeón: Input oscuro -->
+                        <input type="number" id="transaccion-cantidad-input" placeholder="Ej: 1000 o -50" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-white">
                         
                         <!-- NUEVO: Visor de cálculo de comisión -->
-                        <div id="transaccion-calculo-impuesto" class="text-xs text-gray-500 mt-1 h-4">
+                        <!-- CAMBIO vNeón: Texto claro -->
+                        <div id="transaccion-calculo-impuesto" class="text-xs text-gray-400 mt-1 h-4">
                             <!-- El cálculo de la comisión aparecerá aquí -->
                         </div>
                     </div>
                     <div class="mt-6 flex justify-end">
-                        <button id="transaccion-submit-btn" data-accion="transaccion_multiple" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm w-full md:w-auto">
+                        <!-- CAMBIO vNeón: Botón cian -->
+                        <button id="transaccion-submit-btn" data-accion="transaccion_multiple" class="px-4 py-2 bg-cyan-400 text-cyan-900 text-sm font-medium rounded-lg hover:bg-cyan-500 transition-colors shadow-sm shadow-cyan-400/10 w-full md:w-auto">
                             <span id="transaccion-btn-text">Realizar Transacción</span>
                         </button>
                     </div>
                 </div>
                 <div id="tab-prestamos" class="tab-content hidden">
                     <div class="mb-4 relative">
-                        <label for="prestamo-alumno-search" class="block text-sm font-medium text-gray-700 mb-1">
+                        <!-- CAMBIO vNeón: Texto claro -->
+                        <label for="prestamo-alumno-search" class="block text-sm font-medium text-gray-300 mb-1">
                             Buscar Alumno
-                            <span id="prestamo-alumno-saldo" class="text-xs text-gray-500 ml-2 font-normal"></span>
+                            <span id="prestamo-alumno-saldo" class="text-xs text-gray-400 ml-2 font-normal"></span>
                         </label>
-                        <input type="text" id="prestamo-alumno-search" placeholder="Escriba el nombre del alumno..." class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <div id="prestamo-search-results" class="search-results-container hidden absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
+                        <!-- CAMBIO vNeón: Input oscuro -->
+                        <input type="text" id="prestamo-alumno-search" placeholder="Escriba el nombre del alumno..." class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500">
+                        <div id="prestamo-search-results" class="search-results-container hidden absolute z-10 w-full">
                         </div>
                     </div>
-                    <div class="mt-4 p-4 border border-blue-200 rounded-lg bg-blue-50">
-                        <h4 class="text-base font-semibold text-blue-800 mb-3">
+                    <!-- CAMBIO vNeón: Fondos oscuros, texto claro -->
+                    <div class="mt-4 p-4 border border-cyan-500/30 rounded-lg bg-cyan-900/20">
+                        <h4 class="text-base font-semibold text-cyan-300 mb-3">
                             Paquetes de Préstamo
-                            <span id="tesoreria-saldo-prestamo" class="text-sm text-blue-600 ml-2 font-normal float-right">
+                            <span id="tesoreria-saldo-prestamo" class="text-sm text-cyan-400 ml-2 font-normal float-right">
                             </span>
                         </h4>
                         <div id="prestamo-paquetes-container" class="space-y-3">
-                            <div class="text-sm text-gray-500">Seleccione un alumno para ver las opciones de préstamo.</div>
+                            <div class="text-sm text-gray-400">Seleccione un alumno para ver las opciones de préstamo.</div>
                         </div>
                     </div>
                 </div>
                 <div id="tab-depositos" class="tab-content hidden">
                     <div class="mb-4 relative">
-                        <label for="deposito-alumno-search" class="block text-sm font-medium text-gray-700 mb-1">
+                        <!-- CAMBIO vNeón: Texto claro -->
+                        <label for="deposito-alumno-search" class="block text-sm font-medium text-gray-300 mb-1">
                             Buscar Alumno
-                            <span id="deposito-alumno-saldo" class="text-xs text-gray-500 ml-2 font-normal"></span>
+                            <span id="deposito-alumno-saldo" class="text-xs text-gray-400 ml-2 font-normal"></span>
                         </label>
-                        <input type="text" id="deposito-alumno-search" placeholder="Escriba el nombre del alumno..." class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <div id="deposito-search-results" class="search-results-container hidden absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
+                        <!-- CAMBIO vNeón: Input oscuro -->
+                        <input type="text" id="deposito-alumno-search" placeholder="Escriba el nombre del alumno..." class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500">
+                        <div id="deposito-search-results" class="search-results-container hidden absolute z-10 w-full">
                         </div>
                     </div>
-                    <div class="mt-4 p-4 border border-green-200 rounded-lg bg-green-50">
-                        <h4 class="text-base font-semibold text-green-800 mb-3">
+                    <!-- CAMBIO vNeón: Fondos oscuros, texto claro -->
+                    <div class="mt-4 p-4 border border-lime-500/30 rounded-lg bg-lime-900/20">
+                        <h4 class="text-base font-semibold text-lime-300 mb-3">
                             Certificados de Depósito a Plazo
-                            <span id="deposito-info-tesoreria" class="text-sm text-green-600 ml-2 font-normal float-right">
+                            <span id="deposito-info-tesoreria" class="text-sm text-lime-400 ml-2 font-normal float-right">
                             </span>
                         </h4>
                         <div id="deposito-paquetes-container" class="space-y-3">
-                            <div class="text-sm text-gray-500">Seleccione un alumno para ver las opciones de depósito.</div>
+                            <div class="text-sm text-gray-400">Seleccione un alumno para ver las opciones de depósito.</div>
                         </div>
                     </div>
                 </div>
                 <div id="transaccion-status-msg" class="text-sm text-center font-medium px-6 pt-4 h-auto min-h-[1rem]">
                 </div>
             </div>
-            <div class="bg-gray-50 p-4 border-t border-gray-200 flex justify-between gap-3 flex-shrink-0">
+            <!-- CAMBIO vNeón: Fondo y borde oscuros -->
+            <div class="bg-slate-700 p-4 border-t border-slate-600 flex justify-between gap-3 flex-shrink-0">
+                <!-- CAMBIO vNeón: Botón verde oscuro -->
                 <a id="db-link-btn" href="https." target="_blank" class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-1">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3-3m0 0-3-3m-1.5 1.5H19.5" />
                     </svg>
                     Ver Base de Datos
                 </a>
-                <button id="transaccion-cancel-btn" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">Cerrar</button>
+                <!-- CAMBIO vNeón: Botón oscuro -->
+                <button id="transaccion-cancel-btn" class="px-4 py-2 bg-slate-600 text-gray-300 text-sm font-medium rounded-lg hover:bg-slate-500 transition-colors">Cerrar</button>
             </div>
         </div>
     </div>
     
     <!-- MODAL DE TRANSFERENCIAS P2P -->
-    <!-- CAMBIO v16.0: Eliminado backdrop-blur, aumentado /75 -->
-    <div id="p2p-transfer-modal" class="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <!-- Contenido... (sin cambios) -->
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg transform scale-95 transition-transform duration-300 overflow-hidden"> 
-            <div class="bg-gray-50 border-b border-gray-200">
+    <!-- CAMBIO vNeón: Fondo más oscuro, diálogo oscuro -->
+    <div id="p2p-transfer-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <!-- CAMBIO vNeón: Fondo y bordes oscuros -->
+        <div class="bg-slate-800 rounded-lg shadow-xl w-full max-w-lg transform scale-95 transition-transform duration-300 overflow-hidden"> 
+            <div class="bg-slate-700 border-b border-slate-600">
                 <div class="flex justify-between items-center p-4">
-                    <h2 class="text-lg font-semibold text-gray-900">
+                    <!-- CAMBIO vNeón: Texto claro -->
+                    <h2 class="text-lg font-semibold text-gray-100">
                         Portal de Transferencias P2P
                     </h2>
-                    <button id="p2p-modal-close-btn" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                    <button id="p2p-modal-close-btn" class="text-gray-400 hover:text-gray-200 text-2xl">&times;</button>
                 </div>
             </div>
             <div class="p-6 space-y-4">
                 <div class="relative">
-                    <label for="p2p-search-origen" class="block text-sm font-medium text-gray-700 mb-1">Tu Nombre (Remitente)</label>
-                    <input type="text" id="p2p-search-origen" placeholder="Busca tu nombre..." class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
-                    <div id="p2p-origen-results" class="search-results-container hidden absolute z-20 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
+                    <!-- CAMBIO vNeón: Texto claro, input oscuro -->
+                    <label for="p2p-search-origen" class="block text-sm font-medium text-gray-300 mb-1">Tu Nombre (Remitente)</label>
+                    <input type="text" id="p2p-search-origen" placeholder="Busca tu nombre..." class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-lime-500">
+                    <div id="p2p-origen-results" class="search-results-container hidden absolute z-20 w-full">
                     </div>
                 </div>
                 <div>
-                    <label for="p2p-clave" class="block text-sm font-medium text-gray-700 mb-1">Tu Clave P2P</label>
-                    <input type="password" id="p2p-clave" placeholder="Ingresa tu clave de 5 dígitos" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                    <!-- CAMBIO vNeón: Texto claro, input oscuro -->
+                    <label for="p2p-clave" class="block text-sm font-medium text-gray-300 mb-1">Tu Clave P2P</label>
+                    <input type="password" id="p2p-clave" placeholder="Ingresa tu clave de 5 dígitos" class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-lime-500">
                 </div>
                 <div class="relative">
-                    <label for="p2p-search-destino" class="block text-sm font-medium text-gray-700 mb-1">Enviar a (Destinatario)</label>
-                    <input type="text" id="p2p-search-destino" placeholder="Busca el nombre del destinatario..." class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
-                    <div id="p2p-destino-results" class="search-results-container hidden absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
+                    <!-- CAMBIO vNeón: Texto claro, input oscuro -->
+                    <label for="p2p-search-destino" class="block text-sm font-medium text-gray-300 mb-1">Enviar a (Destinatario)</label>
+                    <input type="text" id="p2p-search-destino" placeholder="Busca el nombre del destinatario..." class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-lime-500">
+                    <div id="p2p-destino-results" class="search-results-container hidden absolute z-10 w-full">
                     </div>
                 </div>
                 <div>
-                    <label for="p2p-cantidad" class="block text-sm font-medium text-gray-700 mb-1">Cantidad a Enviar</label>
-                    <input type="number" id="p2p-cantidad" placeholder="Ej: 1000" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                    <!-- CAMBIO vNeón: Texto claro, input oscuro -->
+                    <label for="p2p-cantidad" class="block text-sm font-medium text-gray-300 mb-1">Cantidad a Enviar</label>
+                    <input type="number" id="p2p-cantidad" placeholder="Ej: 1000" class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-lime-500">
                 </div>
-                <div id="p2p-calculo-impuesto" class="text-sm text-center text-gray-600 h-5">
+                <!-- CAMBIO vNeón: Texto claro -->
+                <div id="p2p-calculo-impuesto" class="text-sm text-center text-gray-400 h-5">
                 </div>
                 <div id="p2p-status-msg" class="text-sm text-center font-medium px-6 pt-2 h-auto min-h-[1rem]">
                 </div>
             </div>
-            <div class="bg-gray-50 p-4 border-t border-gray-200 flex justify-end gap-3 flex-shrink-0">
-                <button id="p2p-cancel-btn" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">Cerrar</button>
-                <button id="p2p-submit-btn" class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm">
+            <!-- CAMBIO vNeón: Fondo y borde oscuros -->
+            <div class="bg-slate-700 p-4 border-t border-slate-600 flex justify-end gap-3 flex-shrink-0">
+                <!-- CAMBIO vNeón: Botón oscuro -->
+                <button id="p2p-cancel-btn" class="px-4 py-2 bg-slate-600 text-gray-300 text-sm font-medium rounded-lg hover:bg-slate-500 transition-colors">Cerrar</button>
+                <!-- CAMBIO vNeón: Botón lima -->
+                <button id="p2p-submit-btn" class="px-4 py-2 bg-lime-500 text-lime-900 text-sm font-medium rounded-lg hover:bg-lime-600 transition-colors shadow-sm shadow-lime-500/10">
                     <span id="p2p-btn-text">Realizar Transferencia</span>
                 </button>
             </div>
@@ -413,74 +482,75 @@
 
 
     <!-- Modal de Reglas -->
-    <!-- CAMBIO v16.0: Eliminado backdrop-blur, aumentado /75 -->
-    <div id="reglas-modal" class="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <!-- CAMBIO 3 (REGLAS): Contenido completamente rediseñado -->
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-5xl transform scale-95 transition-transform duration-300">
+    <!-- CAMBIO vNeón: Fondo más oscuro, diálogo oscuro -->
+    <div id="reglas-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <!-- CAMBIO vNeón: Fondo oscuro -->
+        <div class="bg-slate-800 rounded-lg shadow-xl w-full max-w-5xl transform scale-95 transition-transform duration-300">
             <div class="p-6 md:p-8">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-semibold text-gray-900">Reglas y Economía del Banco</h2>
-                    <button id="reglas-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                    <!-- CAMBIO vNeón: Texto claro -->
+                    <h2 class="text-xl font-semibold text-gray-100">Reglas y Economía del Banco</h2>
+                    <button id="reglas-modal-close" class="text-gray-400 hover:text-gray-200 text-2xl">&times;</button>
                 </div>
                 
                 <!-- Contenedor scrollable con nuevo layout -->
-                <div class="space-y-6 max-h-[70vh] overflow-y-auto pr-4 text-gray-700 no-scrollbar">
+                <!-- CAMBIO vNeón: Texto claro -->
+                <div class="space-y-6 max-h-[70vh] overflow-y-auto pr-4 text-gray-300 no-scrollbar">
 
                     <!-- Sección 1: Tesorería -->
                     <div class="space-y-3">
-                        <h4 class="text-lg font-semibold text-gray-800 border-b pb-2">Economía Cerrada y Tesorería</h4>
-                        <p class="text-gray-600 text-justify">
+                        <!-- CAMBIO vNeón: Texto y borde claros -->
+                        <h4 class="text-lg font-semibold text-gray-100 border-b border-slate-700 pb-2">Economía Cerrada y Tesorería</h4>
+                        <p class="text-gray-300 text-justify">
                             El Banco (Tesorería) es la única entidad que puede crear Pinceles. Todas las acciones del administrador que implican entregar Pinceles (como otorgar préstamos o pagar intereses de depósitos) están estrictamente limitadas por el saldo disponible en la Tesorería.
                         </p>
-                        <p class="text-gray-600 text-justify">
+                        <p class="text-gray-300 text-justify">
                             La Tesorería genera ingresos (ganancias) a través de múltiples fuentes automatizadas para mantener la economía saludable:
                         </p>
                         <!-- Bloque de Ingresos de Tesorería -->
-                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-2">
-                            <p class="text-sm text-gray-700"><strong class="font-medium text-gray-800">Impuestos P2P:</strong> Comisión del 10% sobre todas las transferencias entre alumnos.</p>
-                            <p class="text-sm text-gray-700"><strong class="font-medium text-gray-800">Intereses de Préstamos:</strong> Ganancias recibidas por el pago de cuotas e intereses de préstamos.</p>
-                            <!-- V18.1: Actualizado el texto de la regla con la nueva política -->
-                            <p class="text-sm text-gray-700"><strong class="font-medium text-gray-800">Impuesto Pasivo Progresivo (ISP):</strong> Cobro diario con escala progresiva sobre saldos altos para desincentivar la acumulación (el cobro inicia a partir de 101 ℙ).</p>
-                            <p class="text-sm text-gray-700"><strong class="font-medium text-gray-800">Impuesto a Depósitos:</strong> Cobro del 5% sobre los intereses generados por los depósitos a plazo.</p>
-                            <!-- INICIO CAMBIO: INGRESO PASIVO POR RENDIMIENTO DE INVERSIONES DE CAPITAL -->
-                            <p class="text-sm text-gray-700"><strong class="font-medium text-gray-800">Rendimiento de Inversiones de Capital:</strong> Rendimiento obtenido al invertir capital excedente para inyectar liquidez y mantener el crecimiento.</p>
-                            <!-- FIN CAMBIO -->
-                            <!-- NUEVO v16.0: Añadido ITBIS de tienda -->
-                            <p class="text-sm text-gray-700"><strong class="font-medium text-gray-800">ITBIS de Tienda:</strong> Cobro del 18% sobre todas las compras de artículos en la tienda.</p>
+                        <!-- CAMBIO vNeón: Fondo y borde oscuros -->
+                        <div class="bg-slate-700 p-4 rounded-lg border border-slate-600 space-y-2">
+                            <p class="text-sm text-gray-200"><strong class="font-medium text-gray-100">Impuestos P2P:</strong> Comisión del 10% sobre todas las transferencias entre alumnos.</p>
+                            <p class="text-sm text-gray-200"><strong class="font-medium text-gray-100">Intereses de Préstamos:</strong> Ganancias recibidas por el pago de cuotas e intereses de préstamos.</p>
+                            <p class="text-sm text-gray-200"><strong class="font-medium text-gray-100">Impuesto Pasivo Progresivo (ISP):</strong> Cobro diario con escala progresiva sobre saldos altos para desincentivar la acumulación (el cobro inicia a partir de 101 ℙ).</p>
+                            <p class="text-sm text-gray-200"><strong class="font-medium text-gray-100">Impuesto a Depósitos:</strong> Cobro del 5% sobre los intereses generados por los depósitos a plazo.</p>
+                            <p class="text-sm text-gray-200"><strong class="font-medium text-gray-100">Rendimiento de Inversiones de Capital:</strong> Rendimiento obtenido al invertir capital excedente para inyectar liquidez y mantener el crecimiento.</p>
+                            <p class="text-sm text-gray-200"><strong class="font-medium text-gray-100">ITBIS de Tienda:</strong> Cobro del 18% sobre todas las compras de artículos en la tienda.</p>
                         </div>
                     </div>
 
                     <!-- Sección 3: Préstamos -->
-                    <div class="space-y-3 pt-4 border-t">
-                        <h4 class="text-lg font-semibold text-gray-800">Préstamos Bancarios</h4>
-                        <p class="text-gray-600 text-justify">
+                    <div class="space-y-3 pt-4 border-t border-slate-700">
+                        <h4 class="text-lg font-semibold text-gray-100">Préstamos Bancarios</h4>
+                        <p class="text-gray-300 text-justify">
                             Los préstamos se otorgan desde la Tesorería y se pagan automáticamente en cuotas diarias (7, 14 o 21 días). Un alumno no puede solicitar un préstamo si ya tiene uno activo.
                         </p>
-                        <div class="bg-red-50 p-4 rounded-lg border border-red-200">
-                            <h5 class="font-semibold text-red-800 mb-1">Penalización por Mora (Préstamo Vencido)</h5>
-                            <p class="text-sm text-red-700">Si el préstamo vence y aún hay deuda, la deuda pendiente <strong class="text-red-900">aumentará un 1% CADA DÍA</strong>. Además, el sistema intentará cobrar automáticamente un 20% del saldo actual del alumno diariamente hasta saldar la deuda.</p>
+                        <!-- CAMBIO vNeón: Bloque de alerta oscuro -->
+                        <div class="bg-red-900/50 p-4 rounded-lg border border-red-500/30">
+                            <h5 class="font-semibold text-red-300 mb-1">Penalización por Mora (Préstamo Vencido)</h5>
+                            <p class="text-sm text-red-400">Si el préstamo vence y aún hay deuda, la deuda pendiente <strong class="text-red-300">aumentará un 1% CADA DÍA</strong>. Además, el sistema intentará cobrar automáticamente un 20% del saldo actual del alumno diariamente hasta saldar la deuda.</p>
                         </div>
                     </div>
 
                     <!-- Sección 4: Depósitos -->
-                    <div class="space-y-3 pt-4 border-t">
-                        <h4 class="text-lg font-semibold text-gray-800">Depósitos a Plazo</h4>
-                        <p class="text-gray-600 text-justify">
+                    <div class="space-y-3 pt-4 border-t border-slate-700">
+                        <h4 class="text-lg font-semibold text-gray-100">Depósitos a Plazo</h4>
+                        <p class="text-gray-300 text-justify">
                             Permiten a los alumnos bloquear sus Pinceles para ganar intereses fijos y garantizados. Al vencer el plazo, la Tesorería paga el monto original más el interés neto.
                         </p>
-                        <p class="text-gray-600 text-justify">
-                            <strong class="font-medium text-gray-800">Requisitos:</strong> El alumno no debe tener préstamos activos y debe poseer el saldo exacto del paquete de depósito.
+                        <p class="text-gray-300 text-justify">
+                            <strong class="font-medium text-gray-100">Requisitos:</strong> El alumno no debe tener préstamos activos y debe poseer el saldo exacto del paquete de depósito.
                         </p>
                     </div>
 
                     <!-- Sección 5: P2P -->
-                    <div class="space-y-3 pt-4 border-t">
-                        <h4 class="text-lg font-semibold text-gray-800">Transferencias P2P</h4>
-                        <p class="text-gray-600 text-justify">
+                    <div class="space-y-3 pt-4 border-t border-slate-700">
+                        <h4 class="text-lg font-semibold text-gray-100">Transferencias P2P</h4>
+                        <p class="text-gray-300 text-justify">
                             Los alumnos pueden transferirse Pinceles entre ellos usando el "Portal P2P" y su clave personal.
                         </p>
-                        <p class="text-gray-600 text-justify">
-                            <strong class="font-medium text-gray-800">Comisión:</strong> Cada transferencia tiene un impuesto fijo del <strong class="text-gray-900">10%</strong> sobre el monto enviado. Este impuesto se suma al costo total para el remitente (Ej: Para enviar 1,000 ℙ, se debitarán 1,100 ℙ de la cuenta origen).
+                        <p class="text-gray-300 text-justify">
+                            <strong class="font-medium text-gray-100">Comisión:</strong> Cada transferencia tiene un impuesto fijo del <strong class="text-gray-100">10%</strong> sobre el monto enviado. Este impuesto se suma al costo total para el remitente (Ej: Para enviar 1,000 ℙ, se debitarán 1,100 ℙ de la cuenta origen).
                         </p>
                     </div>
                 </div>
@@ -489,51 +559,57 @@
     </div>
 
     <!-- Modal de Todos los Anuncios -->
-    <!-- CAMBIO v16.0: Eliminado backdrop-blur, aumentado /75 -->
-    <div id="anuncios-modal" class="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <!-- Contenido... (sin cambios) -->
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl transform scale-95 transition-transform duration-300">
+    <!-- CAMBIO vNeón: Fondo más oscuro, diálogo oscuro -->
+    <div id="anuncios-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <!-- CAMBIO vNeón: Fondo oscuro -->
+        <div class="bg-slate-800 rounded-lg shadow-xl w-full max-w-2xl transform scale-95 transition-transform duration-300">
             <div class="p-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold text-gray-900">Todos los Anuncios</h2>
-                    <button id="anuncios-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                    <!-- CAMBIO vNeón: Texto claro -->
+                    <h2 class="text-lg font-semibold text-gray-100">Todos los Anuncios</h2>
+                    <button id="anuncios-modal-close" class="text-gray-400 hover:text-gray-200 text-2xl">&times;</button>
                 </div>
                 <div id="anuncios-modal-lista" class="max-h-[60vh] overflow-y-auto space-y-4 pr-2">
-                    <p class="text-gray-500 text-center">Cargando anuncios...</p>
+                    <!-- CAMBIO vNeón: Texto claro -->
+                    <p class="text-gray-400 text-center">Cargando anuncios...</p>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Modal de Información del Alumno -->
-    <!-- CAMBIO v16.0: Eliminado backdrop-blur, aumentado /75 -->
-    <div id="student-modal" class="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-[1002] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <div id="student-modal-content" class="bg-white rounded-lg shadow-xl w-full max-w-lg transform scale-95 transition-transform duration-300">
+    <!-- CAMBIO vNeón: Fondo más oscuro, diálogo oscuro -->
+    <div id="student-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[1002] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <!-- CAMBIO vNeón: Fondo oscuro -->
+        <div id="student-modal-content" class="bg-slate-800 rounded-lg shadow-xl w-full max-w-lg transform scale-95 transition-transform duration-300">
             <!-- Contenido se insertará aquí -->
         </div>
     </div>
 
 
     <!-- MODAL (v0.5.0): PORTAL DE BONOS -->
-    <!-- CAMBIO v16.0: Eliminado backdrop-blur, aumentado /75 -->
-    <div id="bonos-modal" class="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <!-- CAMBIO v0.5.2: Ancho aumentado a max-w-6xl -->
-        <div id="bonos-modal-dialog" class="bg-white rounded-lg shadow-xl w-full max-w-6xl transform scale-95 transition-transform duration-300 overflow-hidden">
+    <!-- CAMBIO vNeón: Fondo más oscuro, diálogo oscuro -->
+    <div id="bonos-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <!-- CAMBIO vNeón: Fondo oscuro -->
+        <div id="bonos-modal-dialog" class="bg-slate-800 rounded-lg shadow-xl w-full max-w-6xl transform scale-95 transition-transform duration-300 overflow-hidden">
             
             <!-- Encabezado y Pestañas -->
-            <div class="bg-gray-50 border-b border-gray-200">
+            <!-- CAMBIO vNeón: Fondo y borde oscuros -->
+            <div class="bg-slate-700 border-b border-slate-600">
                 <div class="flex justify-between items-center p-4">
-                    <h2 class="text-lg font-semibold text-gray-900">
+                    <!-- CAMBIO vNeón: Texto claro -->
+                    <h2 class="text-lg font-semibold text-gray-100">
                         Portal de Bonos
                     </h2>
-                    <button id="bonos-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                    <button id="bonos-modal-close" class="text-gray-400 hover:text-gray-200 text-2xl">&times;</button>
                 </div>
                 <!-- Pestañas -->
-                <div class="flex border-b border-gray-200 px-4">
-                    <button data-tab="canjear" class="bono-tab-btn active-tab px-4 py-2 text-sm font-medium border-b-2 border-blue-600 text-blue-600 transition-colors hover:bg-gray-100">
+                <!-- CAMBIO vNeón: Borde y texto oscuros -->
+                <div class="flex border-b border-slate-600 px-4">
+                    <button data-tab="canjear" class="bono-tab-btn active-tab px-4 py-2 text-sm font-medium border-b-2 border-cyan-500 text-cyan-500 transition-colors hover:bg-slate-600">
                         Canjear Bono
                     </button>
-                    <button data-tab="admin" class="bono-tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-600 transition-colors hover:bg-gray-100">
+                    <button data-tab="admin" class="bono-tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-400 transition-colors hover:bg-slate-600">
                         Configuración (Admin)
                     </button>
                 </div>
@@ -548,32 +624,38 @@
                         
                         <!-- Columna de Canje (Formulario) -->
                         <div class="lg:col-span-2 space-y-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Canjear Bono</h3>
+                            <!-- CAMBIO vNeón: Texto claro -->
+                            <h3 class="text-lg font-semibold text-gray-100">Canjear Bono</h3>
                             <!-- 1. Buscador de Alumno -->
                             <div class="relative">
-                                <label for="bono-search-alumno" class="block text-sm font-medium text-gray-700 mb-1">Tu Nombre</label>
-                                <input type="text" id="bono-search-alumno" placeholder="Busca tu nombre..." class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                <div id="bono-search-results" class="search-results-container hidden absolute z-20 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
+                                <!-- CAMBIO vNeón: Texto claro, input oscuro -->
+                                <label for="bono-search-alumno" class="block text-sm font-medium text-gray-300 mb-1">Tu Nombre</label>
+                                <input type="text" id="bono-search-alumno" placeholder="Busca tu nombre..." class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500">
+                                <div id="bono-search-results" class="search-results-container hidden absolute z-20 w-full">
                                     <!-- Resultados de búsqueda -->
                                 </div>
                             </div>
                             <!-- 2. Clave P2P -->
                             <div>
-                                <label for="bono-clave-p2p" class="block text-sm font-medium text-gray-700 mb-1">Tu Clave P2P</label>
-                                <input type="password" id="bono-clave-p2p" placeholder="Ingresa tu clave de 5 dígitos" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <!-- CAMBIO vNeón: Texto claro, input oscuro -->
+                                <label for="bono-clave-p2p" class="block text-sm font-medium text-gray-300 mb-1">Tu Clave P2P</label>
+                                <input type="password" id="bono-clave-p2p" placeholder="Ingresa tu clave de 5 dígitos" class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500">
                             </div>
                             <!-- 3. Clave del Bono -->
                             <div>
-                                <label for="bono-clave-input" class="block text-sm font-medium text-gray-700 mb-1">Clave del Bono</label>
-                                <input type="text" id="bono-clave-input" placeholder="Ej: BIENVENIDA2025" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase">
+                                <!-- CAMBIO vNeón: Texto claro, input oscuro -->
+                                <label for="bono-clave-input" class="block text-sm font-medium text-gray-300 mb-1">Clave del Bono</label>
+                                <input type="text" id="bono-clave-input" placeholder="Ej: BIENVENIDA2025" class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 uppercase">
                             </div>
                         </div>
                         
                         <!-- Columna de Lista de Bonos -->
                         <div class="lg:col-span-3">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Bonos Disponibles</h3>
+                            <!-- CAMBIO vNeón: Texto claro -->
+                            <h3 class="text-lg font-semibold text-gray-100 mb-4">Bonos Disponibles</h3>
                             <div id="bonos-lista-disponible" class="grid grid-cols-1 md:grid-cols-2 gap-3 pr-2 no-scrollbar">
-                                <p class="text-sm text-gray-500 text-center col-span-2">Cargando bonos...</p>
+                                <!-- CAMBIO vNeón: Texto claro -->
+                                <p class="text-sm text-gray-400 text-center col-span-2">Cargando bonos...</p>
                                 <!-- Bonos se insertan aquí -->
                             </div>
                         </div>
@@ -587,11 +669,14 @@
                     <!-- 1. Reja de Seguridad (Gate) -->
                     <div id="bono-admin-gate" class="w-full max-w-md mx-auto flex flex-col justify-center items-center h-full">
                         <div> <!-- Contenedor extra para centrar el contenido -->
-                            <h3 class="text-lg font-semibold text-gray-900 text-center">Acceso de Administrador</h3>
-                            <p class="text-sm text-gray-600 text-center mb-4">Ingresa la clave maestra para gestionar los bonos.</p>
+                            <!-- CAMBIO vNeón: Texto claro -->
+                            <h3 class="text-lg font-semibold text-gray-100 text-center">Acceso de Administrador</h3>
+                            <p class="text-sm text-gray-400 text-center mb-4">Ingresa la clave maestra para gestionar los bonos.</p>
                             <div class="flex items-center gap-3">
-                                <input type="password" id="bono-admin-clave" placeholder="Clave Maestra" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                <button id="bono-admin-unlock-btn" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                                <!-- CAMBIO vNeón: Input oscuro -->
+                                <input type="password" id="bono-admin-clave" placeholder="Clave Maestra" class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500">
+                                <!-- CAMBIO vNeón: Botón cian -->
+                                <button id="bono-admin-unlock-btn" class="px-4 py-2 bg-cyan-400 text-cyan-900 text-sm font-medium rounded-lg hover:bg-cyan-500 transition-colors shadow-sm shadow-cyan-400/10">
                                     Desbloquear
                                 </button>
                             </div>
@@ -603,30 +688,37 @@
                         
                         <!-- Columna 1: Formulario de Creación/Edición -->
                         <div id="bono-admin-form-container" class="lg:col-span-2">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Crear / Actualizar Bono</h3>
+                            <!-- CAMBIO vNeón: Texto claro -->
+                            <h3 class="text-lg font-semibold text-gray-100 mb-4">Crear / Actualizar Bono</h3>
                             <form id="bono-admin-form" class="space-y-4">
                                 <div>
-                                    <label for="bono-admin-clave-input" class="block text-sm font-medium text-gray-700 mb-1">Clave (ID Único)</label>
-                                    <input type="text" id="bono-admin-clave-input" placeholder="Ej: BONONUEVO" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase">
-                                    <p class="text-xs text-gray-500 mt-1">Si la clave ya existe, se actualizará el bono.</p>
+                                    <!-- CAMBIO vNeón: Texto claro, input oscuro -->
+                                    <label for="bono-admin-clave-input" class="block text-sm font-medium text-gray-300 mb-1">Clave (ID Único)</label>
+                                    <input type="text" id="bono-admin-clave-input" placeholder="Ej: BONONUEVO" class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 uppercase">
+                                    <p class="text-xs text-gray-400 mt-1">Si la clave ya existe, se actualizará el bono.</p>
                                 </div>
                                 <div>
-                                    <label for="bono-admin-nombre-input" class="block text-sm font-medium text-gray-700 mb-1">Nombre Descriptivo</label>
-                                    <input type="text" id="bono-admin-nombre-input" placeholder="Ej: Bono de Bienvenida" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <!-- CAMBIO vNeón: Texto claro, input oscuro -->
+                                    <label for="bono-admin-nombre-input" class="block text-sm font-medium text-gray-300 mb-1">Nombre Descriptivo</label>
+                                    <input type="text" id="bono-admin-nombre-input" placeholder="Ej: Bono de Bienvenida" class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500">
                                 </div>
                                 <div>
-                                    <label for="bono-admin-recompensa-input" class="block text-sm font-medium text-gray-700 mb-1">Recompensa (Pinceles)</label>
-                                    <input type="number" id="bono-admin-recompensa-input" placeholder="Ej: 5000" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <!-- CAMBIO vNeón: Texto claro, input oscuro -->
+                                    <label for="bono-admin-recompensa-input" class="block text-sm font-medium text-gray-300 mb-1">Recompensa (Pinceles)</label>
+                                    <input type="number" id="bono-admin-recompensa-input" placeholder="Ej: 5000" class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500">
                                 </div>
                                 <div>
-                                    <label for="bono-admin-usos-input" class="block text-sm font-medium text-gray-700 mb-1">Usos Totales (Lote)</label>
-                                    <input type="number" id="bono-admin-usos-input" placeholder="Ej: 100" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <!-- CAMBIO vNeón: Texto claro, input oscuro -->
+                                    <label for="bono-admin-usos-input" class="block text-sm font-medium text-gray-300 mb-1">Usos Totales (Lote)</label>
+                                    <input type="number" id="bono-admin-usos-input" placeholder="Ej: 100" class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500">
                                 </div>
                                 <div class="flex items-center justify-end gap-3 pt-2">
-                                    <button type="button" id="bono-admin-clear-btn" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
+                                    <!-- CAMBIO vNeón: Botón oscuro -->
+                                    <button type="button" id="bono-admin-clear-btn" class="px-4 py-2 bg-slate-600 text-gray-300 text-sm font-medium rounded-lg hover:bg-slate-500 transition-colors">
                                         Limpiar
                                     </button>
-                                    <button type="submit" id="bono-admin-submit-btn" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                                    <!-- CAMBIO vNeón: Botón cian -->
+                                    <button type="submit" id="bono-admin-submit-btn" class="px-4 py-2 bg-cyan-400 text-cyan-900 text-sm font-medium rounded-lg hover:bg-cyan-500 transition-colors shadow-sm shadow-cyan-400/10">
                                         Crear / Actualizar Bono
                                     </button>
                                 </div>
@@ -638,21 +730,27 @@
 
                         <!-- Columna 2: Lista de Bonos Configurados -->
                         <div id="bonos-admin-lista-container" class="lg:col-span-3">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Bonos Configurados</h3>
-                            <div class="border border-gray-200 rounded-lg">
-                                <table class="min-w-full divide-y divide-gray-200">
-                                    <thead class="bg-gray-50 sticky top-0">
+                            <!-- CAMBIO vNeón: Texto claro -->
+                            <h3 class="text-lg font-semibold text-gray-100 mb-4">Bonos Configurados</h3>
+                            <!-- CAMBIO vNeón: Borde oscuro -->
+                            <div class="border border-slate-700 rounded-lg">
+                                <table class="min-w-full divide-y divide-slate-700">
+                                    <!-- CAMBIO vNeón: Fondo oscuro -->
+                                    <thead class="bg-slate-700 sticky top-0">
                                         <tr>
-                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clave</th>
-                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Recompensa</th>
-                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Usos</th>
-                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
+                                            <!-- CAMBIO vNeón: Texto claro -->
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Clave</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Nombre</th>
+                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Recompensa</th>
+                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Usos</th>
+                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Acción</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="bonos-admin-lista" class="bg-white divide-y divide-gray-200">
+                                    <!-- CAMBIO vNeón: Fondo y borde oscuros -->
+                                    <tbody id="bonos-admin-lista" class="bg-slate-800 divide-y divide-slate-700">
                                         <tr>
-                                            <td colspan="5" class="p-4 text-center text-gray-500">Cargando bonos...</td>
+                                            <!-- CAMBIO vNeón: Texto claro -->
+                                            <td colspan="5" class="p-4 text-center text-gray-400">Cargando bonos...</td>
                                         </tr>
                                         <!-- Filas de bonos de admin -->
                                     </tbody>
@@ -666,17 +764,20 @@
             </div>
 
             <!-- Footer del Modal de Bonos -->
-            <div id="bonos-modal-footer" class="bg-gray-50 p-4 border-t border-gray-200 flex justify-between gap-3 flex-shrink-0">
+            <!-- CAMBIO vNeón: Fondo y borde oscuros -->
+            <div id="bonos-modal-footer" class="bg-slate-700 p-4 border-t border-slate-600 flex justify-between gap-3 flex-shrink-0">
                 <!-- Mensaje de estado principal -->
-                <div id="bono-status-msg" class="text-sm text-left font-medium text-red-600 h-auto min-h-[1rem] flex-1 items-center flex">
+                <div id="bono-status-msg" class="text-sm text-left font-medium text-red-400 h-auto min-h-[1rem] flex-1 items-center flex">
                     <!-- Mensajes de estado de canje -->
                 </div>
                 <!-- Botones -->
                 <div class="flex gap-3">
-                    <button id="bonos-cancel-btn" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
+                    <!-- CAMBIO vNeón: Botón oscuro -->
+                    <button id="bonos-cancel-btn" class="px-4 py-2 bg-slate-600 text-gray-300 text-sm font-medium rounded-lg hover:bg-slate-500 transition-colors">
                         Cerrar
                     </button>
-                    <button id="bono-submit-btn" class="px-4 py-2 bg-yellow-500 text-yellow-900 text-sm font-medium rounded-lg hover:bg-yellow-600 transition-colors shadow-sm hidden">
+                    <!-- CAMBIO vNeón: Botón rosa neón -->
+                    <button id="bono-submit-btn" class="px-4 py-2 bg-pink-500 text-white text-sm font-medium rounded-lg hover:bg-pink-600 transition-colors shadow-sm shadow-pink-500/10 hidden">
                         <span id="bono-btn-text">Canjear Bono</span>
                     </button>
                 </div>
@@ -688,25 +789,28 @@
     <!-- =================================================================== -->
     <!-- MODAL DE TIENDA (REDISENADO v16.0) -->
     <!-- =================================================================== -->
-    <!-- CAMBIO v16.0: Eliminado backdrop-blur, aumentado /75, z-index 1001 -->
-    <div id="tienda-modal" class="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <!-- CAMBIO v16.0: Ancho aumentado a max-w-7xl -->
-        <div id="tienda-modal-dialog" class="bg-white rounded-lg shadow-xl w-full max-w-7xl transform scale-95 transition-transform duration-300 overflow-hidden">
+    <!-- CAMBIO vNeón: Fondo más oscuro, diálogo oscuro -->
+    <div id="tienda-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <!-- CAMBIO vNeón: Fondo oscuro -->
+        <div id="tienda-modal-dialog" class="bg-slate-800 rounded-lg shadow-xl w-full max-w-7xl transform scale-95 transition-transform duration-300 overflow-hidden">
             
             <!-- Encabezado y Pestañas (NUEVO v16.0) -->
-            <div class="bg-gray-50 border-b border-gray-200">
+            <!-- CAMBIO vNeón: Fondo y borde oscuros -->
+            <div class="bg-slate-700 border-b border-slate-600">
                 <div class="flex justify-between items-center p-4">
-                    <h2 class="text-lg font-semibold text-gray-900">
+                    <!-- CAMBIO vNeón: Texto claro -->
+                    <h2 class="text-lg font-semibold text-gray-100">
                         Tienda de Artículos del Mes
                     </h2>
-                    <button id="tienda-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                    <button id="tienda-modal-close" class="text-gray-400 hover:text-gray-200 text-2xl">&times;</button>
                 </div>
                 <!-- Pestañas -->
-                <div class="flex border-b border-gray-200 px-4">
-                    <button data-tab="comprar" class="tienda-tab-btn active-tab px-4 py-2 text-sm font-medium border-b-2 border-blue-600 text-blue-600 transition-colors hover:bg-gray-100">
+                <!-- CAMBIO vNeón: Borde y texto oscuros -->
+                <div class="flex border-b border-slate-600 px-4">
+                    <button data-tab="comprar" class="tienda-tab-btn active-tab px-4 py-2 text-sm font-medium border-b-2 border-cyan-500 text-cyan-500 transition-colors hover:bg-slate-600">
                         Comprar
                     </button>
-                    <button data-tab="admin" class="tienda-tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-600 transition-colors hover:bg-gray-100">
+                    <button data-tab="admin" class="tienda-tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-400 transition-colors hover:bg-slate-600">
                         Gestión de Tienda (Admin)
                     </button>
                 </div>
@@ -716,39 +820,42 @@
             <div class="p-6">
 
                 <!-- PESTAÑA 1: COMPRAR (USUARIO) -->
-                <!-- CORRECCIÓN SALTO: Añadida clase 'tienda-tab-content' -->
                 <div id="tienda-tab-comprar" class="tienda-tab-content">
                     <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
                         
                         <!-- Columna de Info de Compra (Formulario) -->
                         <div class="lg:col-span-2 space-y-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Información del Comprador</h3>
+                            <!-- CAMBIO vNeón: Texto claro -->
+                            <h3 class="text-lg font-semibold text-gray-100">Información del Comprador</h3>
                             <!-- 1. Buscador de Alumno -->
                             <div class="relative">
-                                <label for="tienda-search-alumno" class="block text-sm font-medium text-gray-700 mb-1">Tu Nombre (Comprador)</label>
-                                <input type="text" id="tienda-search-alumno" placeholder="Busca tu nombre..." class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                <div id="tienda-search-results" class="search-results-container hidden absolute z-20 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
+                                <!-- CAMBIO vNeón: Texto claro, input oscuro -->
+                                <label for="tienda-search-alumno" class="block text-sm font-medium text-gray-300 mb-1">Tu Nombre (Comprador)</label>
+                                <input type="text" id="tienda-search-alumno" placeholder="Busca tu nombre..." class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500">
+                                <div id="tienda-search-results" class="search-results-container hidden absolute z-20 w-full">
                                     <!-- Resultados de búsqueda -->
                                 </div>
                             </div>
                             <!-- 2. Clave P2P -->
                             <div>
-                                <label for="tienda-clave-p2p" class="block text-sm font-medium text-gray-700 mb-1">Tu Clave P2P</label>
-                                <input type="password" id="tienda-clave-p2p" placeholder="Ingresa tu clave de 5 dígitos" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <!-- CAMBIO vNeón: Texto claro, input oscuro -->
+                                <label for="tienda-clave-p2p" class="block text-sm font-medium text-gray-300 mb-1">Tu Clave P2P</label>
+                                <input type="password" id="tienda-clave-p2p" placeholder="Ingresa tu clave de 5 dígitos" class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500">
                             </div>
                             <!-- 3. Mensaje de Estado de Tienda (Timer) -->
-                            <div id="tienda-timer-status" class="text-center p-3 rounded-lg bg-gray-100 text-gray-700 font-medium">
-                                <!-- Mensaje de estado del timer (abierta/cerrada) se inyectará aquí -->
+                            <!-- CAMBIO vNeón: Fondo y texto oscuros -->
+                            <div id="tienda-timer-status" class="text-center p-3 rounded-lg bg-slate-700 text-gray-300 font-medium">
                                 Cargando estado de la tienda...
                             </div>
                         </div>
                         
                         <!-- Columna de Lista de Artículos -->
                         <div class="lg:col-span-3">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Artículos del Mes</h3>
-                            <!-- CAMBIO v16.0: 2 columnas, altura fija, scroll -->
+                            <!-- CAMBIO vNeón: Texto claro -->
+                            <h3 class="text-lg font-semibold text-gray-100 mb-4">Artículos del Mes</h3>
                             <div id="tienda-items-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 h-[500px] overflow-y-auto pr-2 no-scrollbar">
-                                <p class="text-sm text-gray-500 text-center col-span-2">Cargando artículos...</p>
+                                <!-- CAMBIO vNeón: Texto claro -->
+                                <p class="text-sm text-gray-400 text-center col-span-2">Cargando artículos...</p>
                                 <!-- Artículos se insertan aquí por JS -->
                             </div>
                         </div>
@@ -757,17 +864,19 @@
                 </div>
 
                 <!-- PESTAÑA 2: GESTIÓN DE TIENDA (ADMIN) -->
-                <!-- CORRECCIÓN SALTO: Reemplazada 'h-[550px]' por 'tienda-tab-content' -->
                 <div id="tienda-tab-admin" class="tienda-tab-content hidden space-y-6 overflow-y-auto pr-2">
                     
                     <!-- 1. Reja de Seguridad (Gate) -->
                     <div id="tienda-admin-gate" class="w-full max-w-md mx-auto flex flex-col justify-center items-center h-full">
                         <div> <!-- Contenedor extra para centrar el contenido -->
-                            <h3 class="text-lg font-semibold text-gray-900 text-center">Acceso de Administrador</h3>
-                            <p class="text-sm text-gray-600 text-center mb-4">Ingresa la clave maestra para gestionar la tienda.</p>
+                            <!-- CAMBIO vNeón: Texto claro -->
+                            <h3 class="text-lg font-semibold text-gray-100 text-center">Acceso de Administrador</h3>
+                            <p class="text-sm text-gray-400 text-center mb-4">Ingresa la clave maestra para gestionar la tienda.</p>
                             <div class="flex items-center gap-3">
-                                <input type="password" id="tienda-admin-clave" placeholder="Clave Maestra" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                <button id="tienda-admin-unlock-btn" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                                <!-- CAMBIO vNeón: Input oscuro -->
+                                <input type="password" id="tienda-admin-clave" placeholder="Clave Maestra" class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500">
+                                <!-- CAMBIO vNeón: Botón cian -->
+                                <button id="tienda-admin-unlock-btn" class="px-4 py-2 bg-cyan-400 text-cyan-900 text-sm font-medium rounded-lg hover:bg-cyan-500 transition-colors shadow-sm shadow-cyan-400/10">
                                     Desbloquear
                                 </button>
                             </div>
@@ -779,39 +888,47 @@
                         
                         <!-- Columna 1: Formulario de Creación/Edición -->
                         <div id="tienda-admin-form-container" class="lg:col-span-2">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Crear / Actualizar Artículo</h3>
+                            <!-- CAMBIO vNeón: Texto claro -->
+                            <h3 class="text-lg font-semibold text-gray-100 mb-4">Crear / Actualizar Artículo</h3>
                             <form id="tienda-admin-form" class="space-y-4">
                                 <div>
-                                    <label for="tienda-admin-itemid-input" class="block text-sm font-medium text-gray-700 mb-1">ItemID (ID Único)</label>
-                                    <!-- CAMBIO v17.0: Añadido 'disabled:bg-gray-100' -->
-                                    <input type="text" id="tienda-admin-itemid-input" placeholder="Ej: exonerar_tema" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100">
-                                    <p class="text-xs text-gray-500 mt-1">Si el ID ya existe, se actualizará el artículo.</p>
+                                    <!-- CAMBIO vNeón: Texto claro, input oscuro -->
+                                    <label for="tienda-admin-itemid-input" class="block text-sm font-medium text-gray-300 mb-1">ItemID (ID Único)</label>
+                                    <input type="text" id="tienda-admin-itemid-input" placeholder="Ej: exonerar_tema" class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 disabled:bg-slate-600 disabled:opacity-70">
+                                    <p class="text-xs text-gray-400 mt-1">Si el ID ya existe, se actualizará el artículo.</p>
                                 </div>
                                 <div>
-                                    <label for="tienda-admin-nombre-input" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Artículo</label>
-                                    <input type="text" id="tienda-admin-nombre-input" placeholder="Ej: Exonerar un Tema" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <!-- CAMBIO vNeón: Texto claro, input oscuro -->
+                                    <label for="tienda-admin-nombre-input" class="block text-sm font-medium text-gray-300 mb-1">Nombre del Artículo</label>
+                                    <input type="text" id="tienda-admin-nombre-input" placeholder="Ej: Exonerar un Tema" class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500">
                                 </div>
                                 <div>
-                                    <label for="tienda-admin-desc-input" class="block text-sm font-medium text-gray-700 mb-1">Descripción (Tooltip)</label>
-                                    <textarea id="tienda-admin-desc-input" rows="3" placeholder="Ej: Permite omitir un tema..." class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                                    <!-- CAMBIO vNeón: Texto claro, input oscuro -->
+                                    <label for="tienda-admin-desc-input" class="block text-sm font-medium text-gray-300 mb-1">Descripción (Tooltip)</label>
+                                    <textarea id="tienda-admin-desc-input" rows="3" placeholder="Ej: Permite omitir un tema..." class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"></textarea>
                                 </div>
                                 <div>
-                                    <label for="tienda-admin-tipo-input" class="block text-sm font-medium text-gray-700 mb-1">Tipo / Categoría</label>
-                                    <input type="text" id="tienda-admin-tipo-input" placeholder="Ej: Académico, Privilegio, Estatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <!-- CAMBIO vNeón: Texto claro, input oscuro -->
+                                    <label for="tienda-admin-tipo-input" class="block text-sm font-medium text-gray-300 mb-1">Tipo / Categoría</label>
+                                    <input type="text" id="tienda-admin-tipo-input" placeholder="Ej: Académico, Privilegio, Estatus" class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500">
                                 </div>
                                 <div>
-                                    <label for="tienda-admin-precio-input" class="block text-sm font-medium text-gray-700 mb-1">Precio Base (Pinceles)</label>
-                                    <input type="number" id="tienda-admin-precio-input" placeholder="Ej: 200000" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <!-- CAMBIO vNeón: Texto claro, input oscuro -->
+                                    <label for="tienda-admin-precio-input" class="block text-sm font-medium text-gray-300 mb-1">Precio Base (Pinceles)</label>
+                                    <input type="number" id="tienda-admin-precio-input" placeholder="Ej: 200000" class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500">
                                 </div>
                                 <div>
-                                    <label for="tienda-admin-stock-input" class="block text-sm font-medium text-gray-700 mb-1">Stock (Lote)</label>
-                                    <input type="number" id="tienda-admin-stock-input" placeholder="Ej: 5 (o 9999 para ilimitado)" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <!-- CAMBIO vNeón: Texto claro, input oscuro -->
+                                    <label for="tienda-admin-stock-input" class="block text-sm font-medium text-gray-300 mb-1">Stock (Lote)</label>
+                                    <input type="number" id="tienda-admin-stock-input" placeholder="Ej: 5 (o 9999 para ilimitado)" class="w-full px-3 py-2 border border-slate-600 rounded-lg shadow-sm bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500">
                                 </div>
                                 <div class="flex items-center justify-end gap-3 pt-2">
-                                    <button type="button" id="tienda-admin-clear-btn" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
+                                    <!-- CAMBIO vNeón: Botón oscuro -->
+                                    <button type="button" id="tienda-admin-clear-btn" class="px-4 py-2 bg-slate-600 text-gray-300 text-sm font-medium rounded-lg hover:bg-slate-500 transition-colors">
                                         Limpiar
                                     </button>
-                                    <button type="submit" id="tienda-admin-submit-btn" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                                    <!-- CAMBIO vNeón: Botón cian -->
+                                    <button type="submit" id="tienda-admin-submit-btn" class="px-4 py-2 bg-cyan-400 text-cyan-900 text-sm font-medium rounded-lg hover:bg-cyan-500 transition-colors shadow-sm shadow-cyan-400/10">
                                         Crear / Actualizar
                                     </button>
                                 </div>
@@ -820,26 +937,27 @@
                                 </div>
                             </form>
                             
-                            <!-- NUEVO: Controles Manuales de la Tienda -->
-                            <!-- CAMBIO v17.0: Añadida línea separadora <hr> -->
-                            <div id="tienda-admin-controls-container" class="mt-6 pt-6 border-t border-gray-200">
-                                <h3 class="text-lg font-semibold text-gray-900 mb-2">Control Manual</h3>
-                                <p class="text-sm text-gray-600 mb-3">
+                            <!-- Controles Manuales de la Tienda -->
+                            <!-- CAMBIO vNeón: Borde y texto oscuros -->
+                            <div id="tienda-admin-controls-container" class="mt-6 pt-6 border-t border-slate-700">
+                                <h3 class="text-lg font-semibold text-gray-100 mb-2">Control Manual</h3>
+                                <p class="text-sm text-gray-400 mb-3">
                                     Anula el temporizador para forzar la apertura o cierre de la tienda para pruebas.
                                 </p>
-                                <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-3">
-                                    <span class="text-sm text-gray-700">Estado Actual:</span>
-                                    <!-- El JS actualizará este texto y color -->
-                                    <span id="tienda-admin-status-label" class="text-sm font-bold text-blue-600">Cargando...</span> 
+                                <!-- CAMBIO vNeón: Fondo y borde oscuros -->
+                                <div class="bg-slate-700 border border-slate-600 rounded-lg p-3 mb-3">
+                                    <span class="text-sm text-gray-300">Estado Actual:</span>
+                                    <span id="tienda-admin-status-label" class="text-sm font-bold text-cyan-400">Cargando...</span> 
                                 </div>
                                 <div class="grid grid-cols-3 gap-2">
-                                    <button type="button" id="tienda-force-open-btn" onclick="AppTransacciones.toggleStoreManual('open')" class="px-3 py-2 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm">
+                                    <!-- CAMBIO vNeón: Botones de colores -->
+                                    <button type="button" id="tienda-force-open-btn" onclick="AppTransacciones.toggleStoreManual('open')" class="px-3 py-2 bg-green-500 text-white text-xs font-medium rounded-lg hover:bg-green-600 transition-colors shadow-sm">
                                         Forzar Apertura
                                     </button>
-                                    <button type="button" id="tienda-force-close-btn" onclick="AppTransacciones.toggleStoreManual('closed')" class="px-3 py-2 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 transition-colors shadow-sm">
+                                    <button type="button" id="tienda-force-close-btn" onclick="AppTransacciones.toggleStoreManual('closed')" class="px-3 py-2 bg-red-500 text-white text-xs font-medium rounded-lg hover:bg-red-600 transition-colors shadow-sm">
                                         Forzar Cierre
                                     </button>
-                                    <button type="button" id="tienda-force-auto-btn" onclick="AppTransacciones.toggleStoreManual('auto')" class="px-3 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                                    <button type="button" id="tienda-force-auto-btn" onclick="AppTransacciones.toggleStoreManual('auto')" class="px-3 py-2 bg-cyan-400 text-cyan-900 text-xs font-medium rounded-lg hover:bg-cyan-500 transition-colors shadow-sm">
                                         Modo Automático
                                     </button>
                                 </div>
@@ -849,21 +967,26 @@
 
                         <!-- Columna 2: Lista de Artículos Configurados -->
                         <div id="tienda-admin-lista-container" class="lg:col-span-3">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Inventario Actual</h3>
-                            <div class="border border-gray-200 rounded-lg overflow-hidden">
-                                <table class="min-w-full divide-y divide-gray-200">
-                                    <thead class="bg-gray-50 sticky top-0">
+                            <!-- CAMBIO vNeón: Texto claro -->
+                            <h3 class="text-lg font-semibold text-gray-100 mb-4">Inventario Actual</h3>
+                            <!-- CAMBIO vNeón: Borde oscuro -->
+                            <div class="border border-slate-700 rounded-lg overflow-hidden">
+                                <table class="min-w-full divide-y divide-slate-700">
+                                    <!-- CAMBIO vNeón: Fondo y texto oscuros -->
+                                    <thead class="bg-slate-700 sticky top-0">
                                         <tr>
-                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Artículo</th>
-                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
-                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">ID</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Artículo</th>
+                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Precio</th>
+                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Stock</th>
+                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Acción</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="tienda-admin-lista" class="bg-white divide-y divide-gray-200">
+                                    <!-- CAMBIO vNeón: Fondo y borde oscuros -->
+                                    <tbody id="tienda-admin-lista" class="bg-slate-800 divide-y divide-slate-700">
                                         <tr>
-                                            <td colspan="5" class="p-4 text-center text-gray-500">Cargando inventario...</td>
+                                            <!-- CAMBIO vNeón: Texto claro -->
+                                            <td colspan="5" class="p-4 text-center text-gray-400">Cargando inventario...</td>
                                         </tr>
                                         <!-- Filas de admin -->
                                     </tbody>
@@ -877,14 +1000,17 @@
             </div>
 
             <!-- Footer del Modal de Tienda -->
-            <div id="tienda-modal-footer" class="bg-gray-50 p-4 border-t border-gray-200 flex justify-between gap-3 flex-shrink-0">
+            <!-- CAMBIO vNeón: Fondo y borde oscuros -->
+            <div id="tienda-modal-footer" class="bg-slate-700 p-4 border-t border-slate-600 flex justify-between gap-3 flex-shrink-0">
                 <!-- Mensaje de estado principal -->
-                <div id="tienda-status-msg" class="text-sm text-left font-medium text-red-600 h-auto min-h-[1rem] flex-1 items-center flex">
+                <!-- CAMBIO vNeón: Texto de error claro -->
+                <div id="tienda-status-msg" class="text-sm text-left font-medium text-red-400 h-auto min-h-[1rem] flex-1 items-center flex">
                     <!-- Mensajes de estado de compra -->
                 </div>
                 <!-- Botones -->
                 <div class="flex gap-3">
-                    <button id="tienda-cancel-btn" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
+                    <!-- CAMBIO vNeón: Botón oscuro -->
+                    <button id="tienda-cancel-btn" class="px-4 py-2 bg-slate-600 text-gray-300 text-sm font-medium rounded-lg hover:bg-slate-500 transition-colors">
                         Cerrar
                     </button>
                     <!-- El botón de compra está en las tarjetas -->
@@ -894,13 +1020,8 @@
         </div>
     </div>
 
-    <!-- =================================================================== -->
-    <!-- MODAL DE CONFIRMACIÓN DE TIENDA (ELIMINADO v17.0) -->
-    <!-- =================================================================== -->
-
-
     <!-- Lógica de la Aplicación -->
-    <!-- CAMBIO v18.1: Apuntando a la nueva versión de script -->
-    <script src="script.js?v=18.1" type="module" defer></script>
+    <!-- CAMBIO vNeón: Actualizada versión de script -->
+    <script src="script.js?v=19.0" type="module" defer></script>
 </body>
 </html>
