@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CAMBIO vFintech: Fondo principal claro (slate-50) -->
+<!-- CAMBIO vMonocromo: Fondo principal slate-50, fuente Inter -->
 <html lang="es" class="h-full bg-slate-50 overflow-hidden">
 <head>
     <meta charset="UTF-8">
@@ -13,49 +13,67 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏦</text></svg>">
 
     <!-- Archivo de estilos personalizados -->
-    <link rel="stylesheet" href="style.css?v=19.1">
+    <link rel="stylesheet" href="style.css?v=21.0">
+    <!-- NUEVO: Estilos para la animación de cierre del modal -->
+    <style>
+        .modal-close-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .modal-close-btn:hover {
+            color: #4f46e5; /* indigo-600 */
+            transform: rotate(90deg) scale(1.1);
+        }
+    </style>
 </head>
-<!-- CAMBIO vFintech: Texto oscuro por defecto -->
-<body class="h-full overflow-hidden text-gray-800"> 
+<!-- CAMBIO vMonocromo: Texto base slate-800 -->
+<body class="h-full overflow-hidden text-slate-800"> 
     <div id="app-container" class="flex h-full">
-        <!-- 1. Barra Lateral de Navegación (Fija y Ocultable) -->
-        <!-- CAMBIO vFintech: Fondo blanco, sombra suave -->
-        <nav id="sidebar" class="fixed top-0 left-0 h-full z-30 flex flex-col bg-white w-64 border-r border-gray-200 flex-shrink-0 transition-transform duration-300 transform -translate-x-full shadow-lg">
+        
+        <!-- Overlay para móvil -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/20 z-30 hidden transition-opacity opacity-0 lg:hidden"></div>
+
+        <!-- Zona de activación por hover -->
+        <div id="sidebar-hover-trigger" class="fixed inset-y-0 left-0 w-4 z-40 hidden lg:block"></div>
+
+        <!-- 1. Barra Lateral de Navegación -->
+        <nav id="sidebar" class="fixed inset-y-0 left-0 h-full z-50 flex flex-col bg-white w-64 border-r border-slate-200 flex-shrink-0 transition-transform duration-300 transform -translate-x-full shadow-lg">
             
             <!-- Encabezado de la Sidebar -->
-            <!-- CAMBIO vFintech: Fondo blanco -->
-            <div class="p-4 border-b border-gray-200 flex items-center justify-center bg-white">
-                <!-- CAMBIO vFintech: Acento Índigo -->
+            <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-white flex-shrink-0 h-16">
+                <!-- CAMBIO vMonocromo: Primario (Índigo) -->
                 <span class="text-xl font-extrabold text-indigo-600">BPD</span>
+                <!-- Botón de cerrar explícito para móvil -->
+                <button id="close-sidebar-btn" class="lg:hidden text-slate-400 hover:text-indigo-600 focus:outline-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
 
-            <!-- Contenedor de Grupos (se llenará dinámicamente) -->
-            <div id="sidebar-nav" class="flex-1 overflow-y-auto p-2 space-y-1 pt-4">
-                <!-- Links de "Inicio" y grupos se insertarán aquí -->
-                <div class="text-center p-4 text-gray-500 text-sm">
+            <!-- Contenedor de Grupos -->
+            <div id="sidebar-nav" class="flex-1 overflow-y-auto p-2 space-y-1 pt-4 no-scrollbar">
+                <!-- Se inyectan los botones con estilo de botón unificado -->
+                <div class="text-center p-4 text-slate-500 text-sm">
                     Cargando grupos...
                 </div>
             </div>
             
-            <!-- Footer de la Sidebar (Botón Admin y Versión) -->
-            <div class="p-2 border-t border-gray-200 bg-white flex-shrink-0 space-y-2">
-                <!-- V0.2.2: Contenedor de la Versión -->
-                <div id="app-version-container" class="text-center py-1 text-xs text-gray-400">
+            <!-- Footer de la Sidebar -->
+            <div class="p-3 border-t border-slate-200 bg-white flex-shrink-0 space-y-2">
+                <div id="app-version-container" class="text-center py-1 text-xs text-slate-400">
                     <!-- Versión se inyecta aquí -->
                 </div>
                 
-                <!-- Botón P2P -->
-                <!-- CAMBIO vFintech: Verde corporativo -->
-                <button id="p2p-portal-btn" class="p2p-btn flex items-center justify-center w-full px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors shadow-md">
+                <!-- Botón P2P (Estilo Outline Índigo) -->
+                <button id="p2p-portal-btn" class="flex items-center justify-center w-full px-4 py-2 bg-white border border-indigo-600 text-indigo-600 text-sm font-medium rounded-lg hover:bg-indigo-50 transition-colors shadow-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
                     </svg>
                     <span>Portal P2P</span>
                 </button>
                 
-                <!-- Botón de Gestión -->
-                <!-- CAMBIO vFintech: Estilo primario (Índigo) -->
-                <button id="gestion-btn" class="flex items-center justify-center w-full px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-md">
+                <!-- Botón de Gestión (Estilo Outline Índigo) -->
+                <button id="gestion-btn" class="flex items-center justify-center w-full px-4 py-2 bg-white border border-indigo-600 text-indigo-600 text-sm font-medium rounded-lg hover:bg-indigo-50 transition-colors shadow-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
@@ -65,178 +83,150 @@
         </nav>
 
         <!-- 2. Área de Contenido Principal -->
-        <div id="main-content-container" class="flex-1 flex flex-col overflow-hidden ml-0">
+        <div id="main-content-container" class="flex-1 flex flex-col overflow-hidden w-full">
             
-            <!-- Barra Superior (para Toggle y Título) -->
-            <!-- CAMBIO vFintech: Fondo blanco, sombra suave -->
-            <header class="h-16 bg-white border-b border-gray-200 flex-shrink-0 flex items-center px-4 shadow-sm">
-                <!-- Botón para ocultar/mostrar sidebar -->
-                <button id="toggle-sidebar-btn" class="p-2 -ml-2 mr-2 rounded-full text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-300">
-                    <span class="font-bold text-lg">»</span>
+            <!-- Barra Superior -->
+            <header class="h-16 bg-white border-b border-slate-200 flex-shrink-0 flex items-center px-4 shadow-sm z-10 relative">
+                <button id="toggle-sidebar-btn" class="p-2 -ml-2 mr-2 rounded-lg text-slate-600 hover:bg-slate-100 focus:outline-none">
+                    <!-- Ícono de menú (hamburguesa) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                    </svg>
                 </button>
-                <!-- Título principal (se actualiza dinámicamente) -->
-                <h1 id="main-header-title" class="text-lg font-semibold text-gray-900 truncate">
+                <!-- CAMBIO vMonocromo: Texto slate-900 -->
+                <h1 id="main-header-title" class="text-lg font-semibold text-slate-900 truncate">
                     Cargando...
                 </h1>
 
-                <!-- Indicador de Estado (Punto sin texto) -->
                 <div id="status-indicator" class="ml-auto flex items-center pr-2" title="Estado de la conexión">
-                    <div id="status-dot" class="w-3 h-3 rounded-full"></div>
+                    <div id="status-dot" class="w-3 h-3 rounded-full bg-slate-300"></div>
                 </div>
             </header>
             
             <!-- Contenido (scrollable) -->
-            <!-- CAMBIO vFintech: Fondo principal gris muy claro (slate-50) -->
             <main id="main-content-area" class="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-6 lg:p-8 overflow-x-hidden">
-                <!-- Subtítulo (para total de grupo o bienvenida) -->
-                <div id="page-subtitle" class="mb-6">
-                    <!-- Contenido se inserta aquí (Ej. "Total del Grupo: ...") -->
-                </div>
+                <div id="page-subtitle" class="mb-6"></div>
                 
-                <!-- Contenedor de la Tabla (se actualizará) -->
-                <!-- CAMBIO vFintech: Fondo blanco, sombra -->
-                <div id="table-container" class="bg-white rounded-xl shadow-lg overflow-hidden hidden">
-                    <!-- Contenido neutral o tabla de grupo irá aquí -->
+                <!-- V20.1: Este contenedor se usará como el 'listado libre' sin la estructura de tabla -->
+                <div id="table-container" class="bg-white rounded-xl shadow-lg overflow-hidden hidden p-4 space-y-0">
+                    <!-- El encabezado de la tabla se mantiene con colores gris/negro -->
+                    <div class="grid grid-cols-12 px-6 py-3 border-b border-gray-200 bg-gray-50">
+                        <div class="col-span-1 text-center text-xs font-medium text-slate-700 uppercase tracking-wider">Rank</div>
+                        <div class="col-span-8 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Nombre</div>
+                        <div class="col-span-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">Pinceles</div>
+                    </div>
+                    <!-- CAMBIO vMonocromo: Se elimina student-list-body, el contenido se inyecta directamente -->
                 </div>
 
-                <!-- Contenedor de Resumen Compacto (Solo en Home) -->
+                <!-- Contenedor de Resumen Compacto (Home) -->
                 <div id="home-stats-container" class="mb-6 hidden">
-    
-                    <!-- Títulos -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-2">
-                        <h3 class="text-base font-semibold text-gray-900">Resumen del Banco</h3>
-                        <h3 class="text-base font-semibold text-gray-900">Alumnos Destacados</h3>
+                        <!-- CAMBIO vMonocromo: Texto slate-900 -->
+                        <h3 class="text-base font-semibold text-slate-900">Resumen del Banco</h3>
+                        <h3 class="text-base font-semibold text-slate-900">Alumnos Destacados</h3>
                     </div>
                     
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    
-                        <!-- Fila 1, Col 1: Bóveda -->
+                        <!-- Card Bóveda (Se mantiene el gradiente de izquierda a derecha) -->
                         <div id="boveda-card-container" class="h-full">
-                            <!-- Bóveda Card Injected here. -->
+                            <!-- Contenido inyectado por JS -->
                         </div>
                         
-                        <!-- Fila 1, Col 2: Top 3 Grid -->
+                        <!-- Top 3 Alumnos Destacados -->
                         <div id="top-3-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <!-- Top 3 cards Injected here. -->
+                            <!-- Contenido inyectado por JS (Fondo blanco, rank Índigo, sin píldoras de color) -->
                         </div>
                         
-                        <!-- Fila 2, Col 1: Tesorería -->
+                        <!-- Card Tesorería (CAMBIO vMonocromo: Se invierte el gradiente a derecha a izquierda) -->
                         <div id="tesoreria-card-container" class="h-full">
-                            <!-- Tesorería Card Injected here. -->
+                             <!-- Contenido inyectado por JS -->
                         </div>
                         
-                        <!-- Fila 2, Col 2: Contador/Botones -->
-                        <!-- CAMBIO vFintech: Fondo blanco con sombra -->
+                        <!-- Botones Principales -->
                         <div class="flex flex-col justify-between gap-4 px-3 bg-white rounded-xl shadow-lg p-4 h-full">
                             <!-- Timer -->
-                            <div id="countdown-timer" class="flex-shrink-0 text-sm font-medium text-gray-700 flex items-baseline gap-2">
-                                <!-- CAMBIO vFintech: Acento Índigo -->
-                                <span id="days" class="text-xl font-bold text-indigo-600 w-8 text-right">00</span><span class="text-xs text-gray-500 uppercase -ml-1">Días</span>
-                                <span id="hours" class="text-xl font-bold text-indigo-600 w-8 text-right">00</span><span class="text-xs text-gray-500 uppercase -ml-1">Horas</span>
-                                <span id="minutes" class="text-xl font-bold text-indigo-600 w-8 text-right">00</span><span class="text-xs text-gray-500 uppercase -ml-1">Minutos</span>
-                                <span id="seconds" class="text-xl font-bold text-indigo-600 w-8 text-right">00</span><span class="text-xs text-gray-500 uppercase -ml-1">Segundos</span>
+                            <!-- CAMBIO vMonocromo: Texto slate-700 y Primario (Índigo) -->
+                            <div id="countdown-timer" class="flex-shrink-0 text-sm font-medium text-slate-700 flex items-baseline gap-2">
+                                <span id="days" class="text-xl font-bold text-indigo-600 w-8 text-right">00</span><span class="text-xs text-slate-500 uppercase -ml-1">Días</span>
+                                <span id="hours" class="text-xl font-bold text-indigo-600 w-8 text-right">00</span><span class="text-xs text-slate-500 uppercase -ml-1">Horas</span>
+                                <span id="minutes" class="text-xl font-bold text-indigo-600 w-8 text-right">00</span><span class="text-xs text-slate-500 uppercase -ml-1">Minutos</span>
+                                <span id="seconds" class="text-xl font-bold text-indigo-600 w-8 text-right">00</span><span class="text-xs text-slate-500 uppercase -ml-1">Segundos</span>
                             </div>
                             <!-- Mensaje -->
-                            <div id="store-message" class="hidden w-full text-center text-green-600 font-semibold">
+                            <!-- CAMBIO vMonocromo: Mensaje de tienda a Índigo -->
+                            <div id="store-message" class="hidden w-full text-center text-indigo-600 font-semibold">
                                 ¡La tienda está abierta!
                             </div>
-                            <!-- Botones -->
+                            <!-- Botones (Estilo Outline Índigo) -->
                             <div class="flex gap-3 flex-shrink-0 w-full">
-                                <!-- CAMBIO vFintech: Botón secundario con borde -->
-                                <button id="reglas-btn" class="flex-1 px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-100 transition-colors shadow-sm">
+                                <button id="reglas-btn" class="flex-1 px-4 py-2 bg-white border border-indigo-600 text-indigo-600 text-sm font-medium rounded-lg hover:bg-indigo-50 transition-colors shadow-sm">
                                     Ver Reglas
                                 </button>
-                                <!-- CAMBIO vFintech: Botón Bonos (Amarillo corporativo) -->
-                                <button id="bonos-btn" class="flex-1 px-4 py-2 bg-yellow-400 text-yellow-900 text-sm font-medium rounded-lg hover:bg-yellow-500 transition-colors shadow-sm">
+                                <button id="bonos-btn" class="flex-1 px-4 py-2 bg-white border border-indigo-600 text-indigo-600 text-sm font-medium rounded-lg hover:bg-indigo-50 transition-colors shadow-sm">
                                     Bonos
                                 </button>
-                                <!-- CAMBIO vFintech: Botón primario (Índigo) -->
-                                <button id="tienda-btn" class="flex-1 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-md">
+                                <button id="tienda-btn" class="flex-1 px-4 py-2 bg-white border border-indigo-600 text-indigo-600 text-sm font-medium rounded-lg hover:bg-indigo-50 transition-colors shadow-sm">
                                     Tienda
                                 </button>
                             </div>
                         </div>
-                    
                     </div>
                 </div>
                 
                 <!-- MÓDULOS DE HOME -->
                 <div id="home-modules-grid" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-                    
-                    <!-- Panel de "Alumnos en Riesgo" (lg:col-span-3) -->
-                    <!-- CAMBIO vFintech: Fondo blanco, sombra, bordes redondeados -->
-                    <div id="riesgo-container" class="bg-white rounded-xl shadow-lg lg:col-span-3">
-                        <h3 class="text-base font-semibold text-gray-900 p-4 border-b border-gray-200">Alumnos en Riesgo</h3>
-                        
+                    <!-- Panel de "Alumnos en Riesgo" -->
+                    <div id="riesgo-container" class="bg-white rounded-xl shadow-lg lg:col-span-6">
+                        <!-- CAMBIO vMonocromo: Título slate-900, borde slate-200 -->
+                        <h3 class="text-base font-semibold text-slate-900 p-4 border-b border-slate-200">Alumnos en Riesgo</h3>
                         <div class="overflow-x-auto">
-                            <table class="min-w-full">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap w-1/4">Grupo</th>
-                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap w-1/4">Pinceles</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="riesgo-lista" class="bg-white divide-y divide-gray-200">
-                                    <!-- Items de alumnos en riesgo se insertarán aquí -->
-                                    <tr>
-                                        <td colspan="3" class="p-4 text-sm text-gray-500 text-center">Cargando datos...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <!-- Encabezado de la lista -->
+                            <div class="grid grid-cols-3 px-4 py-2 bg-slate-50">
+                                <div class="col-span-1 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Nombre</div>
+                                <div class="col-span-1 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Grupo</div>
+                                <div class="col-span-1 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">Pinceles</div>
+                            </div>
+                            <!-- CAMBIO vMonocromo: Divisores Índigo sutil -->
+                            <div id="riesgo-lista" class="bg-white divide-y divide-indigo-100">
+                                <div colspan="3" class="p-4 text-sm text-slate-500 text-center">Cargando datos...</div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Panel de "Estadísticas Rápidas" (lg:col-span-3) -->
-                    <!-- CAMBIO vFintech: Fondo blanco, sombra, bordes redondeados -->
-                    <div id="quick-stats-container" class="bg-white rounded-xl shadow-lg lg:col-span-3">
-                        <h3 class="text-base font-semibold text-gray-900 p-4 border-b border-gray-200">Estadísticas</h3>
-                        <div id="quick-stats-list" class="p-4 space-y-3">
-                            <!-- Stats will be injected here -->
-                            <div class="text-center p-4 text-sm text-gray-500">Cargando datos...</div>
-                        </div>
-                    </div>
-
-                    <!-- Tablón de Anuncios (lg:col-span-6) -->
-                    <!-- CAMBIO vFintech: Fondo blanco, sombra, bordes redondeados -->
+                    <!-- Tablón de Anuncios -->
                     <div id="anuncios-container" class="bg-white rounded-xl shadow-lg lg:col-span-6">
-                        <div class="flex justify-between items-center p-4 border-b border-gray-200">
-                            <h3 class="text-base font-semibold text-gray-900">Tablón de Anuncios</h3>
-                            <!-- CAMBIO vFintech: Acento Índigo -->
-                            <button id="anuncios-modal-btn" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">Ver Todos</button>
+                        <div class="flex justify-between items-center p-4 border-b border-slate-200">
+                            <h3 class="text-base font-semibold text-slate-900">Tablón de Anuncios</h3>
+                            <!-- CAMBIO: Botón pequeño Outline Índigo -->
+                            <button id="anuncios-modal-btn" class="px-3 py-1 bg-white border border-indigo-600 text-indigo-600 text-xs font-medium rounded-lg hover:bg-indigo-50 transition-colors shadow-sm">Ver Todos</button>
                         </div>
-                        <ul id="anuncios-lista" class="divide-y divide-gray-100 p-4 space-y-1">
-                            <!-- Anuncios dinámicos se insertarán aquí -->
-                        </ul>
+                        <!-- CAMBIO vMonocromo: Divisor slate-100 (se mantiene neutro) -->
+                        <ul id="anuncios-lista" class="divide-y divide-slate-100 p-4 space-y-1"></ul>
                     </div>
                 </div>
 
             </main>
 
-            <!-- Copyright (Anclado al fondo del contenedor principal) -->
-            <!-- CAMBIO vFintech: Fondo de app, texto más sutil -->
-            <p id="copyright-footer" class="flex-shrink-0 bg-slate-50 p-4 text-xs text-gray-500 text-center">
+            <!-- Copyright -->
+            <!-- CAMBIO vMonocromo: Texto slate-500 -->
+            <p id="copyright-footer" class="flex-shrink-0 bg-slate-50 p-4 text-xs text-slate-500 text-center">
                 © 2025 Banco del Pincel Dorado | Desarrollado por Didac-Click Group.
             </p>
         </div>
     </div>
 
-    <!-- Overlay de Carga (Rediseñado con Animación) -->
-    <!-- CAMBIO vFintech: Fondo semi-transparente claro -->
+    <!-- Overlay de Carga -->
     <div id="loading-overlay" class="fixed inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-[10000] transition-opacity duration-300">
-        <!-- Contenedor del Título, Eslogan y Puntos -->
         <div class="text-center">
-            <!-- Título Grande y Azul -->
-            <!-- CAMBIO vFintech: Acento Índigo -->
+            <!-- CAMBIO vMonocromo: Primario (Índigo) -->
             <h1 class="text-5xl font-bold text-indigo-600 mb-2">
                 Banco del Pincel Dorado
             </h1>
-            <!-- Eslogan con Comillas -->
-            <p class="text-lg text-gray-600 mb-6">
+            <!-- CAMBIO vMonocromo: Título a color oscuro -->
+            <p class="text-lg text-slate-800 mb-6">
                 "Donde el esfuerzo académico tiene su recompensa"
             </p>
-            <!-- Animación de Puntos Pulsantes -->
-            <!-- CAMBIO vFintech: Acento Índigo -->
+            <!-- Animación de Puntos (Primario Índigo) -->
             <div class="flex justify-center items-center space-x-2">
                 <span class="w-3 h-3 bg-indigo-600 rounded-full animate-pulse-dot" style="animation-delay: 0s;"></span>
                 <span class="w-3 h-3 bg-indigo-600 rounded-full animate-pulse-dot" style="animation-delay: 0.2s;"></span>
@@ -246,702 +236,580 @@
     </div>
 
     <!-- Modal de Acceso (Clave) -->
-    <div id="gestion-modal" class="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <!-- CAMBIO vFintech: Fondo blanco -->
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform scale-95 transition-transform duration-300">
+    <!-- CAMBIO vMonocromo: Borde Índigo al modal -->
+    <div id="gestion-modal" class="fixed inset-0 bg-slate-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform scale-95 transition-transform duration-300 border-2 border-indigo-600">
             <div class="p-6">
-                <h2 class="text-lg font-semibold text-gray-900 text-center mb-4">Acceso a Administración</h2>
+                <!-- CAMBIO vMonocromo: Título a color Índigo -->
+                <h2 class="text-lg font-semibold text-indigo-700 text-center mb-4">Acceso a Administración</h2>
                 <div class="mb-4">
-                    <label for="clave-input" class="block text-sm font-medium text-gray-700 mb-1">Clave de Acceso</label>
-                    <!-- CAMBIO vFintech: Input claro, foco Índigo -->
-                    <input type="password" id="clave-input" placeholder="Ingrese su clave" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                    <label for="clave-input" class="block text-sm font-medium text-slate-700 mb-1">Clave de Acceso</label>
+                    <!-- CAMBIO vMonocromo: Foco índigo-500 -->
+                    <input type="password" id="clave-input" placeholder="Ingrese su clave" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
                 <div class="flex justify-end gap-3">
-                    <button id="modal-cancel" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">Cancelar</button>
-                    <!-- CAMBIO vFintech: Botón primario Índigo -->
-                    <button id="modal-submit" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-md">Acceder</button>
+                    <!-- CAMBIO vMonocromo: Se elimina botón "Cancelar" inferior -->
+                    <!-- CAMBIO: Estilo Outline Índigo -->
+                    <button id="modal-submit" class="px-4 py-2 bg-white border border-indigo-600 text-indigo-600 text-sm font-medium rounded-lg hover:bg-indigo-50 transition-colors shadow-sm">Acceder</button>
                 </div>
             </div>
+             <!-- CAMBIO vMonocromo: Botón X con animación -->
+            <button id="modal-cancel" class="modal-close-btn absolute top-2 right-2 text-slate-400 hover:text-indigo-600 text-2xl p-1">&times;</button>
         </div>
     </div>
     
     <!-- MODAL DE ADMINISTRACIÓN -->
-    <div id="transaccion-modal" class="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <!-- CAMBIO vFintech: Fondo blanco -->
-        <div id="transaccion-modal-dialog" class="bg-white rounded-lg shadow-xl w-full max-w-4xl transform scale-95 transition-transform duration-300 overflow-hidden"> 
-            <div class="bg-gray-50 border-b border-gray-200">
-                <div class="flex justify-between items-center p-4">
-                    <h2 class="text-lg font-semibold text-gray-900">
+    <!-- CAMBIO vMonocromo: Borde Índigo al modal -->
+    <div id="transaccion-modal" class="fixed inset-0 bg-slate-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div id="transaccion-modal-dialog" class="bg-white rounded-lg shadow-xl w-full max-w-4xl transform scale-95 transition-transform duration-300 overflow-hidden border-2 border-indigo-600"> 
+            <!-- CAMBIO vMonocromo: Fondo header slate-50, borde slate-200 -->
+            <div class="bg-slate-50 border-b border-slate-200 relative">
+                <div class="flex justify-between items-center p-4 pr-12">
+                    <!-- CAMBIO vMonocromo: Título a color Índigo -->
+                    <h2 class="text-lg font-semibold text-indigo-700">
                         Panel de Administración
                     </h2>
-                    <button id="transaccion-modal-close-btn" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
                 </div>
-                <!-- CAMBIO vFintech: Pestañas con acento Índigo -->
-                <div class="flex border-b border-gray-200 px-4">
-                    <button data-tab="transaccion" class="tab-btn active-tab px-4 py-2 text-sm font-medium border-b-2 border-indigo-600 text-indigo-600 transition-colors hover:bg-gray-100">
+                <div class="flex border-b border-slate-200 px-4 overflow-x-auto">
+                    <!-- Pestañas: Texto Índigo (activo) o Gris (inactivo) -->
+                    <button data-tab="transaccion" class="tab-btn active-tab whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 border-indigo-600 text-indigo-600 transition-colors hover:bg-slate-100">
                         Transacción Múltiple
                     </button>
-                    <button data-tab="prestamos" class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-600 transition-colors hover:bg-gray-100">
+                    <button data-tab="prestamos" class="tab-btn whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 border-transparent text-slate-700 transition-colors hover:bg-slate-100">
                         Préstamos
                     </button>
-                    <button data-tab="depositos" class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-600 transition-colors hover:bg-gray-100">
+                    <button data-tab="depositos" class="tab-btn whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 border-transparent text-slate-700 transition-colors hover:bg-slate-100">
                         Depósitos
                     </button>
+                    <button data-tab="bonos_admin" class="tab-btn whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 border-transparent text-slate-700 transition-colors hover:bg-slate-100">
+                        Bonos
+                    </button>
+                    <button data-tab="tienda_gestion" class="tab-btn whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 border-transparent text-slate-700 transition-colors hover:bg-slate-100">
+                        Tienda (Gestión)
+                    </button>
+                    <button data-tab="tienda_inventario" class="tab-btn whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 border-transparent text-slate-700 transition-colors hover:bg-slate-100">
+                        Tienda (Inventario)
+                    </button>
                 </div>
+                <!-- CAMBIO vMonocromo: Botón X con animación. Eliminado transaccion-modal-close-btn -->
+                <button id="transaccion-modal-close-btn" class="modal-close-btn absolute top-2 right-2 text-slate-400 hover:text-indigo-600 text-2xl p-1">&times;</button>
             </div>
-            <div class="p-6 max-h-[80vh] overflow-y-auto">
+
+            <div id="transaccion-modal-content-wrapper" class="p-6 h-[540px] overflow-y-auto">
+                
+                <!-- PESTAÑA 1: TRANSACCIÓN MÚLTIPLE -->
                 <div id="tab-transaccion" class="tab-content active"> 
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Grupos</label>
-                            <!-- CAMBIO vFintech: Fondo gris claro, borde normal -->
-                            <div id="transaccion-lista-grupos-container" class="w-full h-72 overflow-y-auto bg-gray-50 border border-gray-300 rounded-lg p-2 space-y-1">
-                                <span class="text-sm text-gray-500 p-2">Cargando grupos...</span>
+                            <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Grupos</label>
+                            <!-- CAMBIO vMonocromo: Fondo slate-50, borde slate-300 -->
+                            <div id="transaccion-lista-grupos-container" class="w-full h-72 overflow-y-auto bg-slate-50 border border-slate-300 rounded-lg p-2 space-y-1">
+                                <span class="text-sm text-slate-500 p-2">Cargando grupos...</span>
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Usuarios</label>
-                            <!-- CAMBIO vFintech: Fondo gris claro, borde normal -->
-                            <div id="transaccion-lista-usuarios-container" class="w-full h-72 overflow-y-auto bg-gray-50 border border-gray-300 rounded-lg p-2 space-y-1">
-                                <span class="text-sm text-gray-500 p-2">Seleccione un grupo...</span>
+                            <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Usuarios</label>
+                            <div id="transaccion-lista-usuarios-container" class="w-full h-72 overflow-y-auto bg-slate-50 border border-slate-300 rounded-lg p-2 space-y-1">
+                                <span class="text-sm text-slate-500 p-2">Seleccione un grupo...</span>
                             </div>
                         </div>
                     </div>
                     <div class="mt-4">
-                        <label for="transaccion-cantidad-input" class="block text-sm font-medium text-gray-700 mb-1">
+                        <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                        <label for="transaccion-cantidad-input" class="block text-sm font-medium text-slate-700 mb-1">
                             Cantidad (para cada usuario seleccionado)
-                            <!-- CAMBIO vFintech: Acento Índigo -->
-                            <span id="tesoreria-saldo-transaccion" class="text-xs text-indigo-600 ml-2 font-normal">
-                            </span>
+                            <!-- CAMBIO vMonocromo: Primario (Índigo) -->
+                            <span id="tesoreria-saldo-transaccion" class="text-xs text-indigo-600 ml-2 font-normal"></span>
                         </label>
-                        <!-- CAMBIO vFintech: Input claro, foco Índigo -->
-                        <input type="number" id="transaccion-cantidad-input" placeholder="Ej: 1000 o -50" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        
-                        <!-- NUEVO: Visor de cálculo de comisión -->
-                        <!-- CAMBIO vFintech: Texto gris normal -->
-                        <div id="transaccion-calculo-impuesto" class="text-xs text-gray-500 mt-1 h-4">
-                            <!-- El cálculo de la comisión aparecerá aquí -->
-                        </div>
+                        <input type="number" id="transaccion-cantidad-input" placeholder="Ej: 1000 o -50" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <div id="transaccion-calculo-impuesto" class="text-xs text-slate-500 mt-1 h-4"></div>
                     </div>
                     <div class="mt-6 flex justify-end">
-                        <!-- CAMBIO vFintech: Botón primario Índigo -->
-                        <button id="transaccion-submit-btn" data-accion="transaccion_multiple" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-md w-full md:w-auto">
+                        <!-- CAMBIO: Estilo Outline Índigo -->
+                        <button id="transaccion-submit-btn" data-accion="transaccion_multiple" class="px-4 py-2 bg-white border border-indigo-600 text-indigo-600 text-sm font-medium rounded-lg hover:bg-indigo-50 transition-colors shadow-sm w-full md:w-auto">
                             <span id="transaccion-btn-text">Realizar Transacción</span>
                         </button>
                     </div>
                 </div>
+
+                <!-- PESTAÑA 2: PRÉSTAMOS -->
                 <div id="tab-prestamos" class="tab-content hidden">
                     <div class="mb-4 relative">
-                        <label for="prestamo-alumno-search" class="block text-sm font-medium text-gray-700 mb-1">
+                        <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                        <label for="prestamo-alumno-search" class="block text-sm font-medium text-slate-700 mb-1">
                             Buscar Alumno
-                            <span id="prestamo-alumno-saldo" class="text-xs text-gray-500 ml-2 font-normal"></span>
+                            <span id="prestamo-alumno-saldo" class="text-xs text-slate-500 ml-2 font-normal"></span>
                         </label>
-                        <!-- CAMBIO vFintech: Input claro, foco Índigo -->
-                        <input type="text" id="prestamo-alumno-search" placeholder="Escriba el nombre del alumno..." class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        <div id="prestamo-search-results" class="search-results-container hidden absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
-                        </div>
+                        <input type="text" id="prestamo-alumno-search" placeholder="Escriba el nombre del alumno..." class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <div id="prestamo-search-results" class="search-results-container hidden absolute z-10 w-full bg-white border border-slate-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto"></div>
                     </div>
-                    <!-- CAMBIO vFintech: Fondo azul claro, borde azul normal -->
-                    <div class="mt-4 p-4 border border-blue-200 rounded-lg bg-blue-50">
-                        <h4 class="text-base font-semibold text-blue-800 mb-3">
+                    <!-- CAMBIO vMonocromo: Cambio de colores de alerta a Índigo/Gris -->
+                    <div class="mt-4 p-4 border border-indigo-100 rounded-lg bg-indigo-50">
+                        <!-- CAMBIO vMonocromo: Título a color Índigo -->
+                        <h4 class="text-base font-semibold text-indigo-700 mb-3">
                             Paquetes de Préstamo
-                            <!-- CAMBIO vFintech: Acento Índigo -->
-                            <span id="tesoreria-saldo-prestamo" class="text-sm text-indigo-600 ml-2 font-normal float-right">
-                            </span>
+                            <span id="tesoreria-saldo-prestamo" class="text-sm text-indigo-600 ml-2 font-normal float-right"></span>
                         </h4>
                         <div id="prestamo-paquetes-container" class="space-y-3">
-                            <div class="text-sm text-gray-500">Seleccione un alumno para ver las opciones de préstamo.</div>
+                            <div class="text-sm text-slate-500">Seleccione un alumno para ver las opciones de préstamo.</div>
                         </div>
                     </div>
                 </div>
+
+                <!-- PESTAÑA 3: DEPÓSITOS -->
                 <div id="tab-depositos" class="tab-content hidden">
                     <div class="mb-4 relative">
-                        <label for="deposito-alumno-search" class="block text-sm font-medium text-gray-700 mb-1">
+                        <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                        <label for="deposito-alumno-search" class="block text-sm font-medium text-slate-700 mb-1">
                             Buscar Alumno
-                            <span id="deposito-alumno-saldo" class="text-xs text-gray-500 ml-2 font-normal"></span>
+                            <span id="deposito-alumno-saldo" class="text-xs text-slate-500 ml-2 font-normal"></span>
                         </label>
-                        <!-- CAMBIO vFintech: Input claro, foco Índigo -->
-                        <input type="text" id="deposito-alumno-search" placeholder="Escriba el nombre del alumno..." class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        <div id="deposito-search-results" class="search-results-container hidden absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
-                        </div>
+                        <input type="text" id="deposito-alumno-search" placeholder="Escriba el nombre del alumno..." class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <div id="deposito-search-results" class="search-results-container hidden absolute z-10 w-full bg-white border border-slate-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto"></div>
                     </div>
-                    <!-- CAMBIO vFintech: Fondo verde claro, borde verde normal -->
-                    <div class="mt-4 p-4 border border-green-200 rounded-lg bg-green-50">
-                        <h4 class="text-base font-semibold text-green-800 mb-3">
+                    <!-- CAMBIO vMonocromo: Cambio de colores de alerta a Índigo/Gris -->
+                    <div class="mt-4 p-4 border border-indigo-100 rounded-lg bg-indigo-50">
+                        <!-- CAMBIO vMonocromo: Título a color Índigo -->
+                        <h4 class="text-base font-semibold text-indigo-700 mb-3">
                             Certificados de Depósito a Plazo
-                            <!-- CAMBIO vFintech: Acento Índigo -->
-                            <span id="deposito-info-tesoreria" class="text-sm text-indigo-600 ml-2 font-normal float-right">
-                            </span>
+                            <span id="deposito-info-tesoreria" class="text-sm text-indigo-600 ml-2 font-normal float-right"></span>
                         </h4>
                         <div id="deposito-paquetes-container" class="space-y-3">
-                            <div class="text-sm text-gray-500">Seleccione un alumno para ver las opciones de depósito.</div>
+                            <div class="text-sm text-slate-500">Seleccione un alumno para ver las opciones de depósito.</div>
                         </div>
                     </div>
                 </div>
-                <div id="transaccion-status-msg" class="text-sm text-center font-medium px-6 pt-4 h-auto min-h-[1rem]">
+
+                <!-- PESTAÑA 4: GESTIÓN DE BONOS -->
+                <div id="tab-bonos_admin" class="tab-content hidden">
+                     <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                        <div id="bono-admin-form-container" class="lg:col-span-2">
+                            <!-- CAMBIO vMonocromo: Título a color Índigo -->
+                            <h3 class="text-lg font-semibold text-indigo-700 mb-4">Crear / Actualizar Bono</h3>
+                            <form id="bono-admin-form" class="space-y-4">
+                                <div>
+                                    <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                                    <label for="bono-admin-clave-input" class="block text-sm font-medium text-slate-700 mb-1">Clave (ID Único)</label>
+                                    <input type="text" id="bono-admin-clave-input" placeholder="Ej: BONONUEVO" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 uppercase">
+                                    <p class="text-xs text-slate-500 mt-1">Si la clave ya existe, se actualizará el bono.</p>
+                                </div>
+                                <div>
+                                    <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                                    <label for="bono-admin-nombre-input" class="block text-sm font-medium text-slate-700 mb-1">Nombre Descriptivo</label>
+                                    <input type="text" id="bono-admin-nombre-input" placeholder="Ej: Bono de Bienvenida" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                                <div>
+                                    <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                                    <label for="bono-admin-recompensa-input" class="block text-sm font-medium text-slate-700 mb-1">Recompensa (Pinceles)</label>
+                                    <input type="number" id="bono-admin-recompensa-input" placeholder="Ej: 5000" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                                <div>
+                                    <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                                    <label for="bono-admin-usos-input" class="block text-sm font-medium text-slate-700 mb-1">Usos Totales (Lote)</label>
+                                    <input type="number" id="bono-admin-usos-input" placeholder="Ej: 100" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                                <div class="flex items-center justify-end gap-3 pt-2">
+                                    <!-- CAMBIO: Estilo Outline Índigo para "Limpiar" -->
+                                    <button type="button" id="bono-admin-clear-btn" class="px-4 py-2 bg-white border border-indigo-600 text-indigo-600 text-sm font-medium rounded-lg hover:bg-indigo-50 transition-colors shadow-sm">Limpiar</button>
+                                    <!-- CAMBIO: Estilo Outline Índigo -->
+                                    <button type="submit" id="bono-admin-submit-btn" class="px-4 py-2 bg-white border border-indigo-600 text-indigo-600 text-sm font-medium rounded-lg hover:bg-indigo-50 transition-colors shadow-sm">Crear / Actualizar Bono</button>
+                                </div>
+                                <div id="bono-admin-status-msg" class="text-sm text-center font-medium pt-2 h-auto min-h-[1rem]"></div>
+                            </form>
+                        </div>
+                        <div id="bonos-admin-lista-container" class="lg:col-span-3">
+                            <!-- CAMBIO vMonocromo: Título a color Índigo -->
+                            <h3 class="text-lg font-semibold text-indigo-700 mb-4">Bonos Configurados</h3>
+                            <div class="border border-slate-200 rounded-lg overflow-hidden">
+                                <table class="min-w-full divide-y divide-slate-200">
+                                    <thead class="bg-slate-50 sticky top-0">
+                                        <tr>
+                                            <!-- CAMBIO vMonocromo: Encabezados a color gris oscuro -->
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Clave</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Nombre</th>
+                                            <th class="px-4 py-2 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">Recompensa</th>
+                                            <th class="px-4 py-2 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">Usos</th>
+                                            <th class="px-4 py-2 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bonos-admin-lista" class="bg-white divide-y divide-slate-200">
+                                        <tr><td colspan="5" class="p-4 text-center text-slate-500">Cargando bonos...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- PESTAÑA 5: TIENDA (GESTIÓN) -->
+                <div id="tab-tienda_gestion" class="tab-content hidden">
+                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                        <div id="tienda-admin-form-container">
+                            <!-- CAMBIO vMonocromo: Título a color Índigo -->
+                            <h3 class="text-lg font-semibold text-indigo-700 mb-4">Crear / Actualizar Artículo</h3>
+                            <form id="tienda-admin-form" class="space-y-4">
+                                <div>
+                                    <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                                    <label for="tienda-admin-itemid-input" class="block text-sm font-medium text-slate-700 mb-1">ItemID (ID Único)</label>
+                                    <input type="text" id="tienda-admin-itemid-input" placeholder="Ej: exonerar_tema" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-slate-100">
+                                    <p class="text-xs text-slate-500 mt-1">Si el ID ya existe, se actualizará el artículo.</p>
+                                </div>
+                                <div>
+                                    <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                                    <label for="tienda-admin-nombre-input" class="block text-sm font-medium text-slate-700 mb-1">Nombre del Artículo</label>
+                                    <input type="text" id="tienda-admin-nombre-input" placeholder="Ej: Exonerar un Tema" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                                <div>
+                                    <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                                    <label for="tienda-admin-desc-input" class="block text-sm font-medium text-slate-700 mb-1">Descripción (Tooltip)</label>
+                                    <textarea id="tienda-admin-desc-input" rows="3" placeholder="Ej: Permite omitir un tema..." class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                                </div>
+                                <div>
+                                    <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                                    <label for="tienda-admin-tipo-input" class="block text-sm font-medium text-slate-700 mb-1">Tipo / Categoría</label>
+                                    <input type="text" id="tienda-admin-tipo-input" placeholder="Ej: Académico, Privilegio, Estatus" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                                <div>
+                                    <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                                    <label for="tienda-admin-precio-input" class="block text-sm font-medium text-slate-700 mb-1">Precio Base (Pinceles)</label>
+                                    <input type="number" id="tienda-admin-precio-input" placeholder="Ej: 200000" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                                <div>
+                                    <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                                    <label for="tienda-admin-stock-input" class="block text-sm font-medium text-slate-700 mb-1">Stock (Lote)</label>
+                                    <input type="number" id="tienda-admin-stock-input" placeholder="Ej: 5 (o 9999 para ilimitado)" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                                <div class="flex items-center justify-end gap-3 pt-2">
+                                    <!-- CAMBIO: Estilo Outline Índigo para "Limpiar" -->
+                                    <button type="button" id="tienda-admin-clear-btn" class="px-4 py-2 bg-white border border-indigo-600 text-indigo-600 text-sm font-medium rounded-lg hover:bg-indigo-50 transition-colors shadow-sm">Limpiar</button>
+                                    <!-- CAMBIO: Estilo Outline Índigo -->
+                                    <button type="submit" id="tienda-admin-submit-btn" class="px-4 py-2 bg-white border border-indigo-600 text-indigo-600 text-sm font-medium rounded-lg hover:bg-indigo-50 transition-colors shadow-sm">Crear / Actualizar</button>
+                                </div>
+                                <div id="tienda-admin-status-msg" class="text-sm text-center font-medium pt-2 h-auto min-h-[1rem]"></div>
+                            </form>
+                        </div>
+                        <div id="tienda-admin-controls-container">
+                            <!-- CAMBIO vMonocromo: Título a color Índigo -->
+                            <h3 class="text-lg font-semibold text-indigo-700 mb-2">Control Manual</h3>
+                            <!-- CAMBIO vMonocromo: Texto a color gris oscuro -->
+                            <p class="text-sm text-slate-700 mb-3">Anula el temporizador para forzar la apertura o cierre.</p>
+                            <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-3">
+                                <span class="text-sm text-slate-700">Estado Actual:</span>
+                                <!-- CAMBIO vMonocromo: Estado a color Índigo -->
+                                <span id="tienda-admin-status-label" class="text-sm font-bold text-indigo-600">Cargando...</span> 
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <!-- CAMBIO: Botones de control manual a esquema Outline Índigo -->
+                                <button type="button" id="tienda-force-open-btn" onclick="AppTransacciones.toggleStoreManual('open')" class="px-3 py-2 bg-white border border-indigo-600 text-indigo-600 text-xs font-medium rounded-lg hover:bg-indigo-50 transition-colors shadow-sm">Forzar Apertura</button>
+                                <button type="button" id="tienda-force-close-btn" onclick="AppTransacciones.toggleStoreManual('closed')" class="px-3 py-2 bg-white border border-indigo-600 text-indigo-600 text-xs font-medium rounded-lg hover:bg-indigo-50 transition-colors shadow-sm">Forzar Cierre</button>
+                                <button type="button" id="tienda-force-auto-btn" onclick="AppTransacciones.toggleStoreManual('auto')" class="px-3 py-2 bg-white border border-indigo-600 text-indigo-600 text-xs font-medium rounded-lg hover:bg-indigo-50 transition-colors shadow-sm">Modo Automático</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PESTAÑA 6: TIENDA (INVENTARIO) -->
+                <div id="tab-tienda_inventario" class="tab-content hidden">
+                    <div id="tienda-admin-lista-container">
+                        <!-- CAMBIO vMonocromo: Título a color Índigo -->
+                        <h3 class="text-lg font-semibold text-indigo-700 mb-4">Inventario Actual</h3>
+                        <div class="border border-slate-200 rounded-lg overflow-hidden">
+                            <table class="min-w-full divide-y divide-slate-200">
+                                <thead class="bg-slate-50 sticky top-0">
+                                    <tr>
+                                        <!-- CAMBIO vMonocromo: Encabezados a color gris oscuro -->
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">ID</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">Artículo</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">Precio</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">Stock</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tienda-admin-lista" class="bg-white divide-y divide-slate-200">
+                                    <tr class="text-slate-500"><td colspan="5" class="p-4 text-center">Cargando inventario...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="transaccion-status-msg" class="text-sm text-center font-medium px-6 pt-4 h-auto min-h-[1rem]"></div>
             </div>
-            <div class="bg-gray-50 p-4 border-t border-gray-200 flex justify-between gap-3 flex-shrink-0">
-                <!-- CAMBIO vFintech: Botón secundario verde -->
-                <a id="db-link-btn" href="https." target="_blank" class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm flex items-center">
+            <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-between gap-3 flex-shrink-0">
+                <!-- CAMBIO vMonocromo: Botón DB a esquema Outline Índigo -->
+                <a id="db-link-btn" href="https." target="_blank" class="px-4 py-2 bg-white border border-indigo-600 text-indigo-600 text-sm font-medium rounded-lg hover:bg-indigo-50 transition-colors shadow-sm flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-1">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3-3m0 0-3-3m-1.5 1.5H19.5" />
                     </svg>
                     Ver Base de Datos
                 </a>
-                <button id="transaccion-cancel-btn" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">Cerrar</button>
+                <!-- CAMBIO vMonocromo: Se elimina botón "Cerrar" inferior -->
+                <!-- CAMBIO vMonocromo: Se reemplaza por un botón de espacio para mantener la distribución si es necesario, aunque lo ideal es dejar un flex-end o flex-start sin el botón. -->
+                <div class="h-0 w-0"></div>
             </div>
         </div>
     </div>
     
     <!-- MODAL DE TRANSFERENCIAS P2P -->
-    <div id="p2p-transfer-modal" class="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <!-- CAMBIO vFintech: Fondo blanco -->
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg transform scale-95 transition-transform duration-300 overflow-hidden"> 
-            <div class="bg-gray-50 border-b border-gray-200">
-                <div class="flex justify-between items-center p-4">
-                    <h2 class="text-lg font-semibold text-gray-900">
+    <!-- CAMBIO vMonocromo: Borde Índigo al modal -->
+    <div id="p2p-transfer-modal" class="fixed inset-0 bg-slate-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg transform scale-95 transition-transform duration-300 overflow-hidden border-2 border-indigo-600"> 
+            <div class="bg-slate-50 border-b border-slate-200 relative">
+                <!-- CAMBIO vMonocromo: Título a color Índigo -->
+                <div class="flex justify-between items-center p-4 pr-12">
+                    <h2 class="text-lg font-semibold text-indigo-700">
                         Portal de Transferencias P2P
                     </h2>
-                    <button id="p2p-modal-close-btn" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
                 </div>
+                <!-- CAMBIO vMonocromo: Botón X con animación. Eliminado p2p-modal-close-btn -->
+                <button id="p2p-modal-close-btn" class="modal-close-btn absolute top-2 right-2 text-slate-400 hover:text-indigo-600 text-2xl p-1">&times;</button>
             </div>
             <div class="p-6 space-y-4">
                 <div class="relative">
-                    <label for="p2p-search-origen" class="block text-sm font-medium text-gray-700 mb-1">Tu Nombre (Remitente)</label>
-                    <!-- CAMBIO vFintech: Foco verde -->
-                    <input type="text" id="p2p-search-origen" placeholder="Busca tu nombre..." class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
-                    <div id="p2p-origen-results" class="search-results-container hidden absolute z-20 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
-                    </div>
+                    <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                    <label for="p2p-search-origen" class="block text-sm font-medium text-slate-700 mb-1">Tu Nombre (Remitente)</label>
+                    <!-- CAMBIO vMonocromo: Foco Índigo -->
+                    <input type="text" id="p2p-search-origen" placeholder="Busca tu nombre..." class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <div id="p2p-origen-results" class="search-results-container hidden absolute z-20 w-full bg-white border border-slate-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto"></div>
                 </div>
                 <div>
-                    <label for="p2p-clave" class="block text-sm font-medium text-gray-700 mb-1">Tu Clave P2P</label>
-                    <!-- CAMBIO vFintech: Foco verde -->
-                    <input type="password" id="p2p-clave" placeholder="Ingresa tu clave de 5 dígitos" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                    <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                    <label for="p2p-clave" class="block text-sm font-medium text-slate-700 mb-1">Tu Clave P2P</label>
+                    <!-- CAMBIO vMonocromo: Foco Índigo -->
+                    <input type="password" id="p2p-clave" placeholder="Ingresa tu clave de 5 dígitos" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
                 <div class="relative">
-                    <label for="p2p-search-destino" class="block text-sm font-medium text-gray-700 mb-1">Enviar a (Destinatario)</label>
-                    <!-- CAMBIO vFintech: Foco verde -->
-                    <input type="text" id="p2p-search-destino" placeholder="Busca el nombre del destinatario..." class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
-                    <div id="p2p-destino-results" class="search-results-container hidden absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
-                    </div>
+                    <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                    <label for="p2p-search-destino" class="block text-sm font-medium text-slate-700 mb-1">Enviar a (Destinatario)</label>
+                    <!-- CAMBIO vMonocromo: Foco Índigo -->
+                    <input type="text" id="p2p-search-destino" placeholder="Busca el nombre del destinatario..." class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <div id="p2p-destino-results" class="search-results-container hidden absolute z-10 w-full bg-white border border-slate-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto"></div>
                 </div>
                 <div>
-                    <label for="p2p-cantidad" class="block text-sm font-medium text-gray-700 mb-1">Cantidad a Enviar</label>
-                    <!-- CAMBIO vFintech: Foco verde -->
-                    <input type="number" id="p2p-cantidad" placeholder="Ej: 1000" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                    <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                    <label for="p2p-cantidad" class="block text-sm font-medium text-slate-700 mb-1">Cantidad a Enviar</label>
+                    <!-- CAMBIO vMonocromo: Foco Índigo -->
+                    <input type="number" id="p2p-cantidad" placeholder="Ej: 1000" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
-                <div id="p2p-calculo-impuesto" class="text-sm text-center text-gray-600 h-5">
-                </div>
-                <div id="p2p-status-msg" class="text-sm text-center font-medium px-6 pt-2 h-auto min-h-[1rem]">
-                </div>
+                <!-- CAMBIO vMonocromo: Texto de impuesto a color gris oscuro/Índigo -->
+                <div id="p2p-calculo-impuesto" class="text-sm text-center text-slate-700 h-5"></div>
+                <div id="p2p-status-msg" class="text-sm text-center font-medium px-6 pt-2 h-auto min-h-[1rem]"></div>
             </div>
-            <div class="bg-gray-50 p-4 border-t border-gray-200 flex justify-end gap-3 flex-shrink-0">
-                <button id="p2p-cancel-btn" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">Cerrar</button>
-                <!-- CAMBIO vFintech: Botón verde primario -->
-                <button id="p2p-submit-btn" class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors shadow-md">
+            <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-end gap-3 flex-shrink-0">
+                <!-- CAMBIO vMonocromo: Se elimina botón "Cerrar" inferior -->
+                <!-- CAMBIO: Estilo Outline Índigo -->
+                <button id="p2p-submit-btn" class="px-4 py-2 bg-white border border-indigo-600 text-indigo-600 text-sm font-medium rounded-lg hover:bg-indigo-50 transition-colors shadow-sm">
                     <span id="p2p-btn-text">Realizar Transferencia</span>
                 </button>
             </div>
         </div>
     </div>
 
-
     <!-- Modal de Reglas -->
-    <div id="reglas-modal" class="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <!-- CAMBIO vFintech: Fondo blanco -->
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-5xl transform scale-95 transition-transform duration-300">
-            <div class="p-6 md:p-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-semibold text-gray-900">Reglas y Economía del Banco</h2>
-                    <button id="reglas-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+    <!-- CAMBIO vMonocromo: Borde Índigo al modal -->
+    <div id="reglas-modal" class="fixed inset-0 bg-slate-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-5xl transform scale-95 transition-transform duration-300 border-2 border-indigo-600">
+            <div class="p-6 md:p-8 relative">
+                <!-- CAMBIO vMonocromo: Título a color Índigo -->
+                <div class="flex justify-between items-center mb-6 pr-12">
+                    <h2 class="text-xl font-semibold text-indigo-700">Reglas y Economía del Banco</h2>
                 </div>
-                
-                <!-- Contenedor scrollable con nuevo layout -->
-                <div class="space-y-6 max-h-[70vh] overflow-y-auto pr-4 text-gray-700 no-scrollbar">
-
-                    <!-- Sección 1: Tesorería -->
+                <!-- CAMBIO vMonocromo: Alertas/Warnings y texto general a esquema Índigo/Gris/Oscuro -->
+                <div class="space-y-6 max-h-[70vh] overflow-y-auto pr-4 text-slate-700 no-scrollbar">
+                    <!-- Sección Tesorería -->
                     <div class="space-y-3">
-                        <h4 class="text-lg font-semibold text-gray-800 border-b pb-2">Economía Cerrada y Tesorería</h4>
-                        <p class="text-gray-600 text-justify">
-                            El Banco (Tesorería) es la única entidad que puede crear Pinceles. Todas las acciones del administrador que implican entregar Pinceles (como otorgar préstamos o pagar intereses de depósitos) están estrictamente limitadas por el saldo disponible en la Tesorería.
+                        <h4 class="text-lg font-semibold text-slate-800 border-b border-slate-200 pb-2">Economía Cerrada y Tesorería</h4>
+                        <p class="text-slate-700 text-justify">
+                            El Banco (Tesorería) es la única entidad que puede crear Pinceles. El saldo de la Tesorería representa el capital operativo que el banco tiene disponible para préstamos y creación de valor (depósitos).
                         </p>
-                        <p class="text-gray-600 text-justify">
-                            La Tesorería genera ingresos (ganancias) a través de múltiples fuentes automatizadas para mantener la economía saludable:
-                        </p>
-                        <!-- Bloque de Ingresos de Tesorería -->
-                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-2">
-                            <p class="text-sm text-gray-700"><strong class="font-medium text-gray-800">Impuestos P2P:</strong> Comisión del 10% sobre todas las transferencias entre alumnos.</p>
-                            <p class="text-sm text-gray-700"><strong class="font-medium text-gray-800">Intereses de Préstamos:</strong> Ganancias recibidas por el pago de cuotas e intereses de préstamos.</p>
-                            <p class="text-sm text-gray-700"><strong class="font-medium text-gray-800">Impuesto Pasivo Progresivo (ISP):</strong> Cobro diario con escala progresiva sobre saldos altos para desincentivar la acumulación (el cobro inicia a partir de 101 ℙ).</p>
-                            <p class="text-sm text-gray-700"><strong class="font-medium text-gray-800">Impuesto a Depósitos:</strong> Cobro del 5% sobre los intereses generados por los depósitos a plazo.</p>
-                            <p class="text-sm text-gray-700"><strong class="font-medium text-gray-800">Rendimiento de Inversiones de Capital:</strong> Rendimiento obtenido al invertir capital excedente para inyectar liquidez y mantener el crecimiento.</p>
-                            <p class="text-sm text-gray-700"><strong class="font-medium text-gray-800">ITBIS de Tienda:</strong> Cobro del 18% sobre todas las compras de artículos en la tienda.</p>
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-2">
+                            <p class="text-sm text-slate-700"><strong class="font-medium text-slate-800">Impuestos P2P:</strong> La Tesorería cobra un impuesto del **10%** por cada transferencia P2P (de alumno a alumno). Este monto se añade al costo total de la transferencia, y se destina a la Tesorería para mantener su salud financiera.</p>
+                            <p class="text-sm text-slate-700"><strong class="font-medium text-slate-800">Impuesto a Saldos Altos:</strong> Se cobra un **0.5% diario** de impuesto a todos los alumnos con saldos positivos altos. Este impuesto busca fomentar la inversión y la redistribución, moviendo capital desde los saldos estancados hacia la Tesorería.</p>
+                            <p class="text-sm text-slate-700"><strong class="font-medium text-slate-800">Comisión de Depósito (Admin):</strong> La creación de dinero mediante depósitos administrativos tiene una comisión del **5%** que se cobra al Banco, limitando la cantidad de pinceles que pueden ser creados y entregados al alumno.</p>
                         </div>
                     </div>
-
-                    <!-- Sección 3: Préstamos -->
-                    <div class="space-y-3 pt-4 border-t">
-                        <h4 class="text-lg font-semibold text-gray-800">Préstamos Bancarios</h4>
-                        <p class="text-gray-600 text-justify">
-                            Los préstamos se otorgan desde la Tesorería y se pagan automáticamente en cuotas diarias (7, 14 o 21 días). Un alumno no puede solicitar un préstamo si ya tiene uno activo.
-                        </p>
-                        <!-- CAMBIO vFintech: Alerta roja corporativa -->
-                        <div class="bg-red-50 p-4 rounded-lg border border-red-200">
-                            <h5 class="font-semibold text-red-800 mb-1">Penalización por Mora (Préstamo Vencido)</h5>
-                            <p class="text-sm text-red-700">Si el préstamo vence y aún hay deuda, la deuda pendiente <strong class="text-red-900">aumentará un 1% CADA DÍA</strong>. Además, el sistema intentará cobrar automáticamente un 20% del saldo actual del alumno diariamente hasta saldar la deuda.</p>
+                    <!-- Sección Préstamos -->
+                    <div class="space-y-3 pt-4 border-t border-slate-200">
+                         <h4 class="text-lg font-semibold text-slate-800">Préstamos Bancarios</h4>
+                         <p class="text-slate-700 text-justify">
+                             Los préstamos son otorgados por la Tesorería. Al aceptar un préstamo, el alumno se compromete a pagar el monto principal más un interés del **25%** del principal, dividido en cuotas diarias iguales.
+                         </p>
+                         <!-- CAMBIO vMonocromo: Advertencia de Penalización a esquema Índigo -->
+                         <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                            <h5 class="font-semibold text-slate-800 mb-1">Penalización por Mora (Préstamo Vencido)</h5>
+                            <p class="text-sm text-slate-700">Si el préstamo vence y no ha sido pagado en su totalidad, el monto restante **aumentará un 1% CADA DÍA** hasta que el préstamo sea saldado. El alumno no puede pedir nuevos préstamos o depósitos mientras tenga un préstamo activo.</p>
                         </div>
                     </div>
-
-                    <!-- Sección 4: Depósitos -->
-                    <div class="space-y-3 pt-4 border-t">
-                        <h4 class="text-lg font-semibold text-gray-800">Depósitos a Plazo</h4>
-                        <p class="text-gray-600 text-justify">
-                            Permiten a los alumnos bloquear sus Pinceles para ganar intereses fijos y garantizados. Al vencer el plazo, la Tesorería paga el monto original más el interés neto.
-                        </p>
-                        <p class="text-gray-600 text-justify">
-                            <strong class="font-medium text-gray-800">Requisitos:</strong> El alumno no debe tener préstamos activos y debe poseer el saldo exacto del paquete de depósito.
-                        </p>
+                    <!-- Sección Cicla -->
+                    <div class="space-y-3 pt-4 border-t border-slate-200">
+                         <h4 class="text-lg font-semibold text-slate-800">El Grupo "Cicla"</h4>
+                         <p class="text-slate-700 text-justify">
+                             El grupo "Cicla" actúa como un programa de rescate financiero. Si el saldo de un alumno cae a cero o negativo, automáticamente será movido a este grupo.
+                         </p>
+                         <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-2">
+                            <p class="text-sm text-slate-700"><strong class="font-medium text-slate-800">Limitaciones:</strong> Los alumnos en Cicla solo pueden realizar transferencias P2P a sí mismos (para pagar deudas), no pueden realizar depósitos, y tienen acceso exclusivo al paquete de **Préstamo de Rescate** (montos más pequeños para salir de la deuda).</p>
+                        </div>
                     </div>
-
-                    <!-- Sección 5: P2P -->
-                    <div class="space-y-3 pt-4 border-t">
-                        <h4 class="text-lg font-semibold text-gray-800">Transferencias P2P</h4>
-                        <p class="text-gray-600 text-justify">
-                            Los alumnos pueden transferirse Pinceles entre ellos usando el "Portal P2P" y su clave personal.
-                        </p>
-                        <p class="text-gray-600 text-justify">
-                            <strong class="font-medium text-gray-800">Comisión:</strong> Cada transferencia tiene un impuesto fijo del <strong class="text-gray-900">10%</strong> sobre el monto enviado. Este impuesto se suma al costo total para el remitente (Ej: Para enviar 1,000 ℙ, se debitarán 1,100 ℙ de la cuenta origen).
-                        </p>
+                    <!-- Sección Tienda -->
+                    <div class="space-y-3 pt-4 border-t border-slate-200">
+                         <h4 class="text-lg font-semibold text-slate-800">Tienda y Artículos</h4>
+                         <p class="text-slate-700 text-justify">
+                            La tienda abre por un período limitado el **último jueves de cada mes**. Los artículos tienen un precio base, al cual se le añade un **18% de ITBIS** (Impuesto sobre Transferencia de Bienes Industrializados y Servicios) que es retenido por la Tesorería.
+                         </p>
+                         <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-2">
+                            <p class="text-sm text-slate-700"><strong class="font-medium text-slate-800">Coste Total:</strong> Precio Base x 1.18 = Costo Final al Alumno. Este coste siempre se redondea hacia arriba.</p>
+                        </div>
                     </div>
                 </div>
+                <!-- CAMBIO vMonocromo: Botón X con animación. Eliminado reglas-modal-close -->
+                <button id="reglas-modal-close" class="modal-close-btn absolute top-2 right-2 text-slate-400 hover:text-indigo-600 text-2xl p-1">&times;</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Todos los Anuncios -->
-    <div id="anuncios-modal" class="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <!-- CAMBIO vFintech: Fondo blanco -->
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl transform scale-95 transition-transform duration-300">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold text-gray-900">Todos los Anuncios</h2>
-                    <button id="anuncios-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+    <!-- Modal de Anuncios -->
+    <!-- CAMBIO vMonocromo: Borde Índigo al modal -->
+    <div id="anuncios-modal" class="fixed inset-0 bg-slate-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl transform scale-95 transition-transform duration-300 border-2 border-indigo-600">
+            <div class="p-6 relative">
+                <!-- CAMBIO vMonocromo: Título a color Índigo -->
+                <div class="flex justify-between items-center mb-4 pr-12">
+                    <h2 class="text-lg font-semibold text-indigo-700">Todos los Anuncios</h2>
                 </div>
                 <div id="anuncios-modal-lista" class="max-h-[60vh] overflow-y-auto space-y-4 pr-2">
-                    <p class="text-gray-500 text-center">Cargando anuncios...</p>
+                    <p class="text-slate-500 text-center">Cargando anuncios...</p>
                 </div>
+                <!-- CAMBIO vMonocromo: Botón X con animación. Eliminado anuncios-modal-close -->
+                <button id="anuncios-modal-close" class="modal-close-btn absolute top-2 right-2 text-slate-400 hover:text-indigo-600 text-2xl p-1">&times;</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Información del Alumno -->
-    <div id="student-modal" class="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-[1002] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <!-- CAMBIO vFintech: Fondo blanco -->
-        <div id="student-modal-content" class="bg-white rounded-lg shadow-xl w-full max-w-lg transform scale-95 transition-transform duration-300">
-            <!-- Contenido se insertará aquí -->
+    <!-- Modal de Alumno -->
+    <!-- CAMBIO vMonocromo: Borde Índigo al modal -->
+    <div id="student-modal" class="fixed inset-0 bg-slate-900/75 flex items-center justify-center z-[1002] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div id="student-modal-content" class="bg-white rounded-lg shadow-xl w-full max-w-lg transform scale-95 transition-transform duration-300 border-2 border-indigo-600">
+            <!-- Contenido dinámico -->
         </div>
     </div>
 
-
-    <!-- MODAL (v0.5.0): PORTAL DE BONOS -->
-    <div id="bonos-modal" class="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <!-- CAMBIO vFintech: Fondo blanco -->
-        <div id="bonos-modal-dialog" class="bg-white rounded-lg shadow-xl w-full max-w-6xl transform scale-95 transition-transform duration-300 overflow-hidden">
-            
-            <!-- Encabezado y Pestañas -->
-            <div class="bg-gray-50 border-b border-gray-200">
-                <div class="flex justify-between items-center p-4">
-                    <h2 class="text-lg font-semibold text-gray-900">
-                        Portal de Bonos
-                    </h2>
-                    <button id="bonos-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+    <!-- MODAL DE BONOS (Usuario) -->
+    <!-- CAMBIO vMonocromo: Borde Índigo al modal -->
+    <div id="bonos-modal" class="fixed inset-0 bg-slate-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div id="bonos-modal-dialog" class="bg-white rounded-lg shadow-xl w-full max-w-6xl transform scale-95 transition-transform duration-300 overflow-hidden border-2 border-indigo-600">
+            <div class="bg-slate-50 border-b border-slate-200 relative">
+                <!-- CAMBIO vMonocromo: Título a color Índigo -->
+                <div class="flex justify-between items-center p-4 pr-12">
+                    <h2 class="text-lg font-semibold text-indigo-700">Canjear Bono</h2>
                 </div>
-                <!-- CAMBIO vFintech: Pestañas con acento Índigo -->
-                <div class="flex border-b border-gray-200 px-4">
-                    <button data-tab="canjear" class="bono-tab-btn active-tab px-4 py-2 text-sm font-medium border-b-2 border-indigo-600 text-indigo-600 transition-colors hover:bg-gray-100">
-                        Canjear Bono
-                    </button>
-                    <button data-tab="admin" class="bono-tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-600 transition-colors hover:bg-gray-100">
-                        Configuración (Admin)
-                    </button>
-                </div>
+                <!-- CAMBIO vMonocromo: Botón X con animación. Eliminado bonos-modal-close -->
+                <button id="bonos-modal-close" class="modal-close-btn absolute top-2 right-2 text-slate-400 hover:text-indigo-600 text-2xl p-1">&times;</button>
             </div>
-
-            <!-- Contenedor de Pestañas (Scrollable) -->
-            <div class="p-6">
-
-                <!-- PESTAÑA 1: CANJEAR BONO (USUARIO) -->
-                <div id="bono-tab-canjear" class="bono-tab-content h-[550px] overflow-y-auto pr-2">
+            <div class="p-6 h-[550px] overflow-y-auto pr-2">
+                <div id="bono-tab-canjear">
                     <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                        
-                        <!-- Columna de Canje (Formulario) -->
                         <div class="lg:col-span-2 space-y-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Canjear Bono</h3>
-                            <!-- 1. Buscador de Alumno -->
+                            <!-- CAMBIO vMonocromo: Título a color Índigo -->
+                            <h3 class="text-lg font-semibold text-indigo-700">Información de Canje</h3>
                             <div class="relative">
-                                <label for="bono-search-alumno" class="block text-sm font-medium text-gray-700 mb-1">Tu Nombre</label>
-                                <!-- CAMBIO vFintech: Input claro, foco Índigo -->
-                                <input type="text" id="bono-search-alumno" placeholder="Busca tu nombre..." class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <div id="bono-search-results" class="search-results-container hidden absolute z-20 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
-                                    <!-- Resultados de búsqueda -->
-                                </div>
+                                <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                                <label for="bono-search-alumno" class="block text-sm font-medium text-slate-700 mb-1">Tu Nombre</label>
+                                <!-- CAMBIO vMonocromo: Foco Primario (Índigo) -->
+                                <input type="text" id="bono-search-alumno" placeholder="Busca tu nombre..." class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <div id="bono-search-results" class="search-results-container hidden absolute z-20 w-full bg-white border border-slate-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto"></div>
                             </div>
-                            <!-- 2. Clave P2P -->
                             <div>
-                                <label for="bono-clave-p2p" class="block text-sm font-medium text-gray-700 mb-1">Tu Clave P2P</label>
-                                <!-- CAMBIO vFintech: Input claro, foco Índigo -->
-                                <input type="password" id="bono-clave-p2p" placeholder="Ingresa tu clave de 5 dígitos" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                                <label for="bono-clave-p2p" class="block text-sm font-medium text-slate-700 mb-1">Tu Clave P2P</label>
+                                <input type="password" id="bono-clave-p2p" placeholder="Ingresa tu clave de 5 dígitos" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             </div>
-                            <!-- 3. Clave del Bono -->
                             <div>
-                                <label for="bono-clave-input" class="block text-sm font-medium text-gray-700 mb-1">Clave del Bono</label>
-                                <!-- CAMBIO vFintech: Input claro, foco Índigo -->
-                                <input type="text" id="bono-clave-input" placeholder="Ej: BIENVENIDA2025" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 uppercase">
+                                <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                                <label for="bono-clave-input" class="block text-sm font-medium text-slate-700 mb-1">Clave del Bono</label>
+                                <input type="text" id="bono-clave-input" placeholder="Ej: BIENVENIDA2025" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 uppercase">
                             </div>
                         </div>
-                        
-                        <!-- Columna de Lista de Bonos -->
                         <div class="lg:col-span-3">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Bonos Disponibles</h3>
+                            <!-- CAMBIO vMonocromo: Título a color Índigo -->
+                            <h3 class="text-lg font-semibold text-indigo-700 mb-4">Bonos Disponibles</h3>
                             <div id="bonos-lista-disponible" class="grid grid-cols-1 md:grid-cols-2 gap-3 pr-2 no-scrollbar">
-                                <p class="text-sm text-gray-500 text-center col-span-2">Cargando bonos...</p>
-                                <!-- Bonos se insertan aquí -->
+                                <p class="text-sm text-slate-500 text-center col-span-2">Cargando bonos...</p>
                             </div>
                         </div>
-
                     </div>
                 </div>
-
-                <!-- PESTAÑA 2: CONFIGURACIÓN (ADMIN) -->
-                <div id="bono-tab-admin" class="bono-tab-content hidden space-y-6 h-[550px] overflow-y-auto pr-2">
-                    
-                    <!-- 1. Reja de Seguridad (Gate) -->
-                    <div id="bono-admin-gate" class="w-full max-w-md mx-auto flex flex-col justify-center items-center h-full">
-                        <div> <!-- Contenedor extra para centrar el contenido -->
-                            <h3 class="text-lg font-semibold text-gray-900 text-center">Acceso de Administrador</h3>
-                            <p class="text-sm text-gray-600 text-center mb-4">Ingresa la clave maestra para gestionar los bonos.</p>
-                            <div class="flex items-center gap-3">
-                                <!-- CAMBIO vFintech: Input claro, foco Índigo -->
-                                <input type="password" id="bono-admin-clave" placeholder="Clave Maestra" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <!-- CAMBIO vFintech: Botón primario Índigo -->
-                                <button id="bono-admin-unlock-btn" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-md">
-                                    Desbloquear
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 2. Panel de Administración (Oculto por defecto) -->
-                    <div id="bono-admin-panel" class="hidden grid grid-cols-1 lg:grid-cols-5 gap-6">
-                        
-                        <!-- Columna 1: Formulario de Creación/Edición -->
-                        <div id="bono-admin-form-container" class="lg:col-span-2">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Crear / Actualizar Bono</h3>
-                            <form id="bono-admin-form" class="space-y-4">
-                                <div>
-                                    <label for="bono-admin-clave-input" class="block text-sm font-medium text-gray-700 mb-1">Clave (ID Único)</label>
-                                    <!-- CAMBIO vFintech: Input claro, foco Índigo -->
-                                    <input type="text" id="bono-admin-clave-input" placeholder="Ej: BONONUEVO" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 uppercase">
-                                    <p class="text-xs text-gray-500 mt-1">Si la clave ya existe, se actualizará el bono.</p>
-                                </div>
-                                <div>
-                                    <label for="bono-admin-nombre-input" class="block text-sm font-medium text-gray-700 mb-1">Nombre Descriptivo</label>
-                                    <!-- CAMBIO vFintech: Input claro, foco Índigo -->
-                                    <input type="text" id="bono-admin-nombre-input" placeholder="Ej: Bono de Bienvenida" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                </div>
-                                <div>
-                                    <label for="bono-admin-recompensa-input" class="block text-sm font-medium text-gray-700 mb-1">Recompensa (Pinceles)</label>
-                                    <!-- CAMBIO vFintech: Input claro, foco Índigo -->
-                                    <input type="number" id="bono-admin-recompensa-input" placeholder="Ej: 5000" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                </div>
-                                <div>
-                                    <label for="bono-admin-usos-input" class="block text-sm font-medium text-gray-700 mb-1">Usos Totales (Lote)</label>
-                                    <!-- CAMBIO vFintech: Input claro, foco Índigo -->
-                                    <input type="number" id="bono-admin-usos-input" placeholder="Ej: 100" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                </div>
-                                <div class="flex items-center justify-end gap-3 pt-2">
-                                    <button type="button" id="bono-admin-clear-btn" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
-                                        Limpiar
-                                    </button>
-                                    <!-- CAMBIO vFintech: Botón primario Índigo -->
-                                    <button type="submit" id="bono-admin-submit-btn" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-md">
-                                        Crear / Actualizar Bono
-                                    </button>
-                                </div>
-                                <div id="bono-admin-status-msg" class="text-sm text-center font-medium pt-2 h-auto min-h-[1rem]">
-                                    <!-- Mensajes de estado de admin -->
-                                </div>
-                            </form>
-                        </div>
-
-                        <!-- Columna 2: Lista de Bonos Configurados -->
-                        <div id="bonos-admin-lista-container" class="lg:col-span-3">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Bonos Configurados</h3>
-                            <div class="border border-gray-200 rounded-lg">
-                                <table class="min-w-full divide-y divide-gray-200">
-                                    <thead class="bg-gray-50 sticky top-0">
-                                        <tr>
-                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clave</th>
-                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Recompensa</th>
-                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Usos</th>
-                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="bonos-admin-lista" class="bg-white divide-y divide-gray-200">
-                                        <tr>
-                                            <td colspan="5" class="p-4 text-center text-gray-500">Cargando bonos...</td>
-                                        </tr>
-                                        <!-- Filas de bonos de admin -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
             </div>
-
-            <!-- Footer del Modal de Bonos -->
-            <div id="bonos-modal-footer" class="bg-gray-50 p-4 border-t border-gray-200 flex justify-between gap-3 flex-shrink-0">
-                <!-- Mensaje de estado principal -->
-                <div id="bono-status-msg" class="text-sm text-left font-medium text-red-600 h-auto min-h-[1rem] flex-1 items-center flex">
-                    <!-- Mensajes de estado de canje -->
-                </div>
-                <!-- Botones -->
+            <div id="bonos-modal-footer" class="bg-slate-50 p-4 border-t border-slate-200 flex justify-end gap-3 flex-shrink-0">
+                <div id="bono-status-msg" class="text-sm text-left font-medium text-indigo-600 h-auto min-h-[1rem] flex-1 items-center flex"></div>
                 <div class="flex gap-3">
-                    <button id="bonos-cancel-btn" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
-                        Cerrar
-                    </button>
-                    <!-- CAMBIO vFintech: Botón amarillo corporativo -->
-                    <button id="bono-submit-btn" class="px-4 py-2 bg-yellow-500 text-yellow-900 text-sm font-medium rounded-lg hover:bg-yellow-600 transition-colors shadow-sm hidden">
+                    <!-- CAMBIO vMonocromo: Se elimina botón "Cerrar" inferior -->
+                    <!-- CAMBIO: Estilo Outline Índigo -->
+                    <button id="bono-submit-btn" class="px-4 py-2 bg-white border border-indigo-600 text-indigo-600 text-sm font-medium rounded-lg hover:bg-indigo-50 transition-colors shadow-sm">
                         <span id="bono-btn-text">Canjear Bono</span>
                     </button>
                 </div>
             </div>
-
         </div>
     </div>
     
-    <!-- =================================================================== -->
-    <!-- MODAL DE TIENDA (REDISENADO v16.0) -->
-    <!-- =================================================================== -->
-    <div id="tienda-modal" class="fixed inset-0 bg-gray-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <!-- CAMBIO vFintech: Fondo blanco -->
-        <div id="tienda-modal-dialog" class="bg-white rounded-lg shadow-xl w-full max-w-7xl transform scale-95 transition-transform duration-300 overflow-hidden">
-            
-            <!-- Encabezado y Pestañas (NUEVO v16.0) -->
-            <div class="bg-gray-50 border-b border-gray-200">
-                <div class="flex justify-between items-center p-4">
-                    <h2 class="text-lg font-semibold text-gray-900">
-                        Tienda de Artículos del Mes
-                    </h2>
-                    <button id="tienda-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+    <!-- MODAL DE TIENDA (Usuario) -->
+    <!-- CAMBIO vMonocromo: Borde Índigo al modal -->
+    <div id="tienda-modal" class="fixed inset-0 bg-slate-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div id="tienda-modal-dialog" class="bg-white rounded-lg shadow-xl w-full max-w-7xl transform scale-95 transition-transform duration-300 overflow-hidden border-2 border-indigo-600">
+            <div class="bg-slate-50 border-b border-slate-200 relative">
+                <!-- CAMBIO vMonocromo: Título a color Índigo -->
+                <div class="flex justify-between items-center p-4 pr-12">
+                    <h2 class="text-lg font-semibold text-indigo-700">Tienda de Artículos del Mes</h2>
                 </div>
-                <!-- CAMBIO vFintech: Pestañas con acento Índigo -->
-                <div class="flex border-b border-gray-200 px-4">
-                    <button data-tab="comprar" class="tienda-tab-btn active-tab px-4 py-2 text-sm font-medium border-b-2 border-indigo-600 text-indigo-600 transition-colors hover:bg-gray-100">
-                        Comprar
-                    </button>
-                    <button data-tab="admin" class="tienda-tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-600 transition-colors hover:bg-gray-100">
-                        Gestión de Tienda (Admin)
-                    </button>
-                </div>
+                <!-- CAMBIO vMonocromo: Botón X con animación. Eliminado tienda-modal-close -->
+                <button id="tienda-modal-close" class="modal-close-btn absolute top-2 right-2 text-slate-400 hover:text-indigo-600 text-2xl p-1">&times;</button>
             </div>
-
-            <!-- Contenedor de Pestañas -->
             <div class="p-6">
-
-                <!-- PESTAÑA 1: COMPRAR (USUARIO) -->
-                <div id="tienda-tab-comprar" class="tienda-tab-content">
+                <div id="tienda-tab-comprar">
                     <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                        
-                        <!-- Columna de Info de Compra (Formulario) -->
                         <div class="lg:col-span-2 space-y-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Información del Comprador</h3>
-                            <!-- 1. Buscador de Alumno -->
+                            <!-- CAMBIO vMonocromo: Título a color Índigo -->
+                            <h3 class="text-lg font-semibold text-indigo-700">Información del Comprador</h3>
                             <div class="relative">
-                                <label for="tienda-search-alumno" class="block text-sm font-medium text-gray-700 mb-1">Tu Nombre (Comprador)</label>
-                                <!-- CAMBIO vFintech: Input claro, foco Índigo -->
-                                <input type="text" id="tienda-search-alumno" placeholder="Busca tu nombre..." class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <div id="tienda-search-results" class="search-results-container hidden absolute z-20 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
-                                    <!-- Resultados de búsqueda -->
-                                </div>
+                                <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                                <label for="tienda-search-alumno" class="block text-sm font-medium text-slate-700 mb-1">Tu Nombre</label>
+                                <!-- CAMBIO vMonocromo: Foco Primario (Índigo) -->
+                                <input type="text" id="tienda-search-alumno" placeholder="Busca tu nombre..." class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <div id="tienda-search-results" class="search-results-container hidden absolute z-20 w-full bg-white border border-slate-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto"></div>
                             </div>
-                            <!-- 2. Clave P2P -->
                             <div>
-                                <label for="tienda-clave-p2p" class="block text-sm font-medium text-gray-700 mb-1">Tu Clave P2P</label>
-                                <!-- CAMBIO vFintech: Input claro, foco Índigo -->
-                                <input type="password" id="tienda-clave-p2p" placeholder="Ingresa tu clave de 5 dígitos" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <!-- CAMBIO vMonocromo: Labels a color gris oscuro -->
+                                <label for="tienda-clave-p2p" class="block text-sm font-medium text-slate-700 mb-1">Tu Clave P2P</label>
+                                <input type="password" id="tienda-clave-p2p" placeholder="Ingresa tu clave de 5 dígitos" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             </div>
-                            <!-- 3. Mensaje de Estado de Tienda (Timer) -->
-                            <!-- CAMBIO vFintech: Fondo gris claro -->
-                            <div id="tienda-timer-status" class="text-center p-3 rounded-lg bg-gray-50 text-gray-700 font-medium">
+                            <div id="tienda-timer-status" class="text-center p-3 rounded-lg bg-slate-50 text-slate-700 font-medium border border-slate-200">
                                 Cargando estado de la tienda...
                             </div>
                         </div>
-                        
-                        <!-- Columna de Lista de Artículos -->
                         <div class="lg:col-span-3">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Artículos del Mes</h3>
-                            <!-- CAMBIO vFintech: Fondo blanco -->
-                            <div id="tienda-items-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 h-[500px] overflow-y-auto pr-2 no-scrollbar bg-white p-4 rounded-lg border border-gray-200 shadow-inner">
-                                <p class="text-sm text-gray-500 text-center col-span-2">Cargando artículos...</p>
-                                <!-- Artículos se insertan aquí por JS -->
+                            <!-- CAMBIO vMonocromo: Título a color Índigo -->
+                            <h3 class="text-lg font-semibold text-indigo-700 mb-4">Artículos del Mes</h3>
+                            <!-- CAMBIO vMonocromo: Borde slate-200 -->
+                            <div id="tienda-items-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 h-[500px] overflow-y-auto pr-2 no-scrollbar bg-white p-4 rounded-lg border border-slate-200 shadow-inner">
+                                <p class="text-sm text-slate-500 text-center col-span-2">Cargando artículos...</p>
                             </div>
                         </div>
-
                     </div>
                 </div>
-
-                <!-- PESTAÑA 2: GESTIÓN DE TIENDA (ADMIN) -->
-                <div id="tienda-tab-admin" class="tienda-tab-content hidden space-y-6 overflow-y-auto pr-2">
-                    
-                    <!-- 1. Reja de Seguridad (Gate) -->
-                    <div id="tienda-admin-gate" class="w-full max-w-md mx-auto flex flex-col justify-center items-center h-full">
-                        <div> <!-- Contenedor extra para centrar el contenido -->
-                            <h3 class="text-lg font-semibold text-gray-900 text-center">Acceso de Administrador</h3>
-                            <p class="text-sm text-gray-600 text-center mb-4">Ingresa la clave maestra para gestionar la tienda.</p>
-                            <div class="flex items-center gap-3">
-                                <!-- CAMBIO vFintech: Input claro, foco Índigo -->
-                                <input type="password" id="tienda-admin-clave" placeholder="Clave Maestra" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <!-- CAMBIO vFintech: Botón primario Índigo -->
-                                <button id="tienda-admin-unlock-btn" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-md">
-                                    Desbloquear
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 2. Panel de Administración (Oculto por defecto) -->
-                    <div id="tienda-admin-panel" class="hidden grid grid-cols-1 lg:grid-cols-5 gap-6">
-                        
-                        <!-- Columna 1: Formulario de Creación/Edición -->
-                        <div id="tienda-admin-form-container" class="lg:col-span-2">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Crear / Actualizar Artículo</h3>
-                            <form id="tienda-admin-form" class="space-y-4">
-                                <div>
-                                    <label for="tienda-admin-itemid-input" class="block text-sm font-medium text-gray-700 mb-1">ItemID (ID Único)</label>
-                                    <!-- CAMBIO vFintech: Input claro, foco Índigo -->
-                                    <input type="text" id="tienda-admin-itemid-input" placeholder="Ej: exonerar_tema" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100">
-                                    <p class="text-xs text-gray-500 mt-1">Si el ID ya existe, se actualizará el artículo.</p>
-                                </div>
-                                <div>
-                                    <label for="tienda-admin-nombre-input" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Artículo</label>
-                                    <!-- CAMBIO vFintech: Input claro, foco Índigo -->
-                                    <input type="text" id="tienda-admin-nombre-input" placeholder="Ej: Exonerar un Tema" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                </div>
-                                <div>
-                                    <label for="tienda-admin-desc-input" class="block text-sm font-medium text-gray-700 mb-1">Descripción (Tooltip)</label>
-                                    <!-- CAMBIO vFintech: Input claro, foco Índigo -->
-                                    <textarea id="tienda-admin-desc-input" rows="3" placeholder="Ej: Permite omitir un tema..." class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
-                                </div>
-                                <div>
-                                    <label for="tienda-admin-tipo-input" class="block text-sm font-medium text-gray-700 mb-1">Tipo / Categoría</label>
-                                    <!-- CAMBIO vFintech: Input claro, foco Índigo -->
-                                    <input type="text" id="tienda-admin-tipo-input" placeholder="Ej: Académico, Privilegio, Estatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                </div>
-                                <div>
-                                    <label for="tienda-admin-precio-input" class="block text-sm font-medium text-gray-700 mb-1">Precio Base (Pinceles)</label>
-                                    <!-- CAMBIO vFintech: Input claro, foco Índigo -->
-                                    <input type="number" id="tienda-admin-precio-input" placeholder="Ej: 200000" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                </div>
-                                <div>
-                                    <label for="tienda-admin-stock-input" class="block text-sm font-medium text-gray-700 mb-1">Stock (Lote)</label>
-                                    <!-- CAMBIO vFintech: Input claro, foco Índigo -->
-                                    <input type="number" id="tienda-admin-stock-input" placeholder="Ej: 5 (o 9999 para ilimitado)" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                </div>
-                                <div class="flex items-center justify-end gap-3 pt-2">
-                                    <button type="button" id="tienda-admin-clear-btn" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
-                                        Limpiar
-                                    </button>
-                                    <!-- CAMBIO vFintech: Botón primario Índigo -->
-                                    <button type="submit" id="tienda-admin-submit-btn" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-md">
-                                        Crear / Actualizar
-                                    </button>
-                                </div>
-                                <div id="tienda-admin-status-msg" class="text-sm text-center font-medium pt-2 h-auto min-h-[1rem]">
-                                    <!-- Mensajes de estado de admin -->
-                                </div>
-                            </form>
-                            
-                            <!-- Controles Manuales de la Tienda -->
-                            <div id="tienda-admin-controls-container" class="mt-6 pt-6 border-t border-gray-200">
-                                <h3 class="text-lg font-semibold text-gray-900 mb-2">Control Manual</h3>
-                                <p class="text-sm text-gray-600 mb-3">
-                                    Anula el temporizador para forzar la apertura o cierre de la tienda para pruebas.
-                                </p>
-                                <!-- CAMBIO vFintech: Fondo gris claro -->
-                                <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-3">
-                                    <span class="text-sm text-gray-700">Estado Actual:</span>
-                                    <span id="tienda-admin-status-label" class="text-sm font-bold text-indigo-600">Cargando...</span> 
-                                </div>
-                                <div class="grid grid-cols-3 gap-2">
-                                    <!-- CAMBIO vFintech: Botones de colores corporativos -->
-                                    <button type="button" id="tienda-force-open-btn" onclick="AppTransacciones.toggleStoreManual('open')" class="px-3 py-2 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm">
-                                        Forzar Apertura
-                                    </button>
-                                    <button type="button" id="tienda-force-close-btn" onclick="AppTransacciones.toggleStoreManual('closed')" class="px-3 py-2 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 transition-colors shadow-sm">
-                                        Forzar Cierre
-                                    </button>
-                                    <button type="button" id="tienda-force-auto-btn" onclick="AppTransacciones.toggleStoreManual('auto')" class="px-3 py-2 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
-                                        Modo Automático
-                                    </button>
-                                </div>
-                            </div>
-                            
-                        </div>
-
-                        <!-- Columna 2: Lista de Artículos Configurados -->
-                        <div id="tienda-admin-lista-container" class="lg:col-span-3">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Inventario Actual</h3>
-                            <div class="border border-gray-200 rounded-lg overflow-hidden">
-                                <table class="min-w-full divide-y divide-gray-200">
-                                    <thead class="bg-gray-50 sticky top-0">
-                                        <tr>
-                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Artículo</th>
-                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
-                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tienda-admin-lista" class="bg-white divide-y divide-gray-200">
-                                        <tr>
-                                            <td colspan="5" class="p-4 text-center text-gray-500">Cargando inventario...</td>
-                                        </tr>
-                                        <!-- Filas de admin -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
             </div>
-
-            <!-- Footer del Modal de Tienda -->
-            <div id="tienda-modal-footer" class="bg-gray-50 p-4 border-t border-gray-200 flex justify-between gap-3 flex-shrink-0">
-                <!-- Mensaje de estado principal -->
-                <div id="tienda-status-msg" class="text-sm text-left font-medium text-red-600 h-auto min-h-[1rem] flex-1 items-center flex">
-                    <!-- Mensajes de estado de compra -->
-                </div>
-                <!-- Botones -->
+            <div id="tienda-modal-footer" class="bg-slate-50 p-4 border-t border-slate-200 flex justify-end gap-3 flex-shrink-0">
+                <div id="tienda-status-msg" class="text-sm text-left font-medium text-indigo-600 h-auto min-h-[1rem] flex-1 items-center flex"></div>
                 <div class="flex gap-3">
-                    <button id="tienda-cancel-btn" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
-                        Cerrar
-                    </button>
-                    <!-- El botón de compra está en las tarjetas -->
+                    <!-- CAMBIO vMonocromo: Se elimina botón "Cerrar" inferior -->
                 </div>
             </div>
-
         </div>
     </div>
 
     <!-- Lógica de la Aplicación -->
-    <script src="script.js?v=19.1" type="module" defer></script>
+    <script src="script.js?v=21.0" type="module" defer></script>
 </body>
 </html>
