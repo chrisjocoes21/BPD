@@ -12,7 +12,7 @@ const AppConfig = {
     
     // CAMBIO v16.1: Actualización de versión
     APP_STATUS: 'Beta', 
-    APP_VERSION: 'v19.0 (Neón)', // ACTUALIZADO A v19.0 (Neón)
+    APP_VERSION: 'v19.1 (Fintech)', // ACTUALIZADO A v19.1 (Fintech)
     
     // CAMBIO v0.3.0: Impuesto P2P (debe coincidir con el Backend)
     IMPUESTO_P2P_TASA: 0.10, // 10%
@@ -94,7 +94,7 @@ const AppAuth = {
             claveInput.value = '';
             claveInput.classList.remove('shake', 'border-red-500');
         } else {
-            // CAMBIO vNeón: Clase de borde oscuro para el error
+            // CAMBIO vFintech: Clase de borde para el error
             claveInput.classList.add('shake', 'border-red-500'); 
             claveInput.focus();
             setTimeout(() => {
@@ -435,12 +435,13 @@ const AppUI = {
         AppUI.mostrarVersionApp();
         
         // Listeners para los buscadores (autocomplete)
+        // CAMBIO vFintech: Foco Índigo
         AppUI.setupSearchInput('prestamo-alumno-search', 'prestamo-search-results', 'prestamo', (student) => AppUI.loadPrestamoPaquetes(student ? student.nombre : null));
         AppUI.setupSearchInput('deposito-alumno-search', 'deposito-search-results', 'deposito', (student) => AppUI.loadDepositoPaquetes(student ? student.nombre : null));
         AppUI.setupSearchInput('p2p-search-origen', 'p2p-origen-results', 'p2pOrigen', AppUI.selectP2PStudent);
         AppUI.setupSearchInput('p2p-search-destino', 'p2p-destino-results', 'p2pDestino', AppUI.selectP2PStudent);
-        AppUI.setupSearchInput('bono-search-alumno', 'bono-search-results', 'bonoAlumno', AppUI.selectBonoStudent); // NUEVO v0.5.0
-        AppUI.setupSearchInput('tienda-search-alumno', 'tienda-search-results', 'tiendaAlumno', AppUI.selectTiendaStudent); // NUEVO v16.0
+        AppUI.setupSearchInput('bono-search-alumno', 'bono-search-results', 'bonoAlumno', AppUI.selectBonoStudent); // v0.5.0
+        AppUI.setupSearchInput('tienda-search-alumno', 'tienda-search-results', 'tiendaAlumno', AppUI.selectTiendaStudent); // v16.0
 
 
         // Carga inicial
@@ -466,8 +467,8 @@ const AppUI = {
 
     mostrarVersionApp: function() {
         const versionContainer = document.getElementById('app-version-container');
-        // CAMBIO vNeón: Texto claro
-        versionContainer.classList.add('text-gray-500'); 
+        // CAMBIO vFintech: Texto gris sutil
+        versionContainer.classList.add('text-gray-400'); 
         versionContainer.innerHTML = `Estado: ${AppConfig.APP_STATUS} | ${AppConfig.APP_VERSION}`;
     },
 
@@ -490,13 +491,12 @@ const AppUI = {
             document.getElementById('transaccion-lista-grupos-container').innerHTML = '';
             document.getElementById('transaccion-lista-usuarios-container').innerHTML = '';
             document.getElementById('transaccion-cantidad-input').value = "";
-            document.getElementById('transaccion-calculo-impuesto').textContent = ""; // NUEVO v0.4.2
-            document.getElementById('transaccion-status-msg').textContent = "";
+            document.getElementById('transaccion-calculo-impuesto').textContent = ""; 
             AppUI.resetSearchInput('prestamo');
             AppUI.resetSearchInput('deposito');
-            // CAMBIO vNeón: Placeholder oscuro
-            document.getElementById('prestamo-paquetes-container').innerHTML = '<div class="text-sm text-gray-400">Seleccione un alumno para ver las opciones de préstamo.</div>';
-            document.getElementById('deposito-paquetes-container').innerHTML = '<div class="text-sm text-gray-400">Seleccione un alumno para ver las opciones de depósito.</div>';
+            // CAMBIO vFintech: Placeholder gris
+            document.getElementById('prestamo-paquetes-container').innerHTML = '<div class="text-sm text-gray-500">Seleccione un alumno para ver las opciones de préstamo.</div>';
+            document.getElementById('deposito-paquetes-container').innerHTML = '<div class="text-sm text-gray-500">Seleccione un alumno para ver las opciones de depósito.</div>';
             AppState.transaccionSelectAll = {}; 
             AppTransacciones.setLoadingState(document.getElementById('transaccion-submit-btn'), document.getElementById('transaccion-btn-text'), false, 'Realizar Transacción');
         }
@@ -520,7 +520,7 @@ const AppUI = {
             document.getElementById('bono-clave-input').value = "";
             document.getElementById('bono-status-msg').textContent = "";
             AppTransacciones.setLoadingState(document.getElementById('bono-submit-btn'), document.getElementById('bono-btn-text'), false, 'Canjear Bono');
-            
+
             // Pestaña Admin
             document.getElementById('bono-admin-clave').value = "";
             AppUI.clearBonoAdminForm();
@@ -539,8 +539,8 @@ const AppUI = {
             document.getElementById('tienda-clave-p2p').value = "";
             
             // CORRECCIÓN BUG "Cargando...": Resetear al estado inicial para forzar recarga
-            // CAMBIO vNeón: Placeholder oscuro
-            document.getElementById('tienda-items-container').innerHTML = '<p class="text-sm text-gray-400 text-center col-span-2">Cargando artículos...</p>';
+            // CAMBIO vFintech: Placeholder gris
+            document.getElementById('tienda-items-container').innerHTML = '<p class="text-sm text-gray-500 text-center col-span-2">Cargando artículos...</p>';
             
             document.getElementById('tienda-status-msg').textContent = "";
             
@@ -566,18 +566,18 @@ const AppUI = {
     // Función para cambiar entre pestañas del modal de administración
     changeAdminTab: function(tabId) {
         document.querySelectorAll('#transaccion-modal .tab-btn').forEach(btn => {
-            // CAMBIO vNeón: Clases inactivas oscuras
-            btn.classList.remove('active-tab', 'border-cyan-500', 'text-cyan-500');
-            btn.classList.add('border-transparent', 'text-gray-400', 'hover:bg-slate-600');
+            // CAMBIO vFintech: Clases inactivas claras
+            btn.classList.remove('active-tab', 'border-indigo-600', 'text-indigo-600');
+            btn.classList.add('border-transparent', 'text-gray-600', 'hover:bg-gray-100');
         });
 
         document.querySelectorAll('#transaccion-modal .tab-content').forEach(content => {
             content.classList.add('hidden');
         });
 
-        // CAMBIO vNeón: Clases activas cian
-        document.querySelector(`#transaccion-modal [data-tab="${tabId}"]`).classList.add('active-tab', 'border-cyan-500', 'text-cyan-500');
-        document.querySelector(`#transaccion-modal [data-tab="${tabId}"]`).classList.remove('border-transparent', 'text-gray-400', 'hover:bg-slate-600');
+        // CAMBIO vFintech: Clases activas Índigo
+        document.querySelector(`#transaccion-modal [data-tab="${tabId}"]`).classList.add('active-tab', 'border-indigo-600', 'text-indigo-600');
+        document.querySelector(`#transaccion-modal [data-tab="${tabId}"]`).classList.remove('border-transparent', 'text-gray-600', 'hover:bg-gray-100');
         document.getElementById(`tab-${tabId}`).classList.remove('hidden');
         
         if (tabId === 'transaccion') {
@@ -650,13 +650,13 @@ const AppUI = {
 
         resultsContainer.innerHTML = '';
         if (filteredStudents.length === 0) {
-            // CAMBIO vNeón: Texto oscuro
-            resultsContainer.innerHTML = `<div class="p-2 text-sm text-gray-400">No se encontraron alumnos.</div>`;
+            // CAMBIO vFintech: Texto gris
+            resultsContainer.innerHTML = `<div class="p-2 text-sm text-gray-500">No se encontraron alumnos.</div>`;
         } else {
             filteredStudents.forEach(student => {
                 const div = document.createElement('div');
-                // CAMBIO vNeón: Fondo y texto oscuro
-                div.className = 'p-2 hover:bg-slate-600 cursor-pointer text-sm text-white';
+                // CAMBIO vFintech: Fondo y texto claro
+                div.className = 'p-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-900';
                 div.textContent = `${student.nombre} (${student.grupoNombre})`;
                 div.onclick = () => {
                     const input = document.getElementById(inputId);
@@ -730,8 +730,8 @@ const AppUI = {
         const impuesto = Math.ceil(cantidad * AppConfig.IMPUESTO_P2P_TASA);
         const total = cantidad + impuesto;
         
-        // CAMBIO vNeón: Acento lima neón
-        calculoMsg.innerHTML = `<span class="text-lime-400">Impuesto (10%): ${AppFormat.formatNumber(impuesto)} ℙ | Total a debitar: ${AppFormat.formatNumber(total)} ℙ</span>`;
+        // CAMBIO vFintech: Acento Verde
+        calculoMsg.innerHTML = `<span class="text-green-600">Impuesto (10%): ${AppFormat.formatNumber(impuesto)} ℙ | Total a debitar: ${AppFormat.formatNumber(total)} ℙ</span>`;
     },
 
     // --- FIN FUNCIONES P2P ---
@@ -769,19 +769,19 @@ const AppUI = {
     // Cambia entre pestañas en el modal de Bonos
     changeBonoTab: function(tabId) {
         document.querySelectorAll('#bonos-modal .bono-tab-btn').forEach(btn => {
-            // CAMBIO vNeón: Clases inactivas oscuras
-            btn.classList.remove('active-tab', 'border-cyan-500', 'text-cyan-500');
-            btn.classList.add('border-transparent', 'text-gray-400', 'hover:bg-slate-600');
+            // CAMBIO vFintech: Clases inactivas claras
+            btn.classList.remove('active-tab', 'border-indigo-600', 'text-indigo-600');
+            btn.classList.add('border-transparent', 'text-gray-600', 'hover:bg-gray-100');
         });
 
         document.querySelectorAll('#bonos-modal .bono-tab-content').forEach(content => {
             content.classList.add('hidden');
         });
 
-        // CAMBIO vNeón: Clases activas cian
+        // CAMBIO vFintech: Clases activas Índigo
         const activeBtn = document.querySelector(`#bonos-modal [data-tab="${tabId}"]`);
-        activeBtn.classList.add('active-tab', 'border-cyan-500', 'text-cyan-500');
-        activeBtn.classList.remove('border-transparent', 'text-gray-400', 'hover:bg-slate-600');
+        activeBtn.classList.add('active-tab', 'border-indigo-600', 'text-indigo-600');
+        activeBtn.classList.remove('border-transparent', 'text-gray-600', 'hover:bg-gray-100');
         document.getElementById(`bono-tab-${tabId}`).classList.remove('hidden');
 
         // CAMBIO v0.5.4: Ocultar/mostrar el botón de canje
@@ -811,8 +811,8 @@ const AppUI = {
         const bonosActivos = bonos.filter(b => b.usos_actuales < b.usos_totales);
 
         if (bonosActivos.length === 0) {
-            // CAMBIO vNeón: Placeholder oscuro
-            container.innerHTML = `<p class="text-sm text-gray-400 text-center col-span-1 md:col-span-2">No hay bonos disponibles en este momento.</p>`;
+            // CAMBIO vFintech: Placeholder gris
+            container.innerHTML = `<p class="text-sm text-gray-500 text-center col-span-1 md:col-span-2">No hay bonos disponibles en este momento.</p>`;
             return;
         }
 
@@ -822,28 +822,28 @@ const AppUI = {
             
             // Lógica de "canjeado" (a futuro, si la API lo soporta)
             const isCanjeado = AppState.bonos.canjeados.includes(bono.clave);
-            // CAMBIO vNeón: Estilo de tarjeta oscuro
-            const cardClass = isCanjeado ? 'bg-slate-900 shadow-inner border-slate-700 opacity-60' : 'bg-slate-800 shadow-xl border-slate-700';
+            // CAMBIO vFintech: Estilo de tarjeta claro
+            const cardClass = isCanjeado ? 'bg-gray-50 shadow-inner border-gray-200 opacity-60' : 'bg-white shadow-md border-gray-200';
             
-            // CAMBIO vNeón: Estilos de Badge y Color de Texto
+            // CAMBIO vFintech: Estilos de Badge y Color de Texto
             const badge = isCanjeado ? 
-                `<span class="text-xs font-bold bg-green-900/50 text-green-400 rounded-full px-2 py-0.5">CANJEADO</span>` :
-                `<span class="text-xs font-bold bg-pink-900/50 text-pink-400 rounded-full px-2 py-0.5">DISPONIBLE</span>`;
+                `<span class="text-xs font-bold bg-green-100 text-green-700 rounded-full px-2 py-0.5">CANJEADO</span>` :
+                `<span class="text-xs font-bold bg-yellow-100 text-yellow-700 rounded-full px-2 py-0.5">DISPONIBLE</span>`;
 
             return `
-                <div class="rounded-lg shadow-md p-4 border transition-all ${cardClass}">
+                <div class="rounded-lg shadow-sm p-4 border transition-all ${cardClass}">
                     <div class="flex justify-between items-center mb-2">
-                        <!-- CAMBIO vNeón: Texto claro -->
-                        <span class="text-sm font-medium text-gray-400 truncate">${bono.clave}</span>
+                        <!-- CAMBIO vFintech: Texto gris -->
+                        <span class="text-sm font-medium text-gray-500 truncate">${bono.clave}</span>
                         ${badge}
                     </div>
-                    <!-- CAMBIO vNeón: Texto claro -->
-                    <p class="text-base font-semibold text-gray-100 truncate">${bono.nombre}</p>
+                    <!-- CAMBIO vFintech: Texto oscuro -->
+                    <p class="text-base font-semibold text-gray-800 truncate">${bono.nombre}</p>
                     <div class="flex justify-between items-baseline mt-3">
-                        <!-- CAMBIO vNeón: Texto claro -->
-                        <span class="text-xs text-gray-400">Quedan ${usosRestantes}</span>
-                        <!-- CAMBIO vNeón: Acento Rosa Neón -->
-                        <span class="text-xl font-bold text-pink-400">${recompensa} ℙ</span>
+                        <!-- CAMBIO vFintech: Texto gris -->
+                        <span class="text-xs text-gray-500">Quedan ${usosRestantes}</span>
+                        <!-- CAMBIO vFintech: Acento Índigo -->
+                        <span class="text-xl font-bold text-indigo-600">${recompensa} ℙ</span>
                     </div>
                 </div>
             `;
@@ -862,7 +862,7 @@ const AppUI = {
             gate.classList.add('hidden');
             panel.classList.remove('hidden');
             claveInput.value = ""; // Limpiar
-            // CAMBIO vNeón: Clase de borde oscuro para el error
+            // CAMBIO vFintech: Clase de borde para el error
             claveInput.classList.remove('shake', 'border-red-500');
         } else {
             claveInput.classList.add('shake', 'border-red-500');
@@ -879,8 +879,8 @@ const AppUI = {
         const bonos = AppState.bonos.disponibles; // La API (v13.6) envía todos (activos y agotados)
 
         if (bonos.length === 0) {
-            // CAMBIO vNeón: Placeholder oscuro
-            tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">No hay bonos configurados.</td></tr>`;
+            // CAMBIO vFintech: Placeholder gris
+            tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">No hay bonos configurados.</td></tr>`;
             return;
         }
 
@@ -892,8 +892,8 @@ const AppUI = {
             const recompensa = AppFormat.formatNumber(bono.recompensa);
             const usos = `${bono.usos_actuales} / ${bono.usos_totales}`;
             const isAgotado = bono.usos_actuales >= bono.usos_totales;
-            // CAMBIO vNeón: Filas oscuras
-            const rowClass = isAgotado ? 'opacity-60 bg-slate-900/50' : 'hover:bg-slate-700';
+            // CAMBIO vFintech: Filas claras
+            const rowClass = isAgotado ? 'opacity-60 bg-gray-50' : 'hover:bg-gray-100';
             
             // CORRECCIÓN BUG ONCLICK: Escapar comillas
             const nombreEscapado = escapeHTML(bono.nombre);
@@ -901,16 +901,16 @@ const AppUI = {
 
             html += `
                 <tr class="${rowClass}">
-                    <!-- CAMBIO vNeón: Texto claro -->
-                    <td class="px-4 py-2 text-sm font-semibold text-gray-100">${bono.clave}</td>
-                    <td class="px-4 py-2 text-sm text-gray-300">${bono.nombre}</td>
-                    <td class="px-4 py-2 text-sm text-gray-100 text-right">${recompensa} ℙ</td>
-                    <td class="px-4 py-2 text-sm text-gray-300 text-right">${usos}</td>
+                    <!-- CAMBIO vFintech: Texto oscuro -->
+                    <td class="px-4 py-2 text-sm font-semibold text-gray-800">${bono.clave}</td>
+                    <td class="px-4 py-2 text-sm text-gray-700">${bono.nombre}</td>
+                    <td class="px-4 py-2 text-sm text-gray-800 text-right">${recompensa} ℙ</td>
+                    <td class="px-4 py-2 text-sm text-gray-700 text-right">${usos}</td>
                     <td class="px-4 py-2 text-right text-sm">
-                        <!-- CAMBIO vNeón: Botón Cian -->
-                        <button onclick="AppUI.handleEditBono('${claveEscapada}', '${nombreEscapado}', ${bono.recompensa}, ${bono.usos_totales})" class="font-medium text-cyan-400 hover:text-cyan-300 edit-bono-btn">Editar</button>
-                        <!-- NUEVO v0.5.4: Botón Eliminar (Rojo) -->
-                        <button onclick="AppTransacciones.eliminarBono('${claveEscapada}')" class="ml-2 font-medium text-red-500 hover:text-red-400 delete-bono-btn">Eliminar</button>
+                        <!-- CAMBIO vFintech: Botón Índigo/Rojo -->
+                        <button onclick="AppUI.handleEditBono('${claveEscapada}', '${nombreEscapado}', ${bono.recompensa}, ${bono.usos_totales})" class="font-medium text-indigo-600 hover:text-indigo-800 edit-bono-btn">Editar</button>
+                        <!-- NUEVO v0.5.4: Botón Eliminar -->
+                        <button onclick="AppTransacciones.eliminarBono('${claveEscapada}')" class="ml-2 font-medium text-red-600 hover:text-red-800 delete-bono-btn">Eliminar</button>
                     </td>
                 </tr>
             `;
@@ -938,7 +938,7 @@ const AppUI = {
     
     // --- FIN FUNCIONES DE BONOS ---
 
-    // --- INICIO FUNCIONES DE TIENDA (NUEVO v16.0) ---
+    // --- INICIO FUNCIONES DE TIENDA (FINTECH v19.1) ---
 
     showTiendaModal: function() {
         if (!AppState.datosActuales) return;
@@ -982,19 +982,19 @@ const AppUI = {
     // Cambia entre pestañas en el modal de Tienda
     changeTiendaTab: function(tabId) {
         document.querySelectorAll('#tienda-modal .tienda-tab-btn').forEach(btn => {
-            // CAMBIO vNeón: Clases inactivas oscuras
-            btn.classList.remove('active-tab', 'border-cyan-500', 'text-cyan-500');
-            btn.classList.add('border-transparent', 'text-gray-400', 'hover:bg-slate-600');
+            // CAMBIO vFintech: Clases inactivas claras
+            btn.classList.remove('active-tab', 'border-indigo-600', 'text-indigo-600');
+            btn.classList.add('border-transparent', 'text-gray-600', 'hover:bg-gray-100');
         });
 
         document.querySelectorAll('#tienda-modal .tienda-tab-content').forEach(content => {
             content.classList.add('hidden');
         });
 
-        // CAMBIO vNeón: Clases activas cian
+        // CAMBIO vFintech: Clases activas Índigo
         const activeBtn = document.querySelector(`#tienda-modal [data-tab="${tabId}"]`);
-        activeBtn.classList.add('active-tab', 'border-cyan-500', 'text-cyan-500');
-        activeBtn.classList.remove('border-transparent', 'text-gray-400', 'hover:bg-slate-600');
+        activeBtn.classList.add('active-tab', 'border-indigo-600', 'text-indigo-600');
+        activeBtn.classList.remove('border-transparent', 'text-gray-600', 'hover:bg-gray-100');
         document.getElementById(`tienda-tab-${tabId}`).classList.remove('hidden');
 
         // Limpiar mensajes
@@ -1016,8 +1016,8 @@ const AppUI = {
         const itemKeys = Object.keys(items);
 
         if (itemKeys.length === 0) {
-            // CAMBIO vNeón: Placeholder oscuro
-            container.innerHTML = `<p class="text-sm text-gray-400 text-center col-span-1 md:col-span-2">No hay artículos configurados en la tienda en este momento.</p>`;
+            // CAMBIO vFintech: Placeholder gris
+            container.innerHTML = `<p class="text-sm text-gray-500 text-center col-span-1 md:col-span-2">No hay artículos configurados en la tienda en este momento.</p>`;
             return;
         }
 
@@ -1030,33 +1030,33 @@ const AppUI = {
             const itemIdEscapado = escapeHTML(item.ItemID); // Usar ItemID real
 
             html += `
-                <!-- CAMBIO vNeón: Estilo de tarjeta oscuro -->
-                <div class="bg-slate-800 rounded-lg shadow-xl border border-slate-700 transition-all flex flex-col p-4">
+                <!-- CAMBIO vFintech: Estilo de tarjeta claro con borde Índigo sutil -->
+                <div class="bg-white rounded-xl shadow-lg border border-indigo-100 transition-all flex flex-col p-4 h-full">
                     <!-- Header de la Tarjeta (Tipo, Stock) -->
                     <div class="flex justify-between items-center mb-2">
-                        <!-- CAMBIO vNeón: Estilo de badge cian -->
-                        <span class="text-xs font-bold bg-cyan-900/50 text-cyan-400 rounded-full px-2 py-0.5">${item.tipo}</span>
-                        <!-- CAMBIO vNeón: Texto claro -->
-                        <span id="stock-${itemIdEscapado}" class="text-xs font-medium text-gray-400">Stock: ${item.stock}</span>
+                        <!-- CAMBIO vFintech: Estilo de badge Índigo/Azul -->
+                        <span class="text-xs font-bold bg-indigo-100 text-indigo-700 rounded-full px-2 py-0.5">${item.tipo}</span>
+                        <!-- CAMBIO vFintech: Texto gris -->
+                        <span id="stock-${itemIdEscapado}" class="text-xs font-medium text-gray-500">Stock: ${item.stock}</span>
                     </div>
 
-                    <!-- CAMBIO v17.1: Se elimina el contenedor de tooltip -->
-                    <!-- CAMBIO vNeón: Texto claro -->
-                    <h4 class="text-lg font-bold text-gray-100 truncate mb-3" title="${escapeHTML(item.descripcion)}">
+                    <!-- CAMBIO vFintech: Texto oscuro -->
+                    <h4 class="text-lg font-bold text-gray-900 truncate mb-2" title="${escapeHTML(item.descripcion)}">
                         ${item.nombre}
                     </h4>
+                    <!-- CAMBIO vFintech: Descripción más grande, gris sutil -->
+                    <p class="text-sm text-gray-600 mb-4">${item.descripcion.substring(0, 70)}...</p>
                     
                     <!-- Footer (Precio y Botón) -->
-                    <div class="flex justify-between items-center mt-auto pt-4">
-                        <!-- CAMBIO vNeón: Acento cian -->
-                        <span class="text-xl font-bold text-cyan-400">${AppFormat.formatNumber(costoFinal)} ℙ</span>
+                    <div class="flex justify-between items-center mt-auto pt-4 border-t border-gray-100">
+                        <!-- CAMBIO vFintech: Acento Índigo -->
+                        <span class="text-2xl font-extrabold text-indigo-600">${AppFormat.formatNumber(costoFinal)} ℙ</span>
                         
-                        <!-- CORRECCIÓN v17.1: Se asegura que se usa el itemId correcto para el ID del botón -->
-                        <!-- CAMBIO v17.0: Botón de compra simplificado -->
+                        <!-- Botón de compra (el estilo se actualiza con updateTiendaButtonStates) -->
                         <button id="buy-btn-${itemId}" 
                                 data-item-id="${itemId}"
                                 onclick="AppTransacciones.comprarItem('${itemId}', this)"
-                                class="tienda-buy-btn bg-cyan-400 text-cyan-900 hover:bg-cyan-500 w-auto min-w-[90px] text-center shadow-md shadow-cyan-400/10">
+                                class="tienda-buy-btn w-auto min-w-[90px] text-center">
                             <span class="btn-text">Comprar</span>
                         </button>
                     </div>
@@ -1072,7 +1072,6 @@ const AppUI = {
 
     // Optimización v16.0: Solo actualiza el estado de los botones
     // CAMBIO v17.0: Actualiza el .btn-text interno
-    // CORRECCIÓN v17.1: Asegura que la búsqueda usa el ItemID como clave
     updateTiendaButtonStates: function() {
         const items = AppState.tienda.items;
         const student = AppState.currentSearch.tiendaAlumno.info;
@@ -1088,35 +1087,34 @@ const AppUI = {
 
             const costoFinal = Math.round(item.precio * (1 + AppConfig.TASA_ITBIS));
             
-            // Reset clases
-            // CAMBIO vNeón: Clases de reset oscuras
-            btn.classList.remove('disabled-gray', 'sin-fondos-btn', 'agotado-btn', 'bg-cyan-400', 'hover:bg-cyan-500', 'text-cyan-900', 'shadow-md', 'shadow-cyan-400/10', 'bg-slate-700', 'text-gray-500', 'line-through', 'bg-red-900/50', 'text-red-400', 'border', 'border-red-500/50');
+            // Reset de todas las clases de estado de color/disponibilidad
+            btn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700', 'text-white', 'shadow-md', 'shadow-indigo-600/30', 'bg-gray-300', 'hover:bg-gray-300', 'text-gray-600', 'line-through', 'bg-red-100', 'text-red-700', 'border', 'border-red-200');
             btn.disabled = false;
             btnText.textContent = "Comprar";
 
             if (item.stock <= 0 && item.ItemID !== 'filantropo') { // Usar ItemID real
-                // CAMBIO vNeón: Botón agotado oscuro y tachado
-                btn.classList.add('agotado-btn', 'bg-slate-700', 'text-gray-500', 'line-through');
+                // CAMBIO vFintech: Botón agotado claro y tachado
+                btn.classList.add('bg-gray-200', 'text-gray-500', 'line-through', 'cursor-not-allowed', 'shadow-none');
                 btnText.textContent = "Agotado";
                 btn.disabled = true;
             } else if (!isStoreOpen) {
-                // CAMBIO vNeón: Botón cerrado oscuro
-                btn.classList.add('disabled-gray', 'bg-slate-700', 'text-gray-500');
-                btnText.textContent = "Cerrada"; // Cambiar a "Cerrada" para más claridad
+                // CAMBIO vFintech: Botón cerrado gris
+                btn.classList.add('bg-gray-300', 'text-gray-600', 'hover:bg-gray-300', 'cursor-not-allowed', 'shadow-none');
+                btnText.textContent = "Cerrada"; 
                 btn.disabled = true;
             } else if (!student) {
-                // CAMBIO vNeón: Botón gris para forzar selección de usuario
-                btn.classList.add('disabled-gray', 'bg-slate-700', 'text-gray-500');
+                // CAMBIO vFintech: Botón inhabilitado (requiere selección)
+                btn.classList.add('bg-gray-300', 'text-gray-600', 'hover:bg-gray-300', 'cursor-not-allowed', 'shadow-none');
                 btnText.textContent = "Comprar";
                 btn.disabled = true;
             } else if (student && student.pinceles < costoFinal) { // Añadir chequeo de 'student'
-                // CAMBIO vNeón: Botón sin fondos (rojo neón)
-                btn.classList.add('sin-fondos-btn', 'bg-red-900/50', 'text-red-400', 'border', 'border-red-500/50');
-                btnText.textContent = "Comprar"; // No mostrar "Sin Fondos" para no exponer
+                // CAMBIO vFintech: Botón sin fondos (rojo sutil)
+                btn.classList.add('bg-red-100', 'text-red-700', 'border', 'border-red-200', 'cursor-not-allowed', 'shadow-none', 'hover:bg-red-100');
+                btnText.textContent = "Comprar"; 
                 btn.disabled = true;
             } else {
-                // Estado por defecto (Habilitado - Cian Neón)
-                btn.classList.add('bg-cyan-400', 'text-cyan-900', 'hover:bg-cyan-500', 'shadow-md', 'shadow-cyan-400/10');
+                // Estado por defecto (Habilitado - Índigo Primario)
+                btn.classList.add('bg-indigo-600', 'text-white', 'hover:bg-indigo-700', 'shadow-md', 'shadow-indigo-600/30');
                 btnText.textContent = "Comprar";
             }
         });
@@ -1136,7 +1134,7 @@ const AppUI = {
             gate.classList.add('hidden');
             panel.classList.remove('hidden');
             claveInput.value = ""; // Limpiar
-            // CAMBIO vNeón: Clase de borde oscuro para el error
+            // CAMBIO vFintech: Clase de borde para el error
             claveInput.classList.remove('shake', 'border-red-500');
         } else {
             claveInput.classList.add('shake', 'border-red-500');
@@ -1156,25 +1154,25 @@ const AppUI = {
         
         const status = AppState.tienda.storeManualStatus;
         
-        // CAMBIO vNeón: Clases de color para dark mode
-        label.classList.remove('text-cyan-400', 'text-lime-400', 'text-red-400', 'text-gray-400');
-        container.classList.remove('bg-cyan-900/20', 'bg-lime-900/20', 'bg-red-900/20');
-        container.classList.add('bg-slate-700'); // Base oscura
+        // CAMBIO vFintech: Clases de color para light mode
+        label.classList.remove('text-indigo-600', 'text-green-600', 'text-red-600', 'text-gray-600');
+        container.classList.remove('bg-indigo-100', 'bg-green-100', 'bg-red-100', 'bg-gray-50');
+        container.classList.add('bg-gray-50'); // Base clara
 
         if (status === 'auto') {
             label.textContent = "Automático (por Temporizador)";
-            label.classList.add('text-cyan-400');
+            label.classList.add('text-indigo-600');
         } else if (status === 'open') {
             label.textContent = "Forzado Abierto";
-            label.classList.add('text-lime-400');
-            container.classList.add('bg-lime-900/20');
+            label.classList.add('text-green-600');
+            container.classList.add('bg-green-100');
         } else if (status === 'closed') {
             label.textContent = "Forzado Cerrado";
-            label.classList.add('text-red-400');
-            container.classList.add('bg-red-900/20');
+            label.classList.add('text-red-600');
+            container.classList.add('bg-red-100');
         } else {
             label.textContent = "Desconocido";
-            label.classList.add('text-gray-400');
+            label.classList.add('text-gray-600');
         }
     },
 
@@ -1189,9 +1187,9 @@ const AppUI = {
         const itemIdEscapado = escapeHTML(itemId);
 
         actionCell.innerHTML = `
-            <!-- CAMBIO vNeón: Botones de confirmación oscuros/rojo -->
-            <button onclick="AppTransacciones.eliminarItem('${itemIdEscapado}')" class="font-medium text-red-500 hover:text-red-400 confirm-delete-btn">Confirmar</button>
-            <button onclick="AppUI.cancelDeleteConfirmation('${itemIdEscapado}')" class="ml-2 font-medium text-gray-400 hover:text-gray-300">Cancelar</button>
+            <!-- CAMBIO vFintech: Botones de confirmación rojo/gris -->
+            <button onclick="AppTransacciones.eliminarItem('${itemIdEscapado}')" class="font-medium text-red-600 hover:text-red-800 confirm-delete-btn">Confirmar</button>
+            <button onclick="AppUI.cancelDeleteConfirmation('${itemIdEscapado}')" class="ml-2 font-medium text-gray-600 hover:text-gray-800">Cancelar</button>
         `;
     },
 
@@ -1211,9 +1209,9 @@ const AppUI = {
         const itemIdEscapado = escapeHTML(item.ItemID); 
 
         actionCell.innerHTML = `
-            <!-- CAMBIO vNeón: Botones de acción cian/rojo -->
-            <button onclick="AppUI.handleEditItem('${itemIdEscapado}', '${nombreEscapado}', '${descEscapada}', '${tipoEscapado}', ${item.precio}, ${item.stock})" class="font-medium text-cyan-400 hover:text-cyan-300 edit-item-btn">Editar</button>
-            <button onclick="AppUI.handleDeleteConfirmation('${itemIdEscapado}')" class="ml-2 font-medium text-red-500 hover:text-red-400 delete-item-btn">Eliminar</button>
+            <!-- CAMBIO vFintech: Botones de acción Índigo/Rojo -->
+            <button onclick="AppUI.handleEditItem('${itemIdEscapado}', '${nombreEscapado}', '${descEscapada}', '${tipoEscapado}', ${item.precio}, ${item.stock})" class="font-medium text-indigo-600 hover:text-indigo-800 edit-item-btn">Editar</button>
+            <button onclick="AppUI.handleDeleteConfirmation('${itemIdEscapado}')" class="ml-2 font-medium text-red-600 hover:text-red-800 delete-item-btn">Eliminar</button>
         `;
     },
     // --- FIN FUNCIONES DE CONFIRMACIÓN ---
@@ -1225,8 +1223,8 @@ const AppUI = {
         const itemKeys = Object.keys(items);
 
         if (itemKeys.length === 0) {
-            // CAMBIO vNeón: Placeholder oscuro
-            tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">No hay artículos configurados.</td></tr>`;
+            // CAMBIO vFintech: Placeholder gris
+            tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">No hay artículos configurados.</td></tr>`;
             return;
         }
 
@@ -1237,8 +1235,8 @@ const AppUI = {
             const item = items[itemId];
             const precio = AppFormat.formatNumber(item.precio);
             const stock = item.stock;
-            // CAMBIO vNeón: Filas oscuras
-            const rowClass = (stock <= 0 && item.ItemID !== 'filantropo') ? 'opacity-60 bg-slate-900/50' : 'hover:bg-slate-700';
+            // CAMBIO vFintech: Filas claras
+            const rowClass = (stock <= 0 && item.ItemID !== 'filantropo') ? 'opacity-60 bg-gray-50' : 'hover:bg-gray-100';
             
             // CORRECCIÓN BUG ONCLICK: Escapar datos para los botones
             const itemIdEscapado = escapeHTML(item.ItemID); // Usar ItemID real
@@ -1248,15 +1246,15 @@ const AppUI = {
 
             html += `
                 <tr id="tienda-item-row-${itemIdEscapado}" class="${rowClass}">
-                    <!-- CAMBIO vNeón: Texto claro -->
-                    <td class="px-4 py-2 text-sm font-semibold text-gray-100">${item.ItemID}</td>
-                    <td class="px-4 py-2 text-sm text-gray-300 truncate" title="${item.nombre}">${item.nombre}</td>
-                    <td class="px-4 py-2 text-sm text-gray-100 text-right">${precio} ℙ</td>
-                    <td class="px-4 py-2 text-sm text-gray-300 text-right">${stock}</td>
+                    <!-- CAMBIO vFintech: Texto oscuro -->
+                    <td class="px-4 py-2 text-sm font-semibold text-gray-800">${item.ItemID}</td>
+                    <td class="px-4 py-2 text-sm text-gray-700 truncate" title="${item.nombre}">${item.nombre}</td>
+                    <td class="px-4 py-2 text-sm text-gray-800 text-right">${precio} ℙ</td>
+                    <td class="px-4 py-2 text-sm text-gray-700 text-right">${stock}</td>
                     <td class="px-4 py-2 text-right text-sm">
-                        <!-- CAMBIO vNeón: Botones de acción cian/rojo -->
-                        <button onclick="AppUI.handleEditItem('${itemIdEscapado}', '${nombreEscapado}', '${descEscapada}', '${tipoEscapado}', ${item.precio}, ${item.stock})" class="font-medium text-cyan-400 hover:text-cyan-300 edit-item-btn">Editar</button>
-                        <button onclick="AppUI.handleDeleteConfirmation('${itemIdEscapado}')" class="ml-2 font-medium text-red-500 hover:text-red-400 delete-item-btn">Eliminar</button>
+                        <!-- CAMBIO vFintech: Botones de acción Índigo/Rojo -->
+                        <button onclick="AppUI.handleEditItem('${itemIdEscapado}', '${nombreEscapado}', '${descEscapada}', '${tipoEscapado}', ${item.precio}, ${item.stock})" class="font-medium text-indigo-600 hover:text-indigo-800 edit-item-btn">Editar</button>
+                        <button onclick="AppUI.handleDeleteConfirmation('${itemIdEscapado}')" class="ml-2 font-medium text-red-600 hover:text-red-800 delete-item-btn">Eliminar</button>
                     </td>
                 </tr>
             `;
@@ -1277,8 +1275,8 @@ const AppUI = {
         document.getElementById('tienda-admin-itemid-input').disabled = true;
         document.getElementById('tienda-admin-submit-btn').textContent = 'Guardar Cambios';
         
-        // CAMBIO vNeón: Deshabilitar Input oscuro
-        document.getElementById('tienda-admin-itemid-input').classList.add('disabled:bg-slate-700', 'disabled:opacity-70');
+        // CAMBIO vFintech: Deshabilitar Input claro
+        document.getElementById('tienda-admin-itemid-input').classList.add('disabled:bg-gray-100', 'disabled:opacity-70');
 
 
         // Hacer scroll al formulario
@@ -1293,8 +1291,8 @@ const AppUI = {
         document.getElementById('tienda-admin-submit-btn').textContent = 'Crear / Actualizar';
         document.getElementById('tienda-admin-status-msg').textContent = "";
         
-        // CAMBIO vNeón: Habilitar Input oscuro
-        document.getElementById('tienda-admin-itemid-input').classList.remove('disabled:bg-slate-700', 'disabled:opacity-70');
+        // CAMBIO vFintech: Habilitar Input claro
+        document.getElementById('tienda-admin-itemid-input').classList.remove('disabled:bg-gray-100', 'disabled:opacity-70');
     },
     
     // --- FIN FUNCIONES DE TIENDA ---
@@ -1313,8 +1311,8 @@ const AppUI = {
         const comision = Math.round(cantidad * AppConfig.IMPUESTO_DEPOSITO_ADMIN);
         const costoNeto = cantidad - comision;
 
-        // CAMBIO vNeón: Acento cian neón
-        calculoMsg.innerHTML = `<span class="text-cyan-400">Monto a depositar: ${AppFormat.formatNumber(cantidad)} ℙ | Costo Neto Tesorería: ${AppFormat.formatNumber(costoNeto)} ℙ (Comisión: ${AppFormat.formatNumber(comision)} ℙ)</span>`;
+        // CAMBIO vFintech: Acento Índigo
+        calculoMsg.innerHTML = `<span class="text-indigo-600">Monto a depositar: ${AppFormat.formatNumber(cantidad)} ℙ | Costo Neto Tesorería: ${AppFormat.formatNumber(costoNeto)} ℙ (Comisión: ${AppFormat.formatNumber(comision)} ℙ)</span>`;
     },
 
 
@@ -1342,34 +1340,34 @@ const AppUI = {
         AppState.datosActuales.forEach(grupo => {
             if (grupo.nombre === 'Cicla' || grupo.total === 0) return;
 
-            // CAMBIO vNeón: Hover oscuro
+            // CAMBIO vFintech: Hover claro
             const div = document.createElement('div');
-            div.className = "flex items-center p-1 rounded hover:bg-slate-600";
+            div.className = "flex items-center p-1 rounded hover:bg-gray-200";
             
             const input = document.createElement('input');
             input.type = "checkbox";
             input.id = `group-cb-${grupo.nombre}`;
             input.value = grupo.nombre;
-            // CAMBIO vNeón: Checkbox cian
-            input.className = "h-4 w-4 text-cyan-400 border-slate-600 rounded focus:ring-cyan-500 bg-slate-700 group-checkbox";
+            // CAMBIO vFintech: Checkbox Índigo
+            input.className = "h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 bg-white group-checkbox";
             input.addEventListener('change', AppUI.populateUsuariosTransaccion);
 
             const label = document.createElement('label');
             label.htmlFor = input.id;
-            // CAMBIO vNeón: Texto claro
+            // CAMBIO vFintech: Texto oscuro
             label.textContent = `${grupo.nombre} (${AppFormat.formatNumber(grupo.total)} ℙ)`;
-            label.className = "ml-2 block text-sm text-gray-300 cursor-pointer flex-1";
+            label.className = "ml-2 block text-sm text-gray-900 cursor-pointer flex-1";
 
             div.appendChild(input);
             div.appendChild(label);
             grupoContainer.appendChild(div);
         });
 
-        // CAMBIO vNeón: Placeholder oscuro
-        document.getElementById('transaccion-lista-usuarios-container').innerHTML = '<span class="text-sm text-gray-400 p-2">Seleccione un grupo...</span>';
+        // CAMBIO vFintech: Placeholder gris
+        document.getElementById('transaccion-lista-usuarios-container').innerHTML = '<span class="text-sm text-gray-500 p-2">Seleccione un grupo...</span>';
         AppState.transaccionSelectAll = {}; 
         
-        // CAMBIO vNeón: Acento cian neón
+        // CAMBIO vFintech: Acento Índigo
         document.getElementById('tesoreria-saldo-transaccion').textContent = `(Fondos disponibles: ${AppFormat.formatNumber(AppState.datosAdicionales.saldoTesoreria)} ℙ)`;
     },
 
@@ -1382,8 +1380,8 @@ const AppUI = {
         listaContainer.innerHTML = ''; 
 
         if (selectedGroupNames.length === 0) {
-            // CAMBIO vNeón: Placeholder oscuro
-            listaContainer.innerHTML = '<span class="text-sm text-gray-400 p-2">Seleccione un grupo...</span>';
+            // CAMBIO vFintech: Placeholder gris
+            listaContainer.innerHTML = '<span class="text-sm text-gray-500 p-2">Seleccione un grupo...</span>';
             return;
         }
 
@@ -1391,17 +1389,17 @@ const AppUI = {
             const grupo = AppState.datosActuales.find(g => g.nombre === grupoNombre);
 
             if (grupo && grupo.usuarios && grupo.usuarios.length > 0) {
-                // CAMBIO vNeón: Encabezado oscuro
+                // CAMBIO vFintech: Encabezado claro
                 const headerDiv = document.createElement('div');
-                headerDiv.className = "flex justify-between items-center bg-slate-700 p-2 mt-2 sticky top-0 border-b border-slate-600"; 
-                // CAMBIO vNeón: Texto claro
-                headerDiv.innerHTML = `<span class="text-sm font-semibold text-gray-300">${grupo.nombre}</span>`;
+                headerDiv.className = "flex justify-between items-center bg-gray-200 p-2 mt-2 sticky top-0 border-b border-gray-300"; 
+                // CAMBIO vFintech: Texto oscuro
+                headerDiv.innerHTML = `<span class="text-sm font-semibold text-gray-700">${grupo.nombre}</span>`;
                 
                 const btnSelectAll = document.createElement('button');
                 btnSelectAll.textContent = "Todos";
                 btnSelectAll.dataset.grupo = grupo.nombre; 
-                // CAMBIO vNeón: Botón Cian neón
-                btnSelectAll.className = "text-xs font-medium text-cyan-400 hover:text-cyan-300 select-all-users-btn";
+                // CAMBIO vFintech: Botón Índigo
+                btnSelectAll.className = "text-xs font-medium text-indigo-600 hover:text-indigo-800 select-all-users-btn";
                 AppState.transaccionSelectAll[grupo.nombre] = false; 
                 btnSelectAll.addEventListener('click', AppUI.toggleSelectAllUsuarios);
                 
@@ -1411,24 +1409,24 @@ const AppUI = {
                 const usuariosOrdenados = [...grupo.usuarios].sort((a, b) => a.nombre.localeCompare(b.nombre));
 
                 usuariosOrdenados.forEach(usuario => {
-                    // CAMBIO vNeón: Hover oscuro
+                    // CAMBIO vFintech: Hover claro
                     const div = document.createElement('div');
-                    div.className = "flex items-center p-1 rounded hover:bg-slate-600 ml-2"; 
+                    div.className = "flex items-center p-1 rounded hover:bg-gray-200 ml-2"; 
                     
                     const input = document.createElement('input');
                     input.type = "checkbox";
                     input.id = `user-cb-${grupo.nombre}-${usuario.nombre.replace(/\s/g, '-')}`; 
                     input.value = usuario.nombre;
                     input.dataset.grupo = grupo.nombre; 
-                    // CAMBIO vNeón: Checkbox cian
-                    input.className = "h-4 w-4 text-cyan-400 border-slate-600 rounded focus:ring-cyan-500 bg-slate-700 user-checkbox";
+                    // CAMBIO vFintech: Checkbox Índigo
+                    input.className = "h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 bg-white user-checkbox";
                     input.dataset.checkboxGrupo = grupo.nombre; 
 
                     const label = document.createElement('label');
                     label.htmlFor = input.id;
-                    // CAMBIO vNeón: Texto claro
+                    // CAMBIO vFintech: Texto oscuro
                     label.textContent = usuario.nombre;
-                    label.className = "ml-2 block text-sm text-gray-300 cursor-pointer flex-1";
+                    label.className = "ml-2 block text-sm text-gray-900 cursor-pointer flex-1";
 
                     div.appendChild(input);
                     div.appendChild(label);
@@ -1438,8 +1436,8 @@ const AppUI = {
         });
         
         if (listaContainer.innerHTML === '') {
-             // CAMBIO vNeón: Placeholder oscuro
-             listaContainer.innerHTML = '<span class="text-sm text-gray-400 p-2">Los grupos seleccionados no tienen usuarios.</span>';
+             // CAMBIO vFintech: Placeholder gris
+             listaContainer.innerHTML = '<span class="text-sm text-gray-500 p-2">Los grupos seleccionados no tienen usuarios.</span>';
         }
     },
     
@@ -1466,12 +1464,12 @@ const AppUI = {
         const container = document.getElementById('prestamo-paquetes-container');
         const saldoSpan = document.getElementById('prestamo-alumno-saldo');
         
-        // CAMBIO vNeón: Acento cian
+        // CAMBIO vFintech: Acento Índigo
         document.getElementById('tesoreria-saldo-prestamo').textContent = `(Tesorería: ${AppFormat.formatNumber(AppState.datosAdicionales.saldoTesoreria)} ℙ)`;
 
         if (!selectedStudentName) {
-            // CAMBIO vNeón: Placeholder oscuro
-            container.innerHTML = '<div class="text-sm text-gray-400">Busque y seleccione un alumno para ver las opciones.</div>';
+            // CAMBIO vFintech: Placeholder gris
+            container.innerHTML = '<div class="text-sm text-gray-500">Busque y seleccione un alumno para ver las opciones.</div>';
             saldoSpan.textContent = '';
             return;
         }
@@ -1479,7 +1477,7 @@ const AppUI = {
         const student = AppState.datosAdicionales.allStudents.find(s => s.nombre === selectedStudentName);
         if (!student) return;
         
-        // CAMBIO vNeón: Texto claro
+        // CAMBIO vFintech: Texto gris
         saldoSpan.textContent = `(Saldo actual: ${AppFormat.formatNumber(student.pinceles)} ℙ)`;
 
         const paquetes = {
@@ -1492,8 +1490,8 @@ const AppUI = {
         let hasActiveLoan = AppState.datosAdicionales.prestamosActivos.some(p => p.alumno === selectedStudentName);
 
         if (hasActiveLoan) {
-             // CAMBIO vNeón: Alerta oscura
-             container.innerHTML = `<div class="p-3 text-sm font-semibold text-red-400 bg-red-900/30 rounded-lg border border-red-500/50">🚫 El alumno ya tiene un préstamo activo.</div>`;
+             // CAMBIO vFintech: Alerta clara
+             container.innerHTML = `<div class="p-3 text-sm font-semibold text-red-700 bg-red-100 rounded-lg border border-red-200">🚫 El alumno ya tiene un préstamo activo.</div>`;
              return;
         }
 
@@ -1530,8 +1528,8 @@ const AppUI = {
             }
 
 
-            // CAMBIO vNeón: Estilos de botón y borde oscuros
-            const buttonClass = isEligible ? 'bg-cyan-500 text-cyan-900 hover:bg-cyan-600 shadow-sm shadow-cyan-400/10' : 'bg-slate-700 text-gray-500 cursor-not-allowed';
+            // CAMBIO vFintech: Estilos de botón Índigo/Gris
+            const buttonClass = isEligible ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md' : 'bg-gray-300 text-gray-600 cursor-not-allowed shadow-none';
             const buttonDisabled = !isEligible ? 'disabled' : '';
             
             // CORRECCIÓN BUG ONCLICK: Escapar nombres
@@ -1539,12 +1537,12 @@ const AppUI = {
             const tipoEscapado = escapeHTML(tipo);
             const action = isEligible ? `AppTransacciones.realizarPrestamo('${studentNameEscapado}', '${tipoEscapado}')` : '';
             
-            // CAMBIO vNeón: Fondo y texto claros
+            // CAMBIO vFintech: Fondo y texto claros
             html += `
-                <div class="flex justify-between items-center p-3 border-b border-cyan-800/50">
+                <div class="flex justify-between items-center p-3 border-b border-blue-100">
                     <div>
-                        <span class="font-semibold text-gray-100">${pkg.label} (${AppFormat.formatNumber(pkg.monto)} ℙ)</span>
-                        <span class="text-xs text-gray-400 block">Cuota: <strong>${AppFormat.formatNumber(cuotaDiaria)} ℙ</strong> (x${pkg.plazoDias} días). Total: ${AppFormat.formatNumber(totalAPagar)} ℙ.</span>
+                        <span class="font-semibold text-gray-800">${pkg.label} (${AppFormat.formatNumber(pkg.monto)} ℙ)</span>
+                        <span class="text-xs text-gray-600 block">Cuota: <strong>${AppFormat.formatNumber(cuotaDiaria)} ℙ</strong> (x${pkg.plazoDias} días). Total: ${AppFormat.formatNumber(totalAPagar)} ℙ.</span>
                     </div>
                     <button onclick="${action}" class="px-3 py-1 text-xs font-medium rounded-lg transition-colors ${buttonClass}" ${buttonDisabled}>
                         Otorgar ${isEligible ? '' : eligibilityMessage}
@@ -1561,12 +1559,12 @@ const AppUI = {
         const container = document.getElementById('deposito-paquetes-container');
         const saldoSpan = document.getElementById('deposito-alumno-saldo');
         
-        // CAMBIO vNeón: Acento lima neón
+        // CAMBIO vFintech: Acento Índigo
         document.getElementById('deposito-info-tesoreria').textContent = `(Tesorería: ${AppFormat.formatNumber(AppState.datosAdicionales.saldoTesoreria)} ℙ)`;
 
         if (!selectedStudentName) {
-            // CAMBIO vNeón: Placeholder oscuro
-            container.innerHTML = '<div class="text-sm text-gray-400">Busque y seleccione un alumno para ver las opciones.</div>';
+            // CAMBIO vFintech: Placeholder gris
+            container.innerHTML = '<div class="text-sm text-gray-500">Busque y seleccione un alumno para ver las opciones.</div>';
             saldoSpan.textContent = '';
             return;
         }
@@ -1574,7 +1572,7 @@ const AppUI = {
         const student = AppState.datosAdicionales.allStudents.find(s => s.nombre === selectedStudentName);
         if (!student) return;
 
-        // CAMBIO vNeón: Texto claro
+        // CAMBIO vFintech: Texto gris
         saldoSpan.textContent = `(Saldo actual: ${AppFormat.formatNumber(student.pinceles)} ℙ)`;
 
         const paquetes = {
@@ -1587,8 +1585,8 @@ const AppUI = {
         let hasActiveLoan = AppState.datosAdicionales.prestamosActivos.some(p => p.alumno === selectedStudentName);
 
         if (hasActiveLoan) {
-             // CAMBIO vNeón: Alerta oscura
-             container.innerHTML = `<div class="p-3 text-sm font-semibold text-red-400 bg-red-900/30 rounded-lg border border-red-500/50">🚫 El alumno tiene un préstamo activo. Debe saldarlo para invertir.</div>`;
+             // CAMBIO vFintech: Alerta clara
+             container.innerHTML = `<div class="p-3 text-sm font-semibold text-red-700 bg-red-100 rounded-lg border border-red-200">🚫 El alumno tiene un préstamo activo. Debe saldarlo para invertir.</div>`;
              return;
         }
         
@@ -1608,8 +1606,8 @@ const AppUI = {
                 eligibilityMessage = `(Faltan ${AppFormat.formatNumber(pkg.monto - student.pinceles)} ℙ)`;
             }
 
-            // CAMBIO vNeón: Estilos de botón y borde oscuros (Lima)
-            const buttonClass = isEligible ? 'bg-lime-500 text-lime-900 hover:bg-lime-600 shadow-sm shadow-lime-500/10' : 'bg-slate-700 text-gray-500 cursor-not-allowed';
+            // CAMBIO vFintech: Estilos de botón Verde/Gris
+            const buttonClass = isEligible ? 'bg-green-600 text-white hover:bg-green-700 shadow-md' : 'bg-gray-300 text-gray-600 cursor-not-allowed shadow-none';
             const buttonDisabled = !isEligible ? 'disabled' : '';
             
             // CORRECCIÓN BUG ONCLICK: Escapar nombres
@@ -1617,12 +1615,12 @@ const AppUI = {
             const tipoEscapado = escapeHTML(tipo);
             const action = isEligible ? `AppTransacciones.realizarDeposito('${studentNameEscapado}', '${tipoEscapado}')` : '';
 
-            // CAMBIO vNeón: Fondo y texto claros
+            // CAMBIO vFintech: Fondo y texto claros
             html += `
-                <div class="flex justify-between items-center p-3 border-b border-lime-800/50">
+                <div class="flex justify-between items-center p-3 border-b border-green-100">
                     <div>
-                        <span class="font-semibold text-gray-100">${pkg.label} (${AppFormat.formatNumber(pkg.monto)} ℙ)</span>
-                        <span class="text-xs text-gray-400 block">
+                        <span class="font-semibold text-gray-800">${pkg.label} (${AppFormat.formatNumber(pkg.monto)} ℙ)</span>
+                        <span class="text-xs text-gray-600 block">
                             Recibe: <strong>${AppFormat.formatNumber(totalARecibirNeto)} ℙ</strong> 
                             (Tasa ${pkg.interes}% - Imp. ${AppFormat.formatNumber(impuesto)} ℙ)
                         </span>
@@ -1646,21 +1644,21 @@ const AppUI = {
         
         indicator.title = title;
 
-        // CAMBIO vNeón: Colores neón
-        dot.classList.remove('bg-lime-500', 'bg-cyan-400', 'bg-red-500', 'animate-pulse-dot');
+        // CAMBIO vFintech: Colores corporativos
+        dot.classList.remove('bg-green-600', 'bg-indigo-600', 'bg-red-600', 'animate-pulse-dot');
 
         switch (status) {
             case 'ok':
-                // CAMBIO vNeón: Lima
-                dot.classList.add('bg-lime-500', 'animate-pulse-dot');
+                // CAMBIO vFintech: Verde
+                dot.classList.add('bg-green-600', 'animate-pulse-dot');
                 break;
             case 'loading':
-                // CAMBIO vNeón: Cian
-                dot.classList.add('bg-cyan-400', 'animate-pulse-dot');
+                // CAMBIO vFintech: Índigo
+                dot.classList.add('bg-indigo-600', 'animate-pulse-dot');
                 break;
             case 'error':
-                // CAMBIO vNeón: Rojo
-                dot.classList.add('bg-red-500');
+                // CAMBIO vFintech: Rojo
+                dot.classList.add('bg-red-600');
                 break;
         }
     },
@@ -1711,8 +1709,8 @@ const AppUI = {
         const homeLink = document.createElement('a');
         homeLink.href = '#';
         homeLink.dataset.groupName = "home"; 
-        // CAMBIO vNeón: Clases base oscuras
-        homeLink.className = "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors nav-link text-gray-400 hover:bg-slate-800";
+        // CAMBIO vFintech: Clases base claras
+        homeLink.className = "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors nav-link text-gray-700 hover:bg-gray-100";
         homeLink.innerHTML = `<span class="truncate">Inicio</span>`;
         homeLink.addEventListener('click', (e) => {
             e.preventDefault();
@@ -1731,8 +1729,8 @@ const AppUI = {
             const link = document.createElement('a');
             link.href = '#';
             link.dataset.groupName = grupo.nombre;
-            // CAMBIO vNeón: Clases base oscuras
-            link.className = "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors nav-link text-gray-400 hover:bg-slate-800";
+            // CAMBIO vFintech: Clases base claras
+            link.className = "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors nav-link text-gray-700 hover:bg-gray-100";
             
             link.innerHTML = `
                 <span class="truncate">${grupo.nombre}</span>
@@ -1759,13 +1757,13 @@ const AppUI = {
             const isActive = (AppState.selectedGrupo === null && groupName === 'home') || (AppState.selectedGrupo === groupName);
 
             if (isActive) {
-                // CAMBIO vNeón: Estilo activo (cian y borde izquierdo)
-                link.classList.add('bg-slate-800', 'text-cyan-400', 'border-l-4', 'border-cyan-400');
-                link.classList.remove('text-gray-400', 'hover:bg-slate-800', 'hover:bg-gray-100', 'bg-blue-50', 'text-blue-600', 'border-l-0');
+                // CAMBIO vFintech: Estilo activo (Índigo sutil)
+                link.classList.add('bg-indigo-50', 'text-indigo-700', 'font-semibold');
+                link.classList.remove('text-gray-700', 'hover:bg-gray-100');
             } else {
-                // CAMBIO vNeón: Estilo inactivo (oscuro)
-                link.classList.remove('bg-slate-800', 'text-cyan-400', 'border-l-4', 'border-cyan-400');
-                link.classList.add('text-gray-400', 'hover:bg-slate-800');
+                // CAMBIO vFintech: Estilo inactivo (claro)
+                link.classList.remove('bg-indigo-50', 'text-indigo-700', 'font-semibold');
+                link.classList.add('text-gray-700', 'hover:bg-gray-100');
             }
         });
     },
@@ -1774,6 +1772,7 @@ const AppUI = {
      * Muestra la vista de "Inicio"
      */
     mostrarPantallaNeutral: function(grupos) {
+        // CAMBIO vFintech: Texto oscuro
         document.getElementById('main-header-title').textContent = "Bienvenido al Banco del Pincel Dorado";
         document.getElementById('page-subtitle').innerHTML = ''; 
 
@@ -1804,45 +1803,39 @@ const AppUI = {
         // Tarjeta de Tesorería
         const tesoreriaSaldo = AppState.datosAdicionales.saldoTesoreria;
         
-        // CAMBIO vNeón: Card Oscura con sombra cian (Bóveda)
+        // CAMBIO vFintech: Card Clara con gradiente (Bóveda)
         bovedaHtml = `
-            <div class="bg-slate-800 rounded-lg shadow-xl shadow-cyan-900/50 p-4 h-full flex flex-col justify-between">
+            <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl shadow-xl p-4 h-full flex flex-col justify-between text-white">
                 <div>
                     <!-- Fila 1: Título y Badge -->
                     <div class="flex items-center justify-between">
-                        <!-- CAMBIO vNeón: Texto claro -->
-                        <span class="text-sm font-medium text-gray-400 truncate">Total en Cuentas</span>
-                        <!-- CAMBIO vNeón: Badge Lima Neón -->
-                        <span class="text-xs font-bold bg-lime-900/50 text-lime-400 rounded-full px-2 py-0.5">BÓVEDA</span>
+                        <span class="text-sm font-medium opacity-80 truncate">Total en Cuentas</span>
+                        <span class="text-xs font-bold bg-white/20 text-white rounded-full px-2 py-0.5">BÓVEDA</span>
                     </div>
                     <!-- Fila 2: Subtítulo y Monto (Distribución Horizontal) -->
                     <div class="flex justify-between items-baseline mt-3">
-                        <!-- CAMBIO vNeón: Texto claro -->
-                        <p class="text-lg font-semibold text-gray-100 truncate">Pinceles Totales</p>
-                        <!-- CAMBIO vNeón: Monto Cian Neón -->
-                        <p class="text-3xl font-bold text-cyan-400">${AppFormat.formatNumber(totalGeneral)} ℙ</p>
+                        <p class="text-lg font-semibold truncate">Pinceles Totales</p>
+                        <p class="text-3xl font-bold">${AppFormat.formatNumber(totalGeneral)} ℙ</p>
                     </div>
                 </div>
             </div>
         `;
         
-        // CAMBIO vNeón: Card Oscura con sombra rosa (Tesorería)
+        // CAMBIO vFintech: Card Clara (Tesorería)
         tesoreriaHtml = `
-            <div class="bg-slate-800 rounded-lg shadow-xl shadow-pink-900/50 p-4 h-full flex flex-col justify-between">
+            <div class="bg-white rounded-xl shadow-lg p-4 h-full flex flex-col justify-between">
                 <div>
                     <!-- Fila 1: Título y Badge -->
                     <div class="flex items-center justify-between">
-                        <!-- CAMBIO vNeón: Texto claro -->
-                        <span class="text-sm font-medium text-gray-400 truncate">Capital Operativo</span>
-                        <!-- CAMBIO vNeón: Badge Rosa Neón -->
-                        <span class="text-xs font-bold bg-pink-900/50 text-pink-400 rounded-full px-2 py-0.5">TESORERÍA</span>
+                        <span class="text-sm font-medium text-gray-500 truncate">Capital Operativo</span>
+                        <!-- CAMBIO vFintech: Badge Índigo -->
+                        <span class="text-xs font-bold bg-indigo-100 text-indigo-700 rounded-full px-2 py-0.5">TESORERÍA</span>
                     </div>
                     <!-- Fila 2: Subtítulo y Monto (Distribución Horizontal) -->
                     <div class="flex justify-between items-baseline mt-3">
-                        <!-- CAMBIO vNeón: Texto claro -->
-                        <p class="text-lg font-semibold text-gray-100 truncate">Fondo del Banco</p>
-                        <!-- CAMBIO vNeón: Monto Rosa Neón -->
-                        <p class="text-3xl font-bold text-pink-400">${AppFormat.formatNumber(tesoreriaSaldo)} ℙ</p>
+                        <p class="text-lg font-semibold text-gray-900 truncate">Fondo del Banco</p>
+                        <!-- CAMBIO vFintech: Monto Índigo -->
+                        <p class="text-3xl font-bold text-indigo-600">${AppFormat.formatNumber(tesoreriaSaldo)} ℙ</p>
                     </div>
                 </div>
             </div>
@@ -1876,12 +1869,12 @@ const AppUI = {
 
         if (top3.length > 0) {
             top3Html = top3.map((student, index) => {
-                // CAMBIO vNeón: Colores de rank y fondo oscuros
-                let rankColor = 'bg-slate-700 text-gray-400';
-                let shadowColor = '';
-                if (index === 0) { rankColor = 'bg-yellow-800 text-yellow-300'; shadowColor = 'shadow-yellow-900/50'; }
-                if (index === 1) { rankColor = 'bg-gray-700 text-gray-300'; shadowColor = 'shadow-gray-700/50'; }
-                if (index === 2) { rankColor = 'bg-orange-800 text-orange-300'; shadowColor = 'shadow-orange-900/50'; }
+                // CAMBIO vFintech: Colores de rank claros
+                let rankColor = 'bg-gray-200 text-gray-600';
+                let rankText = 'text-indigo-600';
+                if (index === 0) { rankColor = 'bg-yellow-100 text-yellow-700'; rankText = 'text-yellow-600'; }
+                if (index === 1) { rankColor = 'bg-gray-200 text-gray-700'; rankText = 'text-gray-700'; }
+                if (index === 2) { rankColor = 'bg-orange-100 text-orange-700'; rankText = 'text-orange-600'; }
                 
                 const grupoNombre = student.grupoNombre || 'N/A';
                 
@@ -1889,30 +1882,29 @@ const AppUI = {
                 const totalInvertidoF = AppFormat.formatNumber(student.totalInvertidoDepositos);
 
                 return `
-                    <!-- CAMBIO vNeón: Card oscura con sombra de rank -->
-                    <div class="bg-slate-800 rounded-lg shadow-md ${shadowColor} p-3 h-full flex flex-col justify-between">
+                    <!-- CAMBIO vFintech: Card clara con sombra suave -->
+                    <div class="bg-white rounded-xl shadow-lg p-3 h-full flex flex-col justify-between">
                         <div>
                             <div class="flex items-center justify-between mb-1">
-                                <!-- CAMBIO vNeón: Texto claro -->
-                                <span class="text-sm font-medium text-gray-400 truncate">${grupoNombre}</span>
+                                <!-- CAMBIO vFintech: Texto gris -->
+                                <span class="text-sm font-medium text-gray-500 truncate">${grupoNombre}</span>
                                 <span class="text-xs font-bold ${rankColor} rounded-full px-2 py-0.5">${index + 1}º</span>
                             </div>
-                            <!-- CAMBIO vNeón: Texto claro -->
-                            <p class="text-base font-semibold text-gray-100 truncate">${student.nombre}</p>
+                            <!-- CAMBIO vFintech: Texto oscuro -->
+                            <p class="text-base font-semibold text-gray-900 truncate">${student.nombre}</p>
                         </div>
                         
                         <div class="text-right mt-2">
                             <div class="tooltip-container relative inline-block">
-                                <!-- CAMBIO vNeón: Monto Cian Neón -->
-                                <p class="text-xl font-bold text-cyan-400">
+                                <!-- CAMBIO vFintech: Monto Índigo -->
+                                <p class="text-xl font-bold ${rankText}">
                                     ${AppFormat.formatNumber(student.capitalTotal)} ℙ
                                 </p>
-                                <!-- Tooltip personalizado (Oscuro) -->
+                                <!-- Tooltip oscuro (se mantiene para contraste) -->
                                 <div class="tooltip-text hidden md:block w-48">
                                     <span class="font-bold">Capital Total</span>
                                     <div class="flex justify-between mt-1 text-xs"><span>Capital Líquido:</span> <span>${pincelesLiquidosF} ℙ</span></div>
                                     <div class="flex justify-between text-xs"><span>Capital Invertido:</span> <span>${totalInvertidoF} ℙ</span></div>
-                                    <!-- Flecha para tooltip oscuro -->
                                     <svg class="absolute text-gray-800 h-2 w-full left-0 bottom-full" x="0px" y="0px" viewBox="0 0 255 255" xml:space="preserve"><polygon class="fill-current" points="0,255 127.5,127.5 255,255"/></svg>
                                 </div>
                             </div>
@@ -1924,17 +1916,17 @@ const AppUI = {
         
         for (let i = top3.length; i < 3; i++) {
             top3Html += `
-                <!-- CAMBIO vNeón: Placeholder oscuro -->
-                <div class="bg-slate-800 rounded-lg shadow-md p-3 opacity-50 h-full flex flex-col justify-between">
+                <!-- CAMBIO vFintech: Placeholder claro -->
+                <div class="bg-white rounded-xl shadow-lg p-3 opacity-50 h-full flex flex-col justify-between">
                     <div>
                         <div class="flex items-center justify-between mb-1">
-                            <span class="text-sm font-medium text-gray-600">-</span>
-                            <span class="text-xs font-bold bg-slate-700 text-gray-600 rounded-full px-2 py-0.5">${i + 1}º</span>
+                            <span class="text-sm font-medium text-gray-400">-</span>
+                            <span class="text-xs font-bold bg-gray-100 text-gray-400 rounded-full px-2 py-0.5">${i + 1}º</span>
                         </div>
-                        <p class="text-base font-semibold text-gray-600 truncate">-</p>
+                        <p class="text-base font-semibold text-gray-400 truncate">-</p>
                     </div>
                     <div class="text-right mt-2">
-                         <p class="text-xl font-bold text-gray-600">- ℙ</p>
+                         <p class="text-xl font-bold text-gray-400">- ℙ</p>
                     </div>
                 </div>
             `;
@@ -1952,22 +1944,23 @@ const AppUI = {
         AppUI.actualizarAnuncios(); 
         AppUI.actualizarEstadisticasRapidas(grupos);
         
-    }, // <-- ESTA LLAVE FALTABA (FIN DE mostrarPantallaNeutral)
+    },
 
 
     /**
      * Muestra la tabla de un grupo específico
      */
     mostrarDatosGrupo: function(grupo) {
+        // CAMBIO vFintech: Texto oscuro
         document.getElementById('main-header-title').textContent = grupo.nombre;
         
-        let totalColor = "text-gray-300"; // CAMBIO vNeón: Texto claro
-        if (grupo.total < 0) totalColor = "text-red-500";
-        if (grupo.total > 0) totalColor = "text-lime-500"; // CAMBIO vNeón: Lima Neón
+        let totalColor = "text-gray-700"; 
+        if (grupo.total < 0) totalColor = "text-red-600";
+        if (grupo.total > 0) totalColor = "text-green-600"; // CAMBIO vFintech: Verde
         
         document.getElementById('page-subtitle').innerHTML = `
-            <!-- CAMBIO vNeón: Texto claro -->
-            <h2 class="text-xl font-semibold text-gray-100">Total del Grupo: 
+            <!-- CAMBIO vFintech: Texto oscuro -->
+            <h2 class="text-xl font-semibold text-gray-900">Total del Grupo: 
                 <span class="${totalColor}">${AppFormat.formatNumber(grupo.total)} ℙ</span>
             </h2>
         `;
@@ -1978,31 +1971,31 @@ const AppUI = {
         const filas = usuariosOrdenados.map((usuario, index) => {
             const pos = index + 1;
             
-            // CAMBIO vNeón: Colores de rank y fondo oscuros
-            let rankBg = 'bg-slate-700 text-gray-400';
-            if (pos === 1) rankBg = 'bg-yellow-800 text-yellow-300';
-            if (pos === 2) rankBg = 'bg-gray-700 text-gray-300';
-            if (pos === 3) rankBg = 'bg-orange-800 text-orange-300';
-            if (grupo.nombre === "Cicla") rankBg = 'bg-red-800 text-red-300';
+            // CAMBIO vFintech: Colores de rank claros
+            let rankBg = 'bg-gray-200 text-gray-600';
+            if (pos === 1) rankBg = 'bg-yellow-100 text-yellow-700';
+            if (pos === 2) rankBg = 'bg-gray-200 text-gray-700';
+            if (pos === 3) rankBg = 'bg-orange-100 text-orange-700';
+            if (grupo.nombre === "Cicla") rankBg = 'bg-red-100 text-red-600';
 
             // CORRECCIÓN BUG ONCLICK: Escapar nombres
             const grupoNombreEscapado = escapeHTML(grupo.nombre);
             const usuarioNombreEscapado = escapeHTML(usuario.nombre);
 
             return `
-                <!-- CAMBIO vNeón: Hover oscuro -->
-                <tr class="hover:bg-slate-700 cursor-pointer" onclick="AppUI.showStudentModal('${grupoNombreEscapado}', '${usuarioNombreEscapado}', ${pos})">
+                <!-- CAMBIO vFintech: Hover claro -->
+                <tr class="hover:bg-gray-50 cursor-pointer" onclick="AppUI.showStudentModal('${grupoNombreEscapado}', '${usuarioNombreEscapado}', ${pos})">
                     <td class="px-4 py-3 text-center">
                         <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${rankBg}">
                             ${pos}
                         </span>
                     </td>
-                    <!-- CAMBIO vNeón: Texto claro -->
-                    <td class="px-6 py-3 text-sm font-medium text-gray-100 truncate">
+                    <!-- CAMBIO vFintech: Texto oscuro -->
+                    <td class="px-6 py-3 text-sm font-medium text-gray-900 truncate">
                         ${usuario.nombre}
                     </td>
-                    <!-- CAMBIO vNeón: Texto claro -->
-                    <td class="px-6 py-3 text-sm font-semibold ${usuario.pinceles < 0 ? 'text-red-500' : 'text-lime-500'} text-right">
+                    <!-- CAMBIO vFintech: Texto oscuro/Verde/Rojo -->
+                    <td class="px-6 py-3 text-sm font-semibold ${usuario.pinceles < 0 ? 'text-red-600' : 'text-gray-800'} text-right">
                         ${AppFormat.formatNumber(usuario.pinceles)} ℙ
                     </td>
                 </tr>
@@ -2011,18 +2004,19 @@ const AppUI = {
 
         tableContainer.innerHTML = `
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-slate-700">
-                    <!-- CAMBIO vNeón: Encabezado oscuro -->
-                    <thead class="bg-slate-700">
+                <!-- CAMBIO vFintech: Divisor gris -->
+                <table class="min-w-full divide-y divide-gray-200">
+                    <!-- CAMBIO vFintech: Encabezado claro -->
+                    <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider w-16">Rank</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Nombre</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Pinceles</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Rank</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Pinceles</th>
                         </tr>
                     </thead>
-                    <!-- CAMBIO vNeón: Cuerpo oscuro -->
-                    <tbody class="bg-slate-800 divide-y divide-slate-700">
-                        ${filas.length > 0 ? filas : '<tr><td colspan="3" class="text-center p-6 text-gray-400">No hay alumnos en este grupo.</td></tr>'}
+                    <!-- CAMBIO vFintech: Cuerpo blanco -->
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        ${filas.length > 0 ? filas : '<tr><td colspan="3" class="text-center p-6 text-gray-500">No hay alumnos en este grupo.</td></tr>'}
                     </tbody>
                 </table>
             </div>
@@ -2054,23 +2048,23 @@ const AppUI = {
         const top6Riesgo = enRiesgo.slice(0, 6); 
 
         if (top6Riesgo.length === 0) {
-            // CAMBIO vNeón: Placeholder oscuro
-            lista.innerHTML = `<tr><td colspan="3" class="p-4 text-sm text-gray-400 text-center">No hay alumnos en riesgo por el momento.</td></tr>`;
+            // CAMBIO vFintech: Placeholder gris
+            lista.innerHTML = `<tr><td colspan="3" class="p-4 text-sm text-gray-500 text-center">No hay alumnos en riesgo por el momento.</td></tr>`;
             return;
         }
 
         lista.innerHTML = top6Riesgo.map((student, index) => {
             const grupoNombre = student.grupoNombre || 'N/A';
             const pinceles = AppFormat.formatNumber(student.pinceles);
-            // CAMBIO vNeón: Texto claro/rojo
-            const pincelesColor = student.pinceles <= 0 ? 'text-red-500' : 'text-gray-100';
+            // CAMBIO vFintech: Texto oscuro/rojo
+            const pincelesColor = student.pinceles <= 0 ? 'text-red-600' : 'text-gray-900';
 
             return `
-                <!-- CAMBIO vNeón: Hover oscuro -->
-                <tr class="hover:bg-slate-700">
-                    <!-- CAMBIO vNeón: Texto claro -->
-                    <td class="px-4 py-2 text-sm text-gray-100 font-medium truncate">${student.nombre}</td>
-                    <td class="px-4 py-2 text-sm text-gray-400 whitespace-nowrap">${grupoNombre}</td>
+                <!-- CAMBIO vFintech: Hover claro -->
+                <tr class="hover:bg-gray-50">
+                    <!-- CAMBIO vFintech: Texto oscuro/gris -->
+                    <td class="px-4 py-2 text-sm text-gray-900 font-medium truncate">${student.nombre}</td>
+                    <td class="px-4 py-2 text-sm text-gray-500 whitespace-nowrap">${grupoNombre}</td>
                     <td class="px-4 py-2 text-sm font-semibold ${pincelesColor} text-right whitespace-nowrap">${pinceles} ℙ</td>
                 </tr>
             `;
@@ -2101,39 +2095,41 @@ const AppUI = {
         // Pincel Promedio: Pinceles Positivos divididos entre Alumnos Activos (más útil)
         const promedioPinceles = totalAlumnosActivos > 0 ? (pincelesPositivos / totalAlumnosActivos) : 0;
         
-        // CAMBIO vNeón: Estilos oscuros
-        const createStat = (label, value, valueClass = 'text-gray-100') => `
-            <div class="stat-item flex justify-between items-baseline text-sm py-2 border-b border-slate-700">
-                <span class="text-gray-400">${label}:</span>
+        // CAMBIO vFintech: Estilos claros
+        const createStat = (label, value, valueClass = 'text-gray-900') => `
+            <div class="stat-item flex justify-between items-baseline text-sm py-2 border-b border-gray-100">
+                <span class="text-gray-600">${label}:</span>
                 <span class="font-semibold ${valueClass}">${value}</span>
             </div>
         `;
 
         statsList.innerHTML = `
             ${createStat('Alumnos Activos', totalAlumnosActivos)}
-            ${createStat('Alumnos en Cicla', totalEnCicla, 'text-red-500')}
-            ${createStat('Pincel Promedio (Activos)', `${AppFormat.formatNumber(promedioPinceles.toFixed(0))} ℙ`)}
-            ${createStat('Pinceles Positivos', `${AppFormat.formatNumber(pincelesPositivos)} ℙ`, 'text-lime-400')}
-            ${createStat('Pinceles Negativos', `${AppFormat.formatNumber(pincelesNegativos)} ℙ`, 'text-red-500')}
+            ${createStat('Alumnos en Cicla', totalEnCicla, 'text-red-600')}
+            ${createStat('Pincel Promedio (Activos)', `${AppFormat.formatNumber(promedioPinceles.toFixed(0))} ℙ`, 'text-indigo-600')}
+            ${createStat('Pinceles Positivos', `${AppFormat.formatNumber(pincelesPositivos)} ℙ`, 'text-green-600')}
+            ${createStat('Pinceles Negativos', `${AppFormat.formatNumber(pincelesNegativos)} ℙ`, 'text-red-600')}
         `;
     },
 
     actualizarAnuncios: function() {
         const lista = document.getElementById('anuncios-lista');
         
+        // CAMBIO vFintech: Colores corporativos claros
         const todosLosAnuncios = [
-            ...AnunciosDB['AVISO'].map(texto => ({ tipo: 'AVISO', texto, bg: 'bg-gray-800', text: 'text-gray-300' })), // CAMBIO vNeón
-            ...AnunciosDB['NUEVO'].map(texto => ({ tipo: 'NUEVO', texto, bg: 'bg-cyan-900/50', text: 'text-cyan-400' })), // CAMBIO vNeón
-            ...AnunciosDB['CONSEJO'].map(texto => ({ tipo: 'CONSEJO', texto, bg: 'bg-lime-900/50', text: 'text-lime-400' })), // CAMBIO vNeón
-            ...AnunciosDB['ALERTA'].map(texto => ({ tipo: 'ALERTA', texto, bg: 'bg-red-900/50', text: 'text-red-400' })) // CAMBIO vNeón
+            ...AnunciosDB['AVISO'].map(texto => ({ tipo: 'AVISO', texto, bg: 'bg-gray-100', text: 'text-gray-700' })),
+            ...AnunciosDB['NUEVO'].map(texto => ({ tipo: 'NUEVO', texto, bg: 'bg-indigo-100', text: 'text-indigo-700' })),
+            ...AnunciosDB['CONSEJO'].map(texto => ({ tipo: 'CONSEJO', texto, bg: 'bg-green-100', text: 'text-green-700' })),
+            ...AnunciosDB['ALERTA'].map(texto => ({ tipo: 'ALERTA', texto, bg: 'bg-red-100', text: 'text-red-700' }))
         ];
         
         const anuncios = [...todosLosAnuncios].sort(() => 0.5 - Math.random()).slice(0, 5);
 
         lista.innerHTML = anuncios.map(anuncio => `
-            <li class="flex items-start p-2 hover:bg-slate-700 rounded-lg transition-colors"> 
+            <!-- CAMBIO vFintech: Hover claro -->
+            <li class="flex items-start p-2 hover:bg-gray-50 rounded-lg transition-colors"> 
                 <span class="text-xs font-bold ${anuncio.bg} ${anuncio.text} rounded-full w-20 text-center py-0.5 mr-3 flex-shrink-0 mt-1">${anuncio.tipo}</span>
-                <span class="text-sm text-gray-300 flex-1">${anuncio.texto}</span>
+                <span class="text-sm text-gray-700 flex-1">${anuncio.texto}</span>
             </li>
         `).join('');
     },
@@ -2143,12 +2139,12 @@ const AppUI = {
         if (!listaModal) return;
 
         let html = '';
-        // CAMBIO vNeón: Colores neón
+        // CAMBIO vFintech: Colores corporativos claros
         const tipos = [
-            { id: 'AVISO', titulo: 'Avisos', bg: 'bg-slate-700', text: 'text-gray-300' },
-            { id: 'NUEVO', titulo: 'Novedades', bg: 'bg-cyan-900/50', text: 'text-cyan-400' },
-            { id: 'CONSEJO', titulo: 'Consejos', bg: 'bg-lime-900/50', text: 'text-lime-400' },
-            { id: 'ALERTA', titulo: 'Alertas', bg: 'bg-red-900/50', text: 'text-red-400' }
+            { id: 'AVISO', titulo: 'Avisos', bg: 'bg-gray-100', text: 'text-gray-700' },
+            { id: 'NUEVO', titulo: 'Novedades', bg: 'bg-indigo-100', text: 'text-indigo-700' },
+            { id: 'CONSEJO', titulo: 'Consejos', bg: 'bg-green-100', text: 'text-green-700' },
+            { id: 'ALERTA', titulo: 'Alertas', bg: 'bg-red-100', text: 'text-red-700' }
         ];
 
         tipos.forEach(tipo => {
@@ -2156,14 +2152,14 @@ const AppUI = {
             if (anuncios && anuncios.length > 0) {
                 html += `
                     <div>
-                        <!-- CAMBIO vNeón: Texto claro -->
+                        <!-- CAMBIO vFintech: Texto oscuro -->
                         <h4 class="text-sm font-semibold ${tipo.text} mb-2">${tipo.titulo}</h4>
                         <ul class="space-y-2">
                             ${anuncios.map(texto => `
-                                <!-- CAMBIO vNeón: Fondo de lista oscuro -->
-                                <li class="flex items-start p-2 bg-slate-700 rounded-lg">
+                                <!-- CAMBIO vFintech: Fondo de lista gris claro -->
+                                <li class="flex items-start p-2 bg-gray-50 rounded-lg">
                                     <span class="text-xs font-bold ${tipo.bg} ${tipo.text} rounded-full w-20 text-center py-0.5 mr-3 flex-shrink-0 mt-1">${tipo.id}</span>
-                                    <span class="text-sm text-gray-300 flex-1">${texto}</span>
+                                    <span class="text-sm text-gray-700 flex-1">${texto}</span>
                                 </li>
                             `).join('')}
                         </ul>
@@ -2191,40 +2187,40 @@ const AppUI = {
         const prestamoActivo = AppState.datosAdicionales.prestamosActivos.find(p => p.alumno === student.nombre);
         const depositoActivo = AppState.datosAdicionales.depositosActivos.find(d => d.alumno === student.nombre);
 
-        // CAMBIO vNeón: Estilos oscuros
-        const createStat = (label, value, valueClass = 'text-gray-100') => `
-            <div class="bg-slate-700 p-4 rounded-lg text-center">
-                <div class="text-xs font-medium text-gray-400 uppercase tracking-wide">${label}</div>
+        // CAMBIO vFintech: Estilos claros
+        const createStat = (label, value, valueClass = 'text-gray-900') => `
+            <div class="bg-gray-50 p-4 rounded-lg text-center">
+                <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">${label}</div>
                 <div class="text-2xl font-bold ${valueClass} truncate">${value}</div>
             </div>
         `;
 
         let extraHtml = '';
         if (prestamoActivo) {
-            // CAMBIO vNeón: Alerta oscura
-            extraHtml += `<p class="text-sm font-bold text-red-400 text-center mt-3 p-2 bg-red-900/30 rounded-lg border border-red-500/50">⚠️ Préstamo Activo</p>`;
+            // CAMBIO vFintech: Alerta clara
+            extraHtml += `<p class="text-sm font-bold text-red-700 text-center mt-3 p-2 bg-red-100 rounded-lg border border-red-200">⚠️ Préstamo Activo</p>`;
         }
         if (depositoActivo) {
             const vencimiento = new Date(depositoActivo.vencimiento);
             const fechaString = `${vencimiento.getDate()}/${vencimiento.getMonth() + 1}`;
-            // CAMBIO vNeón: Alerta oscura
-            extraHtml += `<p class="text-sm font-bold text-lime-400 text-center mt-3 p-2 bg-lime-900/30 rounded-lg border border-lime-500/50">🏦 Depósito Activo (Vence: ${fechaString})</p>`;
+            // CAMBIO vFintech: Alerta clara
+            extraHtml += `<p class="text-sm font-bold text-green-700 text-center mt-3 p-2 bg-green-100 rounded-lg border border-green-200">🏦 Depósito Activo (Vence: ${fechaString})</p>`;
         }
         
         modalContent.innerHTML = `
             <div class="p-6">
                 <div class="flex justify-between items-start mb-4">
                     <div>
-                        <!-- CAMBIO vNeón: Texto claro -->
-                        <h2 class="text-xl font-semibold text-gray-100">${student.nombre}</h2>
-                        <p class="text-sm font-medium text-gray-400">${grupo.nombre}</p>
+                        <!-- CAMBIO vFintech: Texto oscuro -->
+                        <h2 class="text-xl font-semibold text-gray-900">${student.nombre}</h2>
+                        <p class="text-sm font-medium text-gray-500">${grupo.nombre}</p>
                     </div>
-                    <button onclick="AppUI.hideModal('student-modal')" class="text-gray-400 hover:text-gray-200 text-2xl">&times;</button>
+                    <button onclick="AppUI.hideModal('student-modal')" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    ${createStat('Rank en Grupo', `${rank}º`, 'text-cyan-400')}
-                    ${createStat('Rank de Grupo', `${rankGrupo > 0 ? rankGrupo + 'º' : 'N/A'}`, 'text-cyan-400')}
-                    ${createStat('Total Pinceles', `${AppFormat.formatNumber(totalPinceles)} ℙ`, totalPinceles < 0 ? 'text-red-500' : 'text-lime-500')}
+                    ${createStat('Rank en Grupo', `${rank}º`, 'text-indigo-600')}
+                    ${createStat('Rank de Grupo', `${rankGrupo > 0 ? rankGrupo + 'º' : 'N/A'}`, 'text-indigo-600')}
+                    ${createStat('Total Pinceles', `${AppFormat.formatNumber(totalPinceles)} ℙ`, totalPinceles < 0 ? 'text-red-600' : 'text-green-600')}
                     ${createStat('Total Grupo', `${AppFormat.formatNumber(grupo.total)} ℙ`)}
                     ${createStat('% del Grupo', `${grupo.total !== 0 ? ((totalPinceles / grupo.total) * 100).toFixed(1) : 0}%`)}
                     ${createStat('Grupo Original', student.grupoNombre || 'N/A' )}
@@ -2263,15 +2259,16 @@ const AppUI = {
         // NUEVO v16.1 (Problema 3): Lógica de Control Manual
         const manualStatus = AppState.tienda.storeManualStatus;
         
-        // CAMBIO vNeón: Clases de color para el modal timer
-        const timerStatusClasses = 'bg-slate-700 text-gray-300 font-medium';
-        const openStatusClasses = 'bg-lime-900/30 text-lime-400 font-bold border border-lime-500/50';
-        const closedStatusClasses = 'bg-red-900/30 text-red-400 font-bold border border-red-500/50';
+        // CAMBIO vFintech: Clases de color para el modal timer (Claras)
+        const timerStatusClasses = 'bg-gray-50 text-gray-700 font-medium';
+        const openStatusClasses = 'bg-green-100 text-green-700 font-bold border border-green-200';
+        const closedStatusClasses = 'bg-red-100 text-red-700 font-bold border border-red-200';
         
         if (tiendaTimerStatus) {
-            tiendaTimerStatus.classList.remove(openStatusClasses, closedStatusClasses);
-            tiendaTimerStatus.className = tiendaTimerStatus.className.replace(/bg-.*?-900\/30|text-.*?-400|border-.*?-500\/50/g, '').trim();
-            tiendaTimerStatus.classList.add(timerStatusClasses.split(' ').filter(c => c).join(' ')); // Limpieza y base
+            // Limpieza de clases dinámicas anteriores (Neón o versiones previas)
+            tiendaTimerStatus.classList.remove('bg-red-900/30', 'text-red-400', 'border-red-500/50', 'bg-lime-900/30', 'text-lime-400', 'border-lime-500/50', 'bg-slate-700');
+            tiendaTimerStatus.className = tiendaTimerStatus.className.replace(/bg-.*?-100|text-.*?-700|border-.*?-200/g, '').trim();
+            tiendaTimerStatus.classList.add(timerStatusClasses.split(' ').filter(c => c).join(' ')); // Base
         }
 
 
@@ -2305,7 +2302,7 @@ const AppUI = {
                 messageEl.textContent = "¡La tienda está abierta!"; // Mensaje original
                 if (tiendaTimerStatus) { 
                     tiendaTimerStatus.innerHTML = `
-                        <span class="text-lime-400 font-bold">¡TIENDA ABIERTA!</span> Oportunidad única.
+                        <span class="text-green-600 font-bold">¡TIENDA ABIERTA!</span> Oportunidad única.
                     `;
                     tiendaTimerStatus.classList.add(openStatusClasses.split(' ').filter(c => c).join(' '));
                 }
@@ -2335,11 +2332,11 @@ const AppUI = {
                 // CORRECCIÓN BUG TIMER (Problema 1): Actualizar también el timer del modal
                 if (tiendaTimerStatus) {
                     tiendaTimerStatus.innerHTML = `
-                        <span class="text-red-400 font-bold">TIENDA CERRADA.</span> Próxima apertura en:
+                        <span class="text-red-600 font-bold">TIENDA CERRADA.</span> Próxima apertura en:
                         <div class="flex items-baseline justify-center gap-2 mt-2">
-                            <span class="text-xl font-bold text-cyan-400 w-8 text-right">${days}</span><span class="text-xs text-gray-400 uppercase -ml-1">Días</span>
-                            <span class="text-xl font-bold text-cyan-400 w-8 text-right">${hours}</span><span class="text-xs text-gray-400 uppercase -ml-1">Horas</span>
-                            <span class="text-xl font-bold text-cyan-400 w-8 text-right">${minutes}</span><span class="text-xs text-gray-400 uppercase -ml-1">Minutos</span>
+                            <span class="text-xl font-bold text-indigo-600 w-8 text-right">${days}</span><span class="text-xs text-gray-500 uppercase -ml-1">Días</span>
+                            <span class="text-xl font-bold text-indigo-600 w-8 text-right">${hours}</span><span class="text-xs text-gray-500 uppercase -ml-1">Horas</span>
+                            <span class="text-xl font-bold text-indigo-600 w-8 text-right">${minutes}</span><span class="text-xs text-gray-500 uppercase -ml-1">Minutos</span>
                         </div>
                     `;
                     tiendaTimerStatus.classList.add(closedStatusClasses.split(' ').filter(c => c).join(' '));
@@ -2748,7 +2745,7 @@ const AppTransacciones = {
         } 
     },
 
-    // --- LÓGICA DE TIENDA (NUEVO v16.0) ---
+    // --- LÓGICA DE TIENDA (FINTECH v19.1) ---
 
     // CAMBIO v17.0: Simplificado. Se llama directamente desde el botón Comprar.
     // Acepta el elemento del botón para mostrar el estado de carga.
@@ -2987,24 +2984,24 @@ const AppTransacciones = {
     setLoading: function(statusMsgEl, message) {
         if (statusMsgEl) {
             statusMsgEl.textContent = message;
-            // CAMBIO vNeón: Texto cian
-            statusMsgEl.className = "text-sm text-center font-medium text-cyan-400 h-auto min-h-[1rem]";
+            // CAMBIO vFintech: Texto Índigo
+            statusMsgEl.className = "text-sm text-center font-medium text-indigo-600 h-auto min-h-[1rem]";
         }
     },
 
     setSuccess: function(statusMsgEl, message) {
         if (statusMsgEl) {
             statusMsgEl.textContent = message;
-            // CAMBIO vNeón: Texto lima neón
-            statusMsgEl.className = "text-sm text-center font-medium text-lime-400 h-auto min-h-[1rem]";
+            // CAMBIO vFintech: Texto Verde
+            statusMsgEl.className = "text-sm text-center font-medium text-green-600 h-auto min-h-[1rem]";
         }
     },
 
     setError: function(statusMsgEl, message) {
         if (statusMsgEl) {
             statusMsgEl.textContent = `Error: ${message}`;
-            // CAMBIO vNeón: Texto rojo neón
-            statusMsgEl.className = "text-sm text-center font-medium text-red-500 h-auto min-h-[1em]";
+            // CAMBIO vFintech: Texto Rojo
+            statusMsgEl.className = "text-sm text-center font-medium text-red-600 h-auto min-h-[1em]";
         }
     }
 };
