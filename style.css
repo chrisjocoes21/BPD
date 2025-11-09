@@ -29,6 +29,30 @@ body {
 }
 
 /* =================================================================== */
+/* Animación del Botón de Menú (Hamburguesa) */
+/* =================================================================== */
+.menu-toggle-icon {
+     transition: transform 0.3s ease-out, color 0.3s ease-out;
+}
+.menu-toggle-icon:hover {
+    /* CAMBIO V16: Dorado */
+    color: #d97706; /* amber-600 */
+    transform: rotate(90deg); 
+}
+
+/* =================================================================== */
+/* Animación del Botón de Cierre (X) */
+/* =================================================================== */
+.modal-close-btn {
+    transition: transform 0.3s ease-out, color 0.3s ease-out;
+}
+.modal-close-btn:hover {
+    transform: rotate(90deg);
+    /* CAMBIO V16: Dorado */
+    color: #d97706; /* amber-600 */
+}
+
+/* =================================================================== */
 /* ESTILOS DE SCROLLBAR (Monocromo Gris) */
 /* =================================================================== */
 ::-webkit-scrollbar {
@@ -52,7 +76,7 @@ body {
     border-radius: 3px;
 }
 
-/* Ocultar scrollbar */
+/* Ocultar scrollbar - CRÍTICO PARA PLAN V15 */
 .no-scrollbar::-webkit-scrollbar {
     display: none;
 }
@@ -68,13 +92,19 @@ body {
     border-radius: 0;
     margin-right: 0.5rem;
 }
-/* CAMBIO vMonocromo: Color de acento a indigo-600 */
+/* CAMBIO V16: Color de acento a Dorado */
 #transaccion-modal .tab-btn.active-tab {
-    border-bottom-color: #4f46e5 !important; /* indigo-600 */
-    color: #4f46e5 !important; /* indigo-600 */
+    border-bottom-color: #d97706 !important; /* amber-600 */
+    color: #d97706 !important; /* amber-600 */
 }
+
+/* CORRECCIÓN PLAN V15: Altura unificada para el contenido de las pestañas de admin */
 .tab-content {
-    min-height: 540px; 
+    /* Aseguramos una altura máxima que respeta el footer y header del modal */
+    /* La altura de 550px se determinó para el max-w-6xl anterior. */
+    /* En la nueva configuración full-width, mantenemos una altura generosa para forzar el scroll interno */
+    height: 550px; 
+    overflow-y: auto; 
 }
 
 /* =================================================================== */
@@ -147,10 +177,4 @@ body {
     .tooltip-text {
         display: none !important;
     }
-}
-
-/* CORRECCIÓN SALTO VERTICAL */
-.tienda-tab-content {
-    height: 550px; /* Altura unificada */
-    overflow-y: auto; /* Permitir scroll si el contenido se pasa */
 }
