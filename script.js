@@ -10,9 +10,9 @@ const AppConfig = {
     MAX_RETRIES: 5,
     CACHE_DURATION: 300000,
     
-    // CAMBIO V25.0: Nueva versión
+    // CAMBIO V26.3: Nueva versión (FIX: Listado Step 1 sin filtro de grupo)
     APP_STATUS: 'RC', 
-    APP_VERSION: 'v25.0', 
+    APP_VERSION: 'v26.3', 
     
     // CAMBIO v0.3.0: Impuesto P2P (debe coincidir con el Backend)
     IMPUESTO_P2P_TASA: 0.10, // 10%
@@ -55,6 +55,9 @@ const AppState = {
     isSidebarOpen: false, 
     sidebarTimer: null, 
     transaccionSelectAll: {}, 
+    
+    // NUEVO V26.0: Almacena el hash de los grupos conocidos para evitar repoblar innecesariamente
+    lastKnownGroupsHash: '',
     
     // CAMBIO v16.0: 'info' almacena el objeto completo del alumno
     currentSearch: {
@@ -227,7 +230,7 @@ const AppData = {
         // ... (Tu lógica de detección de cambios si aplica)
     },
     
-    // CAMBIO v16.0: Modificado para aceptar Tienda
+    // CAMBIO V26.1: Modificado para asegurar la actualización de las listas de usuario.
     procesarYMostrarDatos: function(data) {
         // 1. Separar Tesorería y Datos Adicionales
         AppState.datosAdicionales.saldoTesoreria = data.saldoTesoreria || 0;
@@ -265,6 +268,18 @@ const AppData = {
         // V16: Obtener la lista completa de grupos (incluyendo Cicla) para Checkboxes
         AppState.datosAdicionales.allGroups = gruposOrdenados.map(g => g.nombre).filter(n => n !== 'Banco');
 
+        // V26.0: INICIO CORRECCIÓN PERSISTENCIA DE CHECKBOXES
+        const currentGroupsHash = AppState.datosAdicionales.allGroups.join('|');
+        const groupsChanged = currentGroupsHash !== AppState.lastKnownGroupsHash;
+        
+        if (groupsChanged) {
+            // Repoblar el HTML de los checkboxes solo si la estructura de grupos ha cambiado
+            AppUI.populateAdminGroupCheckboxes('bono-admin-grupos-checkboxes-container', 'bonos');
+            AppUI.populateAdminGroupCheckboxes('tienda-admin-grupos-checkboxes-container', 'tienda');
+            AppState.lastKnownGroupsHash = currentGroupsHash;
+        }
+        // V26.0: FIN CORRECCIÓN PERSISTENCIA DE CHECKBOXES
+
         // 6. Ordenar y filtrar
         activeGroups.sort((a, b) => b.total - a.total);
         if (ciclaGroup) {
@@ -291,7 +306,8 @@ const AppData = {
         
         AppUI.actualizarSidebarActivo();
         
-        // 9. NUEVO v0.5.0: Actualizar UI de Bonos (si está abierta)
+        // 9. V26.1: ACTUALIZACIÓN DE MODALES DE USUARIO
+        // Si el modal de Bonos está abierto, actualizarlo en cada recarga de 10s.
         if (document.getElementById('bonos-modal').classList.contains('opacity-0') === false) {
             AppUI.populateBonoList();
             // Si el paso 2 de Bonos está visible, actualizar el estado de carga
@@ -299,7 +315,8 @@ const AppData = {
                  AppTransacciones.setLoadingState(document.getElementById('bono-submit-step2-btn'), document.getElementById('bono-btn-text-step2'), false, 'Confirmar Canje');
             }
         }
-        // 10. NUEVO v16.0: Actualizar UI de Tienda (si está abierta)
+        // 10. V26.1: ACTUALIZACIÓN DE MODALES DE USUARIO
+        // Si el modal de Tienda está abierto, actualizarlo en cada recarga de 10s.
         if (document.getElementById('tienda-modal').classList.contains('opacity-0') === false) {
             AppUI.renderTiendaItems(); 
             // Si el paso 2 de Tienda está visible, actualizar el estado de carga
@@ -313,10 +330,6 @@ const AppData = {
             const activeTab = document.querySelector('#transaccion-modal .tab-btn.active-tab');
             const tabId = activeTab ? activeTab.dataset.tab : '';
             
-            // V16: Popula los checkboxes de grupos siempre que el modal de admin esté abierto
-            AppUI.populateAdminGroupCheckboxes('bono-admin-grupos-checkboxes-container', 'bonos');
-            AppUI.populateAdminGroupCheckboxes('tienda-admin-grupos-checkboxes-container', 'tienda');
-
             if (tabId === 'bonos_admin') {
                 AppUI.populateBonoAdminList();
             } else if (tabId === 'tienda_gestion' || tabId === 'tienda_inventario') {
@@ -576,6 +589,9 @@ const AppUI = {
         document.getElementById(`tab-${tabId}`).classList.remove('hidden');
         
         // 3. Lógica específica para cada pestaña
+        // NOTA V26.0: populateAdminGroupCheckboxes ahora se llama en AppData.procesarYMostrarDatos 
+        // si la lista de grupos cambia, o aquí como fallback si no se ha cargado (primera vez).
+        
         if (tabId === 'transaccion') {
             AppUI.populateGruposTransaccion();
         } else if (tabId === 'prestamos') {
@@ -583,16 +599,20 @@ const AppUI = {
         } else if (tabId === 'depositos') {
             AppUI.loadDepositoPaquetes(null);
         } else if (tabId === 'bonos_admin') { 
-            // V16: Repopular checkboxes de grupos antes de mostrar el admin de bonos
-            AppUI.populateAdminGroupCheckboxes('bono-admin-grupos-checkboxes-container', 'bonos');
+            // Si la lista de grupos no se ha cargado, forzamos la carga.
+            if (AppState.lastKnownGroupsHash === '') {
+                AppUI.populateAdminGroupCheckboxes('bono-admin-grupos-checkboxes-container', 'bonos');
+            }
             AppUI.populateBonoAdminList();
             AppUI.clearBonoAdminForm(); 
-        } else if (tabId === 'tienda_gestion') { // CAMBIO V19.5: Nueva pestaña de formularios
-            // V16: Repopular checkboxes de grupos antes de mostrar el admin de tienda
-            AppUI.populateAdminGroupCheckboxes('tienda-admin-grupos-checkboxes-container', 'tienda');
+        } else if (tabId === 'tienda_gestion') { 
+            // Si la lista de grupos no se ha cargado, forzamos la carga.
+            if (AppState.lastKnownGroupsHash === '') {
+                AppUI.populateAdminGroupCheckboxes('tienda-admin-grupos-checkboxes-container', 'tienda');
+            }
             AppUI.updateTiendaAdminStatusLabel();
-            AppUI.clearTiendaAdminForm(); // Limpiar el formulario al cambiar
-        } else if (tabId === 'tienda_inventario') { // CAMBIO V19.5: Nueva pestaña de tabla
+            AppUI.clearTiendaAdminForm(); 
+        } else if (tabId === 'tienda_inventario') { 
             AppUI.populateTiendaAdminList();
         }
         
@@ -745,6 +765,9 @@ const AppUI = {
             return;
         }
 
+        // Antes de repoblar, guardar el estado actual del formulario de edición.
+        const currentSelection = AppUI.getAdminGroupCheckboxSelection(containerId);
+
         container.innerHTML = '';
 
         allGroups.forEach(grupoNombre => {
@@ -761,6 +784,11 @@ const AppUI = {
             input.value = grupoNombre;
             // CAMBIO V16: Checkbox Dorado
             input.className = "h-4 w-4 text-amber-600 border-slate-300 rounded focus:ring-amber-600 bg-white group-admin-checkbox";
+            
+            // V26.0: Restaurar la selección previa del formulario de edición
+            if (currentSelection.includes(grupoNombre)) {
+                 input.checked = true;
+            }
 
             const label = document.createElement('label');
             label.htmlFor = checkboxId;
@@ -771,6 +799,15 @@ const AppUI = {
             div.appendChild(label);
             container.appendChild(div);
         });
+    },
+    
+    // NUEVO V26.0: Función utilitaria para obtener el estado de los checkboxes
+    getAdminGroupCheckboxSelection: function(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return [];
+        
+        // Recoger solo los grupos que están actualmente seleccionados.
+        return Array.from(container.querySelectorAll('.group-admin-checkbox:checked')).map(cb => cb.value);
     },
 
     // V16: Función para seleccionar los grupos en la UI al editar
@@ -890,10 +927,13 @@ const AppUI = {
 
     // Puebla la lista de bonos disponibles (Vista de Usuario)
     populateBonoList: function() {
+        // V26.1: Se agrega la verificación de si el modal está abierto para evitar procesamiento innecesario
+        if (document.getElementById('bonos-modal').classList.contains('opacity-0')) return;
+        
         const container = document.getElementById('bonos-lista-disponible');
         const bonos = AppState.bonos.disponibles;
         
-        // V16: Filtra por expiración y grupos permitidos
+        // V26.2 FIX: Lógica robusta de filtrado de grupos
         const student = AppState.currentSearch.bonoAlumno.info || { grupoNombre: null };
         const studentGroup = student.grupoNombre;
         const now = Date.now();
@@ -905,14 +945,17 @@ const AppUI = {
             // 2. Filtrar por expiración (V16)
             if (bono.expiracion_fecha && new Date(bono.expiracion_fecha).getTime() < now) return false;
 
-            // 3. Filtrar por grupos (V16)
-            if (bono.grupos_permitidos) {
-                const allowedGroups = (bono.grupos_permitidos || '').split(',').map(g => g.trim());
-                // Si el alumno no tiene grupo o su grupo no está en la lista de permitidos
-                if (!studentGroup || (allowedGroups.length > 0 && !allowedGroups.includes(studentGroup))) {
+            // 3. Filtrar por grupos (V26.3 FIX: Solo filtramos si el filtro está activo, no si el alumno es nulo)
+            const allowedGroups = (bono.grupos_permitidos || '').split(',').map(g => g.trim()).filter(g => g.length > 0);
+            const hasRestrictions = allowedGroups.length > 0;
+            
+            if (hasRestrictions && studentGroup) {
+                // Si hay restricciones Y hay alumno seleccionado, verificar elegibilidad
+                if (!allowedGroups.includes(studentGroup)) {
                     return false;
                 }
             }
+            // Si tiene restricciones pero NO hay alumno seleccionado, se muestra.
             return true;
         });
 
@@ -922,7 +965,7 @@ const AppUI = {
             container.innerHTML = `<p class="text-sm text-slate-500 text-center col-span-1 md:col-span-2">No hay bonos disponibles en este momento.</p>`;
             return;
         }
-
+// ... (rest of the populateBonoList function)
         container.innerHTML = bonosActivos.map(bono => {
             const recompensa = AppFormat.formatNumber(bono.recompensa);
             const usosRestantes = bono.usos_totales - bono.usos_actuales;
@@ -1141,10 +1184,13 @@ const AppUI = {
     // Renderiza las tarjetas de la tienda
     // CAMBIO V16: Se adapta la estructura para ser ultra-compacta (similar a bonos)
     renderTiendaItems: function() {
+        // V26.1: Se agrega la verificación de si el modal está abierto para evitar procesamiento innecesario
+        if (document.getElementById('tienda-modal').classList.contains('opacity-0')) return;
+
         const container = document.getElementById('tienda-items-container');
         const items = AppState.tienda.items;
         
-        // V16: Filtra por expiración y grupos permitidos
+        // V26.3 FIX: Lógica robusta de filtrado de grupos
         const student = AppState.currentSearch.tiendaAlumno.info || { grupoNombre: null };
         const studentGroup = student.grupoNombre;
         const now = Date.now();
@@ -1159,14 +1205,17 @@ const AppUI = {
             // 2. Filtrar por expiración (V16)
             if (item.ExpiracionFecha && new Date(item.ExpiracionFecha).getTime() < now) return false;
 
-            // 3. Filtrar por grupos (V16)
-            if (item.GruposPermitidos) {
-                const allowedGroups = (item.GruposPermitidos || '').split(',').map(g => g.trim());
-                 // Si el alumno no tiene grupo o su grupo no está en la lista de permitidos
-                if (!studentGroup || (allowedGroups.length > 0 && !allowedGroups.includes(studentGroup))) {
+            // 3. Filtrar por grupos (V26.3 FIX: Solo filtramos si el filtro está activo, no si el alumno es nulo)
+            const allowedGroups = (item.GruposPermitidos || '').split(',').map(g => g.trim()).filter(g => g.length > 0);
+            const hasRestrictions = allowedGroups.length > 0;
+            
+            if (hasRestrictions && studentGroup) {
+                // Si hay restricciones Y hay alumno seleccionado, verificar elegibilidad
+                if (!allowedGroups.includes(studentGroup)) {
                     return false;
                 }
             }
+            // Si no hay restricciones, o si hay un alumno seleccionado Y es elegible, el ítem es visible.
             return true;
         });
 
@@ -1218,7 +1267,7 @@ const AppUI = {
                                     data-item-id="${itemId}"
                                     onclick="AppTransacciones.iniciarCompra('${itemIdEscapado}')"
                                     class="tienda-buy-btn px-3 py-1 text-xs font-medium rounded-lg transition-colors shadow-sm">
-                                <span class="btn-text">Cargando...</span>
+                                <span class="btn-text">Comprar</span>
                             </button>
                         </div>
                     </div>
@@ -1285,6 +1334,7 @@ const AppUI = {
     // NUEVO v16.1 (Problema 3): Actualiza la etiqueta de estado en el panel de admin
     // CAMBIO V16: Colores de estado ajustados a la paleta Dorado
     updateTiendaAdminStatusLabel: function() {
+        // NOTA V26.0: Eliminamos la referencia a tienda-timer-status de aquí, ya que se eliminó del HTML
         const label = document.getElementById('tienda-admin-status-label');
         const container = label ? label.closest('div') : null;
         if (!label || !container) return;
@@ -2401,6 +2451,7 @@ const AppUI = {
     },
     
     // CORRECCIÓN V24.1: Ajuste de lógica para mostrar solo contador O solo mensaje en modo automático.
+    // NOTA V26.0: Eliminamos toda referencia al elemento 'tienda-timer-status' ya que fue eliminado del HTML.
     updateCountdown: function() {
         const getLastThursday = (year, month) => {
             const lastDayOfMonth = new Date(year, month + 1, 0);
@@ -2419,26 +2470,13 @@ const AppUI = {
 
         const timerEl = document.getElementById('countdown-timer');
         const messageEl = document.getElementById('store-message'); 
-        const tiendaTimerStatus = document.getElementById('tienda-timer-status');
         
         const f = (val) => String(val).padStart(2, '0');
 
         // NUEVO v16.1 (Problema 3): Lógica de Control Manual
         const manualStatus = AppState.tienda.storeManualStatus;
         
-        // CAMBIO V16: Definición de clases de estado para el modal (Dorado/Gris)
-        const openStatusClasses = 'bg-amber-100 text-slate-800 font-bold border border-amber-200'; // Dorado para abierto
-        const closedStatusClasses = 'bg-slate-200 text-slate-800 font-bold border border-slate-300'; // Gris para cerrado
         
-        
-        // CORRECCIÓN: Limpiar todas las clases dinámicas existentes en el elemento de estado del modal.
-        if (tiendaTimerStatus) {
-            // Utilizamos una función genérica para limpiar todas las clases de estado dinámicas
-            const allDynamicClasses = ['bg-amber-100', 'text-amber-700', 'border-amber-200', 'bg-slate-200', 'text-slate-800', 'border-slate-300', 'bg-slate-50', 'text-slate-700', 'color-dorado-main', 'text-red-600'];
-            tiendaTimerStatus.classList.remove(...allDynamicClasses);
-        }
-
-
         if (manualStatus === 'open') {
             // TIENDA FORZADA ABIERTA
             timerEl.classList.add('hidden');
@@ -2447,10 +2485,6 @@ const AppUI = {
             // V18: Mensaje Simple de Apertura
             messageEl.textContent = "Tienda Abierta"; 
 
-            if (tiendaTimerStatus) { 
-                tiendaTimerStatus.innerHTML = `¡TIENDA ABIERTA!`; 
-                tiendaTimerStatus.classList.add(...openStatusClasses.split(' ').filter(c => c));
-            }
             AppState.tienda.isStoreOpen = true;
 
         } else if (manualStatus === 'closed') {
@@ -2461,10 +2495,6 @@ const AppUI = {
             // V18: Mensaje Simple de Cierre
             messageEl.textContent = "Tienda Cerrada"; 
 
-            if (tiendaTimerStatus) {
-                tiendaTimerStatus.innerHTML = `TIENDA CERRADA`;
-                tiendaTimerStatus.classList.add(...closedStatusClasses.split(' ').filter(c => c));
-            }
             AppState.tienda.isStoreOpen = false;
 
         } else {
@@ -2477,12 +2507,6 @@ const AppUI = {
                 // V18: Mensaje Simple de Apertura
                 messageEl.textContent = "Tienda Abierta"; 
 
-                if (tiendaTimerStatus) { 
-                    tiendaTimerStatus.innerHTML = `
-                        <span class="color-dorado-main font-bold">¡TIENDA ABIERTA!</span> Oportunidad única.
-                    `;
-                    tiendaTimerStatus.classList.add(...openStatusClasses.split(' ').filter(c => c));
-                }
                 AppState.tienda.isStoreOpen = true;
             } else {
                 // AUTOMÁTICO CERRADO (Contador hasta la próxima apertura)
@@ -2515,18 +2539,6 @@ const AppUI = {
                 if(secondsEl) secondsEl.textContent = seconds;
 
 
-                // CORRECCIÓN BUG TIMER (Problema 1): Actualizar también el timer del modal
-                if (tiendaTimerStatus) {
-                    tiendaTimerStatus.innerHTML = `
-                        <span class="text-slate-800 font-bold">TIENDA CERRADA.</span> Próxima apertura en:
-                        <div class="flex items-baseline justify-center gap-2 mt-2">
-                            <span class="text-xl font-bold color-dorado-main w-8 text-right">${days}</span><span class="text-xs text-slate-500 uppercase -ml-1">Días</span>
-                            <span class="text-xl font-bold color-dorado-main w-8 text-right">${hours}</span><span class="text-xs text-slate-500 uppercase -ml-1">Horas</span>
-                            <span class="text-xl font-bold color-dorado-main w-8 text-right">${minutes}</span><span class="text-xs text-slate-500 uppercase -ml-1">Minutos</span>
-                        </div>
-                    `;
-                    tiendaTimerStatus.classList.add(...closedStatusClasses.split(' ').filter(c => c));
-                }
                 AppState.tienda.isStoreOpen = false;
             }
         }
@@ -2898,7 +2910,7 @@ const AppTransacciones = {
         }
     },
 
-    // CAMBIO V16: Actualiza payload para usar Duración (Horas) y Grupos Checkboxes
+    // V26.1: MODIFICADO para asegurar la actualización de la lista de usuario
     crearActualizarBono: async function() {
         const statusMsg = document.getElementById('bono-admin-status-msg');
         const submitBtn = document.getElementById('bono-admin-submit-btn');
@@ -2967,7 +2979,11 @@ const AppTransacciones = {
                 // CAMBIO V16: Usar Dorado/Gris para éxito
                 AppTransacciones.setSuccess(statusMsg, result.message || "¡Bono guardado con éxito!");
                 AppUI.clearBonoAdminForm();
-                AppData.cargarDatos(false); // Recargar todos los datos
+                await AppData.cargarDatos(false); // Recargar todos los datos
+                
+                // V26.1: FORZAR ACTUALIZACIÓN DE LISTA DE USUARIO
+                AppUI.populateBonoList(); 
+                
             } else {
                 throw new Error(result.message || "Error al guardar el bono.");
             }
@@ -2979,7 +2995,7 @@ const AppTransacciones = {
         }
     },
     
-    // NUEVO v0.5.4: Eliminar Bono
+    // V26.1: MODIFICADO para asegurar la actualización de la lista de usuario
     eliminarBono: async function(claveBono) {
         // ADVERTENCIA: Esta función elimina directamente sin confirmación,
         // ya que `window.confirm()` está prohibido.
@@ -3006,7 +3022,11 @@ const AppTransacciones = {
             if (result.success === true) {
                 // CAMBIO V16: Usar Dorado/Gris para éxito
                 AppTransacciones.setSuccess(statusMsg, result.message || "¡Bono eliminado con éxito!");
-                AppData.cargarDatos(false); // Recargar todos los datos
+                await AppData.cargarDatos(false); // Recargar todos los datos
+                
+                // V26.1: FORZAR ACTUALIZACIÓN DE LISTA DE USUARIO
+                AppUI.populateBonoList();
+                
             } else {
                 throw new Error(result.message || "Error al eliminar el bono.");
             }
@@ -3143,7 +3163,7 @@ const AppTransacciones = {
         }
     },
 
-    // CAMBIO V16: Actualiza payload para usar Duración (Horas) y Grupos Checkboxes
+    // V26.1: MODIFICADO para asegurar la actualización de la lista de usuario
     crearActualizarItem: async function() {
         // NOTA V19.5: La gestión ahora está en la pestaña tienda_gestion
         const statusMsg = document.getElementById('tienda-admin-status-msg');
@@ -3213,7 +3233,11 @@ const AppTransacciones = {
                 // CAMBIO V16: Usar Dorado/Gris para éxito
                 AppTransacciones.setSuccess(statusMsg, result.message || "¡Artículo guardado con éxito!");
                 AppUI.clearTiendaAdminForm();
-                AppData.cargarDatos(false); // Recargar todos los datos
+                await AppData.cargarDatos(false); // Recargar todos los datos
+                
+                // V26.1: FORZAR ACTUALIZACIÓN DE LISTA DE USUARIO
+                AppUI.renderTiendaItems();
+                
             } else {
                 throw new Error(result.message || "Error al guardar el artículo.");
             }
@@ -3225,9 +3249,11 @@ const AppTransacciones = {
         }
     },
     
-    // CAMBIO v17.0: Esta función ahora es llamada por el botón "Confirmar" en la tabla.
+    // V26.1: MODIFICADO para asegurar la actualización de la lista de usuario
     eliminarItem: async function(itemId) {
-        // NOTA V19.5: La tabla está en la pestaña tienda_inventario, pero usamos el mismo ID de mensaje
+        // ADVERTENCIA: Esta función elimina directamente sin confirmación,
+        // ya que `window.confirm()` está prohibido.
+
         const statusMsg = document.getElementById('tienda-admin-status-msg'); 
         AppTransacciones.setLoading(statusMsg, `Eliminando artículo ${itemId}...`);
         
@@ -3254,7 +3280,11 @@ const AppTransacciones = {
             if (result.success === true) {
                 // CAMBIO V16: Usar Dorado/Gris para éxito
                 AppTransacciones.setSuccess(statusMsg, result.message || "¡Artículo eliminado con éxito!");
-                AppData.cargarDatos(false); // Recargar todos los datos
+                await AppData.cargarDatos(false); // Recargar todos los datos
+                
+                // V26.1: FORZAR ACTUALIZACIÓN DE LISTA DE USUARIO
+                AppUI.renderTiendaItems();
+                
             } else {
                 throw new Error(result.message || "Error al eliminar el artículo.");
             }
