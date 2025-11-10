@@ -10,9 +10,9 @@ const AppConfig = {
     MAX_RETRIES: 5,
     CACHE_DURATION: 300000,
     
-    // CAMBIO V26.3: Nueva versión (FIX: Listado Step 1 sin filtro de grupo)
+    // CAMBIO V29.3: Actualización del ciclo Quiniela y versión
     APP_STATUS: 'RC', 
-    APP_VERSION: 'v26.4', // ACTUALIZADO
+    APP_VERSION: 'v29.3', // ACTUALIZADO A v29.3
     
     // CAMBIO v0.3.0: Impuesto P2P (debe coincidir con el Backend)
     IMPUESTO_P2P_TASA: 0.10, // 10%
@@ -37,12 +37,25 @@ function escapeHTML(str) {
 // --- ESTADO DE LA APLICACIÓN ---
 const AppState = {
     datosActuales: null, // Grupos y alumnos (limpios, sin Cicla/Banco)
+    
+    // NUEVO: Timer para el contador del Sorteo Diario
+    sorteoTimer: null, 
+
     datosAdicionales: { // Objeto para Tesorería, préstamos, etc.
         saldoTesoreria: 0,
         prestamosActivos: [],
         depositosActivos: [],
         allStudents: [], // Lista plana de todos los alumnos
-        allGroups: [] // V16: Lista de todos los grupos (incluyendo Cicla) para Checkboxes
+        allGroups: [], // V16: Lista de todos los grupos (incluyendo Cicla) para Checkboxes
+        quiniela: { // NUEVO: Estado Quiniela (Sorteo Diario)
+            estado: 'cerrado', // "abierto", "procesando", "cerrado"
+            costoTicket: 1000,
+            botePremio: 0,
+            cierreTimestamp: null, // Fecha de cierre para el contador
+            ganadorAyer: '--',
+            premioAyer: 'Cargando...',
+            misApuestas: {} // { "Nombre Alumno": [10, 45, 77] }
+        }
     },
     historialUsuarios: {}, 
     actualizacionEnProceso: false,
@@ -65,8 +78,9 @@ const AppState = {
         deposito: { query: '', selected: null, info: null },
         p2pOrigen: { query: '', selected: null, info: null },
         p2pDestino: { query: '', selected: null, info: null },
-        bonoAlumno: { query: '', selected: null, info: null }, // V16: Se usa en Step 2 de Bonos
-        tiendaAlumno: { query: '', selected: null, info: null } // V16: Se usa en Step 2 de Tienda
+        bonoAlumno: { query: '', selected: null, info: null }, 
+        tiendaAlumno: { query: '', selected: null, info: null },
+        quiniela: { query: '', selected: null, info: null } // Sorteo Diario
     },
     
     // NUEVO v22.0: Estado para Flujos de 2 Pasos
@@ -129,35 +143,6 @@ const AppFormat = {
     }
 };
 
-// --- BASE DE DATOS DE ANUNCIOS ---
-// CAMBIO V16: Colores ajustados a Dorado/Gris
-const AnunciosDB = {
-    'AVISO': [
-        "La tienda de fin de mes abre el último Jueves de cada mes.", 
-        "Revisen sus saldos antes del cierre de mes. No se aceptan saldos negativos.",
-        "Recuerden: 'Ver Reglas' tiene información importante sobre la tienda." 
-    ],
-    'NUEVO': [
-        "¡Nueva Tienda del Mes! Revisa los artículos. Se desbloquea el último jueves.",
-        "¡Nuevo Portal de Bonos! Canjea códigos por Pinceles ℙ.",
-        "¡Nuevo Sistema Económico! Depósitos de admin limitados por la Tesorería.",
-        "¡Nuevo Portal P2P! Transfiere pinceles a tus compañeros (con 10% de comisión).",
-        // V16: Texto actualizado por ISP
-        "¡Nuevo Impuesto ISP! El cobro de impuestos por riqueza ahora es PROGRESIVO y diario."
-    ],
-    'CONSEJO': [
-        "Usa el botón '»' en la esquina para abrir y cerrar la barra lateral.",
-        "Haz clic en el nombre de un alumno en la tabla para ver sus estadísticas.",
-        "¡Invierte! Usa los Depósitos a Plazo para obtener retornos fijos (Admin)."
-    ],
-    'ALERTA': [
-        "¡Cuidado! Saldos negativos te moverán automáticamente a Cicla.",
-        "Alumnos en Cicla pueden solicitar préstamos de rescate (Admin).",
-        "Si tienes un préstamo activo, NO puedes crear un Depósito a Plazo."
-    ],
-    // V18: Eliminadas las frases motivacionales y se vuelve a la simpleza.
-};
-
 // --- MANEJO de datos ---
 const AppData = {
     
@@ -178,7 +163,7 @@ const AppData = {
             AppUI.showLoading(); 
         } else {
             // CAMBIO V16: Usar Dorado para el estado de carga
-            AppUI.setConnectionStatus('loading', 'Cargando...');
+            AppUI.setConnectionStatus('loading', 'Cargando...'); // <-- Línea que estaba causando el crash
         }
 
         try {
@@ -259,6 +244,10 @@ const AppData = {
         AppState.tienda.items = data.tiendaStock || {};
         // NUEVO v16.1 (Problema 3): Procesar estado manual de la tienda
         AppState.tienda.storeManualStatus = data.storeManualStatus || 'auto';
+        
+        // NUEVO V27.0: Procesar datos del Sorteo Diario
+        AppState.datosAdicionales.quiniela = data.quiniela || AppState.datosAdicionales.quiniela;
+
 
         const allGroups = data.gruposData;
         
@@ -321,7 +310,7 @@ const AppData = {
         AppUI.actualizarSidebarActivo();
         
         // 9. V26.1: ACTUALIZACIÓN DE MODALES DE USUARIO
-        // Si el modal de Bonos está abierto, actualizarlo en cada recarga de 10s.
+        // Solo actualizamos la lista si el modal está abierto (el initial load se hace en showModal)
         if (document.getElementById('bonos-modal').classList.contains('opacity-0') === false) {
             AppUI.populateBonoList();
             // Si el paso 2 de Bonos está visible, actualizar el estado de carga
@@ -330,7 +319,7 @@ const AppData = {
             }
         }
         // 10. V26.1: ACTUALIZACIÓN DE MODALES DE USUARIO
-        // Si el modal de Tienda está abierto, actualizarlo en cada recarga de 10s.
+        // Solo actualizamos la lista si el modal está abierto (el initial load se hace en showModal)
         if (document.getElementById('tienda-modal').classList.contains('opacity-0') === false) {
             AppUI.renderTiendaItems(); 
             // Si el paso 2 de Tienda está visible, actualizar el estado de carga
@@ -338,6 +327,9 @@ const AppData = {
                  AppTransacciones.setLoadingState(document.getElementById('tienda-submit-step2-btn'), document.getElementById('tienda-btn-text-step2'), false, 'Confirmar Compra');
             }
         }
+        // 11. NUEVO V27.0/V29.0: Actualizar Tarjeta de Sorteo Diario
+        AppUI.actualizarCardQuiniela(AppState.datosAdicionales.quiniela);
+
 
         // Si el panel de admin está abierto, actualizar las listas de admin
         if (document.getElementById('transaccion-modal').classList.contains('opacity-0') === false) {
@@ -360,6 +352,10 @@ const AppData = {
 // --- MANEJO DE LA INTERFAZ (UI) ---
 const AppUI = {
     
+    // NUEVA CONSTANTE V29.0: Hora de Cierre (6 PM) y Reapertura (8 PM) para el cálculo local
+    QUINELA_CIERRE_HORA: 18, // 6 PM
+    QUINELA_REAPERTURA_HORA: 20, // 8 PM
+
     init: function() {
         console.log("AppUI.init() comenzando.");
         
@@ -374,9 +370,8 @@ const AppUI = {
         document.getElementById('bonos-modal-close').addEventListener('click', () => AppUI.hideModal('bonos-modal'));
         document.getElementById('tienda-modal-close').addEventListener('click', () => AppUI.hideModal('tienda-modal'));
         document.getElementById('reglas-modal-close').addEventListener('click', () => AppUI.hideModal('reglas-modal'));
-        document.getElementById('anuncios-modal-close').addEventListener('click', () => AppUI.hideModal('anuncios-modal'));
-
-
+        
+        // Listeners generales de overlay
         document.getElementById('gestion-modal').addEventListener('click', (e) => {
             if (e.target.id === 'gestion-modal') AppUI.hideModal('gestion-modal');
         });
@@ -389,6 +384,31 @@ const AppUI = {
             if (e.target.id === 'transaccion-modal') AppUI.hideModal('transaccion-modal');
         });
         
+        // NUEVO V27.0: Listeners Sorteo Diario
+        document.getElementById('quiniela-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'quiniela-modal') AppUI.hideModal('quiniela-modal');
+        });
+        
+        // AÑADIDO V29.2 FIX: Listener para el botón X de cierre del modal de Sorteo Diario
+        document.getElementById('quiniela-modal-close-btn').addEventListener('click', () => AppUI.hideModal('quiniela-modal')); 
+        
+        document.getElementById('quiniela-submit-btn-modal').addEventListener('click', AppTransacciones.realizarApuestaQuiniela);
+        document.getElementById('quiniela-home-btn').addEventListener('click', AppUI.showQuinielaModal); // Botón en la tarjeta de Inicio
+
+        // NUEVO V28.1: Listeners para el modal de Reglas del Sorteo
+        document.getElementById('quiniela-rules-btn').addEventListener('click', () => AppUI.showModal('quiniela-reglas-modal'));
+        
+        // NUEVO V29.3: Listener para el botón de reglas en el estado "cerrado"
+        const quinielaRulesBtnCerrado = document.getElementById('quiniela-rules-btn-cerrado');
+        if (quinielaRulesBtnCerrado) {
+             quinielaRulesBtnCerrado.addEventListener('click', () => AppUI.showModal('quiniela-reglas-modal'));
+        }
+
+        document.getElementById('quiniela-reglas-close-btn').addEventListener('click', () => AppUI.hideModal('quiniela-reglas-modal'));
+        document.getElementById('quiniela-reglas-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'quiniela-reglas-modal') AppUI.hideModal('quiniela-reglas-modal');
+        });
+
         // Listener para el botón de enviar transacción
         document.getElementById('transaccion-submit-btn').addEventListener('click', AppTransacciones.realizarTransaccionMultiple);
         
@@ -446,12 +466,6 @@ const AppUI = {
             if (e.target.id === 'reglas-modal') AppUI.hideModal('reglas-modal');
         });
 
-        // Listeners Modal Anuncios
-        document.getElementById('anuncios-modal-btn').addEventListener('click', () => AppUI.showModal('anuncios-modal'));
-        document.getElementById('anuncios-modal').addEventListener('click', (e) => {
-            if (e.target.id === 'anuncios-modal') AppUI.hideModal('anuncios-modal');
-        });
-
         // Listener Sidebar
         document.getElementById('toggle-sidebar-btn').addEventListener('click', AppUI.toggleSidebar);
         
@@ -482,6 +496,8 @@ const AppUI = {
         // NUEVO V22.0: Buscadores de alumno en Step 2 de Bonos/Tienda
         AppUI.setupSearchInput('bono-search-alumno-step2', 'bono-origen-results-step2', 'bonoAlumno', AppUI.selectBonoStudent);
         AppUI.setupSearchInput('tienda-search-alumno-step2', 'tienda-origen-results-step2', 'tiendaAlumno', AppUI.selectTiendaStudent);
+        // NUEVO V27.0: Buscador para Sorteo Diario
+        AppUI.setupSearchInput('quiniela-search-alumno', 'quiniela-alumno-results', 'quiniela', AppUI.selectQuinielaStudent);
 
 
         // Carga inicial
@@ -489,8 +505,6 @@ const AppUI = {
         setInterval(() => AppData.cargarDatos(false), 10000); 
         AppUI.updateCountdown();
         setInterval(AppUI.updateCountdown, 1000);
-        
-        AppUI.poblarModalAnuncios();
     },
 
     showLoading: function() {
@@ -576,6 +590,16 @@ const AppUI = {
             AppUI.resetSearchInput('tiendaAlumno'); // Resetea el estado de búsqueda 'tiendaAlumno'
         }
         
+        // NUEVO V27.0: Limpiar modal de Sorteo Diario
+        if (modalId === 'quiniela-modal') {
+            document.getElementById('quiniela-clave-p2p').value = "";
+            document.getElementById('quiniela-numero').value = "";
+            document.getElementById('quiniela-status-msg-modal').textContent = "";
+            AppTransacciones.setLoadingState(document.getElementById('quiniela-submit-btn-modal'), document.getElementById('quiniela-btn-text-modal'), false, 'Apostar');
+            // Nota: No reseteamos el input de búsqueda ni el estado para que el alumno
+            // pueda volver a abrir y no tenga que buscarse de nuevo.
+        }
+        
         if (modalId === 'gestion-modal') {
              document.getElementById('clave-input').value = "";
              // CAMBIO V16: Limpiar clase de error
@@ -642,6 +666,8 @@ const AppUI = {
 
         if (!input) return; // Salir si el input no existe (ej. en modales que no están abiertos)
 
+        input.dataset.resultsId = resultsId; // Almacenar resultsId para resetSearchInput
+
         input.addEventListener('input', (e) => {
             const query = e.target.value;
             AppState.currentSearch[stateKey].query = query;
@@ -687,9 +713,9 @@ const AppUI = {
         let studentList = AppState.datosAdicionales.allStudents;
         
         // Excepciones donde SÍ se permite a Cicla
-        const ciclaAllowed = ['p2pDestino', 'prestamo'];
-        // V16: En Tienda/Bonos, SIEMPRE se permite la búsqueda de todos los alumnos
-        if (!ciclaAllowed.includes(stateKey) && stateKey !== 'bonoAlumno' && stateKey !== 'tiendaAlumno') {
+        const ciclaAllowed = ['p2pDestino', 'prestamo', 'bonoAlumno', 'tiendaAlumno', 'quiniela']; // Quiniela (Sorteo Diario) permite buscar a todos.
+        
+        if (!ciclaAllowed.includes(stateKey)) {
             studentList = studentList.filter(s => s.grupoNombre !== 'Cicla');
         }
         
@@ -737,6 +763,8 @@ const AppUI = {
              inputIds.push('bono-search-alumno-step2');
         } else if (stateKey === 'tiendaAlumno') {
              inputIds.push('tienda-search-alumno-step2'); // Step 2 (Step 1 ya no tiene input de búsqueda)
+        } else if (stateKey === 'quiniela') { // Sorteo Diario
+             inputIds.push('quiniela-search-alumno');
         } else {
             return; // No es una clave válida para resetear
         }
@@ -890,13 +918,15 @@ const AppUI = {
 
     // --- NUEVO v22.0: FUNCIONES DE BONOS (FLUJO DE 2 PASOS) ---
     
+    // [OPTIMIZACIÓN V28.0]: Ahora carga la lista inmediatamente.
     showBonoModal: function() {
         if (!AppState.datosActuales) return;
         
-        // Siempre mostramos el Step 1 al abrir
+        // 1. Mostrar Step 1 y actualizar la lista AHORA (Optimización)
         AppUI.showBonoStep1();
         AppUI.populateBonoList();
         
+        // 2. Abrir Modal
         AppUI.showModal('bonos-modal');
     },
 
@@ -942,7 +972,8 @@ const AppUI = {
     // Puebla la lista de bonos disponibles (Vista de Usuario)
     populateBonoList: function() {
         // V26.1: Se agrega la verificación de si el modal está abierto para evitar procesamiento innecesario
-        if (document.getElementById('bonos-modal').classList.contains('opacity-0')) return;
+        // [OPTIMIZACIÓN V28.0] Se elimina esta restricción para permitir la carga inicial en showBonoModal
+        // if (document.getElementById('bonos-modal').classList.contains('opacity-0')) return;
         
         const container = document.getElementById('bonos-lista-disponible');
         const bonos = AppState.bonos.disponibles;
@@ -1121,25 +1152,20 @@ const AppUI = {
 
     // --- INICIO FUNCIONES DE TIENDA (FLUJO DE 2 PASOS) ---
 
+    // [OPTIMIZACIÓN V28.0]: Ahora carga la lista inmediatamente.
     showTiendaModal: function() {
         if (!AppState.datosActuales) return;
         
-        // Siempre mostramos el Step 1 al abrir
+        // 1. Mostrar Step 1
         AppUI.showTiendaStep1();
         
-        // Poblar listas
-        const container = document.getElementById('tienda-items-container');
-        const isLoading = container.innerHTML.includes('Cargando artículos...');
+        // 2. Poblar listas AHORA (Optimización)
+        AppUI.renderTiendaItems();
         
-        if (isLoading || container.innerHTML.trim() === '') {
-            AppUI.renderTiendaItems();
-        } else {
-            AppUI.updateTiendaButtonStates();
-        }
-        
-        // v16.1: Actualizar etiqueta de estado manual
+        // 3. v16.1: Actualizar etiqueta de estado manual
         AppUI.updateTiendaAdminStatusLabel();
         
+        // 4. Abrir Modal
         AppUI.showModal('tienda-modal');
     },
 
@@ -1198,8 +1224,8 @@ const AppUI = {
     // Renderiza las tarjetas de la tienda
     // CAMBIO V16: Se adapta la estructura para ser ultra-compacta (similar a bonos)
     renderTiendaItems: function() {
-        // V26.1: Se agrega la verificación de si el modal está abierto para evitar procesamiento innecesario
-        if (document.getElementById('tienda-modal').classList.contains('opacity-0')) return;
+        // V26.1: Se elimina la verificación de si el modal está abierto para optimización V28.0
+        // if (document.getElementById('tienda-modal').classList.contains('opacity-0')) return;
 
         const container = document.getElementById('tienda-items-container');
         const items = AppState.tienda.items;
@@ -1861,7 +1887,8 @@ const AppUI = {
     setConnectionStatus: function(status, title) {
         const dot = document.getElementById('status-dot');
         const indicator = document.getElementById('status-indicator');
-        if (!dot) return;
+        // FIX V28.3: Asegurar que ambos elementos existan antes de intentar acceder a sus propiedades.
+        if (!dot || !indicator) return;
         
         indicator.title = title;
 
@@ -2159,9 +2186,12 @@ const AppUI = {
         // 2. MOSTRAR MÓDULOS (Idea 1 & 2)
         document.getElementById('home-modules-grid').classList.remove('hidden');
         AppUI.actualizarAlumnosEnRiesgo();
-        AppUI.actualizarAnuncios(); 
+        // [ELIMINADO V28.0] Se elimina la llamada para actualizar anuncios
+        // AppUI.actualizarAnuncios(); 
         AppUI.actualizarEstadisticasRapidas(grupos);
         
+        // NUEVO V27.0: Asegura que la tarjeta de Sorteo Diario se actualice y muestre
+        AppUI.actualizarCardQuiniela(AppState.datosAdicionales.quiniela);
     },
 
 
@@ -2177,7 +2207,7 @@ const AppUI = {
         let totalColor = "text-amber-700"; 
         
         document.getElementById('page-subtitle').innerHTML = `
-            <!-- REQUERIMIENTO: Total del grupo en Dorado -->
+            <!-- REQUERIMIENTO: Total del Grupo en Dorado -->
             <h2 class="text-xl font-semibold text-slate-900">Total del Grupo: 
                 <span class="${totalColor}">${AppFormat.formatNumber(grupo.total)} ℙ</span>
             </h2>
@@ -2338,71 +2368,6 @@ const AppUI = {
         `;
     },
 
-    // CAMBIO V16: Monocromatiza los anuncios a Dorado
-    actualizarAnuncios: function() {
-        const lista = document.getElementById('anuncios-lista');
-        
-        // CAMBIO V16: Colores corporativos monocromáticos (todos basados en Dorado/Gris)
-        const todosLosAnuncios = [
-            // AVISO: Gris neutro
-            ...AnunciosDB['AVISO'].map(texto => ({ tipo: 'AVISO', texto, bg: 'bg-slate-100', text: 'text-slate-700' })),
-            // NUEVO: Dorado (el color principal)
-            ...AnunciosDB['NUEVO'].map(texto => ({ tipo: 'NUEVO', texto, bg: 'bg-amber-100', text: 'text-amber-700' })),
-            // CONSEJO: Gris más oscuro para diferenciar
-            ...AnunciosDB['CONSEJO'].map(texto => ({ tipo: 'CONSEJO', texto, bg: 'bg-slate-200', text: 'text-slate-700' })),
-            // ALERTA: Dorado (como advertencia principal)
-            ...AnunciosDB['ALERTA'].map(texto => ({ tipo: 'ALERTA', texto, bg: 'bg-amber-50', text: 'text-amber-700' }))
-        ];
-        
-        const anuncios = [...todosLosAnuncios].sort(() => 0.5 - Math.random()).slice(0, 5);
-
-        lista.innerHTML = anuncios.map(anuncio => `
-            <!-- CAMBIO V16: Hover claro -->
-            <li class="flex items-start p-2 hover:bg-slate-50 rounded-lg transition-colors"> 
-                <span class="text-xs font-bold ${anuncio.bg} ${anuncio.text} rounded-full w-20 text-center py-0.5 mr-3 flex-shrink-0 mt-1">${anuncio.tipo}</span>
-                <span class="text-sm text-slate-700 flex-1">${anuncio.texto}</span>
-            </li>
-        `).join('');
-    },
-
-    // CAMBIO V16: Monocromatiza los anuncios del modal a Dorado
-    poblarModalAnuncios: function() {
-        const listaModal = document.getElementById('anuncios-modal-lista');
-        if (!listaModal) return;
-
-        let html = '';
-        // CAMBIO V16: Colores corporativos Dorado
-        const tipos = [
-            { id: 'AVISO', titulo: 'Avisos', bg: 'bg-slate-100', text: 'text-slate-700' },
-            { id: 'NUEVO', titulo: 'Novedades', bg: 'bg-amber-100', text: 'text-amber-700' },
-            { id: 'CONSEJO', titulo: 'Consejos', bg: 'bg-slate-200', text: 'text-slate-700' },
-            { id: 'ALERTA', titulo: 'Alertas', bg: 'bg-amber-50', text: 'text-amber-700' }
-        ];
-
-        tipos.forEach(tipo => {
-            const anuncios = AnunciosDB[tipo.id];
-            if (anuncios && anuncios.length > 0) {
-                html += `
-                    <div>
-                        <!-- CAMBIO V16: Título a Dorado/Gris -->
-                        <h4 class="text-sm font-semibold ${tipo.text} mb-2">${tipo.titulo}</h4>
-                        <ul class="space-y-2">
-                            ${anuncios.map(texto => `
-                                <!-- CAMBIO V16: Fondo de lista gris claro -->
-                                <li class="flex items-start p-2 bg-slate-50 rounded-lg">
-                                    <span class="text-xs font-bold ${tipo.bg} ${tipo.text} rounded-full w-20 text-center py-0.5 mr-3 flex-shrink-0 mt-1">${tipo.id}</span>
-                                    <span class="text-sm text-slate-700 flex-1">${texto}</span>
-                                </li>
-                            `).join('')}
-                        </ul>
-                    </div>
-                `;
-            }
-        });
-
-        listaModal.innerHTML = html;
-    },
-
     // CAMBIO V16: Monocromatiza el modal de alumno a Dorado
     showStudentModal: function(nombreGrupo, nombreUsuario, rank) {
         const student = AppState.datosAdicionales.allStudents.find(u => u.nombre === nombreUsuario);
@@ -2465,7 +2430,7 @@ const AppUI = {
     },
     
     // CORRECCIÓN V24.1: Ajuste de lógica para mostrar solo contador O solo mensaje en modo automático.
-    // NOTA V26.0: Eliminamos toda referencia al elemento 'tienda-timer-status' ya que fue eliminado del HTML.
+    // [MODIFICADO V28.0] Se elimina el cálculo de segundos del contador de la Tienda.
     updateCountdown: function() {
         const getLastThursday = (year, month) => {
             const lastDayOfMonth = new Date(year, month + 1, 0);
@@ -2539,18 +2504,20 @@ const AppUI = {
                 const days = f(Math.floor(distance / (1000 * 60 * 60 * 24)));
                 const hours = f(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)));
                 const minutes = f(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)));
-                const seconds = f(Math.floor((distance % (1000 * 60)) / 1000));
+                // [ELIMINADO V28.0] Eliminamos el cálculo de segundos
+                // const seconds = f(Math.floor((distance % (1000 * 60)) / 1000));
                 
                 // CORRECCIÓN: Solo actualizar el DOM si los elementos existen
                 const daysEl = document.getElementById('days');
                 const hoursEl = document.getElementById('hours');
                 const minutesEl = document.getElementById('minutes');
-                const secondsEl = document.getElementById('seconds');
+                // const secondsEl = document.getElementById('seconds'); // Eliminado
+
                 
                 if(daysEl) daysEl.textContent = days;
                 if(hoursEl) hoursEl.textContent = hours;
                 if(minutesEl) minutesEl.textContent = minutes;
-                if(secondsEl) secondsEl.textContent = seconds;
+                // if(secondsEl) secondsEl.textContent = seconds; // Eliminado
 
 
                 AppState.tienda.isStoreOpen = false;
@@ -2564,10 +2531,273 @@ const AppUI = {
             AppUI.updateTiendaButtonStates();
             AppUI.updateTiendaAdminStatusLabel(); // v16.1
         }
+    },
+    
+    // --- NUEVO V27.0: FUNCIONES DE SORTEO DIARIO ---
+
+    // NUEVO: Callback para cuando se selecciona un alumno en el sorteo diario
+    selectQuinielaStudent: function(student) {
+        const listaContainer = document.getElementById('quiniela-mis-apuestas-lista');
+        
+        if (student) {
+            const quiniela = AppState.datosAdicionales.quiniela;
+            // Usamos el nombre del alumno para buscar sus apuestas de hoy.
+            const misApuestas = quiniela.misApuestas[student.nombre] || [];
+            
+            if (misApuestas.length > 0) {
+                listaContainer.textContent = misApuestas.join(', ');
+            } else {
+                listaContainer.textContent = "No has realizado apuestas hoy.";
+            }
+        } else {
+            listaContainer.textContent = "Selecciona tu nombre para ver tus apuestas.";
+        }
+    },
+    
+    // NUEVO: Muestra el modal del Sorteo Diario al hacer clic
+    showQuinielaModal: function() {
+        if (!AppState.datosActuales) return;
+        
+        const quiniela = AppState.datosAdicionales.quiniela;
+        
+        // Validación: Solo se puede abrir si está "abierto"
+        if (!quiniela || (quiniela.estado !== 'abierto' && new Date().getHours() < AppUI.QUINELA_REAPERTURA_HORA)) {
+             // Usamos un modal de mensaje simple en lugar de alert()
+             AppTransacciones.setError(document.getElementById('quiniela-status-msg-modal'), "El Sorteo Diario no está abierto para apuestas en este momento. Vuelve a partir de las 8:00 PM.");
+             return;
+        }
+        
+        // Limpiamos campos y abrimos
+        AppUI.hideModal('quiniela-modal');
+        
+        // Actualizar datos del modal
+        document.getElementById('quiniela-bote-display').textContent = `${AppFormat.formatNumber(quiniela.botePremio)} ℙ`;
+        document.getElementById('quiniela-costo-display').textContent = `Costo por intento: ${AppFormat.formatNumber(quiniela.costoTicket)} ℙ`;
+        
+        AppUI.showModal('quiniela-modal');
+        
+        // Recargar apuestas si el usuario ya estaba seleccionado
+        const selectedStudent = AppState.currentSearch.quiniela.info;
+        if (selectedStudent) {
+            // Pre-llenar y actualizar la lista de apuestas
+            document.getElementById('quiniela-search-alumno').value = selectedStudent.nombre;
+            AppUI.selectQuinielaStudent(selectedStudent);
+        }
+    },
+    
+    /**
+     * NUEVO V29.0: Se llama cada 10 seg. para actualizar la tarjeta de Inicio
+     * Modificado para ciclo 6PM cierre / 8PM reapertura.
+     * @param {object} quinielaData - Los datos del sorteo.
+     */
+    actualizarCardQuiniela: function(quinielaData) {
+        const quinielaCard = document.getElementById('quiniela-card-container');
+        if (!quinielaCard) return;
+
+        const viewAbierto = document.getElementById('quiniela-view-abierto');
+        const viewProcesando = document.getElementById('quiniela-view-procesando');
+        const viewCerrado = document.getElementById('quiniela-view-cerrado');
+
+        // Ocultar todas las vistas para un cambio limpio
+        viewAbierto.classList.add('hidden');
+        viewProcesando.classList.add('hidden');
+        viewCerrado.classList.add('hidden');
+        
+        // Asegurar que la tarjeta esté visible si estamos en Home
+        if (AppState.selectedGrupo === null) {
+             quinielaCard.classList.remove('hidden');
+        }
+
+        const now = new Date();
+        const nowHour = now.getHours();
+        
+        // Lógica de Sobreescritura de Estado para Reapertura a las 8 PM
+        let estadoActual = quinielaData.estado;
+        
+        // CORRECCIÓN V29.1: Forzar apertura si es después de las 8 PM O antes de las 6 PM (mañanas)
+        if (estadoActual === 'cerrado' && (nowHour >= AppUI.QUINELA_REAPERTURA_HORA || nowHour < AppUI.QUINELA_CIERRE_HORA)) {
+             estadoActual = 'abierto'; 
+        } 
+        // Si el estado es "abierto" pero es la hora de cierre (6 PM), forzamos "procesando"
+        // (Esto es un feedback visual inmediato antes de que el backend cambie a "procesando")
+        else if (estadoActual === 'abierto' && nowHour >= AppUI.QUINELA_CIERRE_HORA && nowHour < AppUI.QUINELA_REAPERTURA_HORA) {
+            estadoActual = 'procesando'; 
+        }
+
+        // Estado 1: El juego está activo ("abierto")
+        if (estadoActual === 'abierto') {
+            document.getElementById('quiniela-home-bote').textContent = `${AppFormat.formatNumber(quinielaData.botePremio)} ℙ`;
+            AppUI.iniciarCountdownQuiniela(quinielaData.cierreTimestamp);
+            viewAbierto.classList.remove('hidden');
+        
+        // Estado 2: Son las 6:00 PM ("procesando") - Calculando resultados
+        } else if (estadoActual === 'procesando') {
+            viewProcesando.classList.remove('hidden');
+            if (AppState.sorteoTimer) clearInterval(AppState.sorteoTimer); // Detener contador
+
+        // Estado 3: Son los Resultados ("cerrado") - Muestra resultados hasta las 8 PM
+        } else if (estadoActual === 'cerrado') {
+            document.getElementById('quiniela-home-ganador').textContent = quinielaData.numeroGanador;
+            document.getElementById('quiniela-home-premio').textContent = quinielaData.premioAyer;
+            
+            // Renderizar la marquesina de ganadores
+            AppUI.renderMarqueeGanadores(quinielaData.ganadorAyer); // Usar ganadorAyer que ya contiene el mensaje completo
+            
+            // Iniciar contador hasta la reapertura (8 PM)
+            AppUI.iniciarCountdownReapertura();
+
+            viewCerrado.classList.remove('hidden');
+        }
+    },
+
+    /**
+     * NUEVO V29.0: Inicia el contador regresivo hasta la reapertura (8 PM).
+     * Se usa en el estado "Cerrado/Resultados".
+     */
+    iniciarCountdownReapertura: function() {
+        if (AppState.sorteoTimer) clearInterval(AppState.sorteoTimer);
+        const now = new Date();
+        const f = (val) => String(val).padStart(2, '0');
+
+        let targetDate = new Date(now);
+        targetDate.setHours(AppUI.QUINELA_REAPERTURA_HORA, 0, 0, 0);
+
+        // Si ya pasaron las 8 PM (lo cual debería ser raro si el backend está sincronizado)
+        if (now.getTime() >= targetDate.getTime()) {
+             // CAMBIO V29.3: Usar IDs específicos del estado Cerrado
+             document.getElementById('q-hours-cerrado').textContent = "00";
+             document.getElementById('q-minutes-cerrado').textContent = "00";
+             return;
+        }
+
+        const update = () => {
+            const now = new Date().getTime();
+            const distance = targetDate.getTime() - now;
+            
+            // CAMBIO V29.3: Usar IDs específicos del estado Cerrado
+            const hoursEl = document.getElementById('q-hours-cerrado');
+            const minutesEl = document.getElementById('q-minutes-cerrado');
+
+            if (distance < 0) {
+                 if(hoursEl) hoursEl.textContent = "00";
+                 if(minutesEl) minutesEl.textContent = "00";
+                 // Detener el contador y esperar al sondeo de 10s para el cambio de estado
+                 if (AppState.sorteoTimer) clearInterval(AppState.sorteoTimer);
+                 AppData.cargarDatos(false); // Forzar sondeo al pasar la hora
+                 return;
+            }
+
+            const hours = f(Math.floor(distance / (1000 * 60 * 60)));
+            const minutes = f(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)));
+            
+            if(hoursEl) hoursEl.textContent = hours;
+            if(minutesEl) minutesEl.textContent = minutes;
+        };
+
+        update(); // Ejecutar una vez de inmediato
+        AppState.sorteoTimer = setInterval(update, 1000);
+    },
+
+    /**
+     * NUEVO V29.0: Inicia el contador regresivo hasta el cierre (6 PM).
+     * Se usa en el estado "Abierto".
+     */
+    iniciarCountdownQuiniela: function(cierreTimestamp) {
+        if (AppState.sorteoTimer) clearInterval(AppState.sorteoTimer);
+        
+        let targetDate;
+        if (cierreTimestamp) {
+            targetDate = new Date(cierreTimestamp).getTime();
+        } else {
+             // Cálculo de respaldo: 6 PM de hoy.
+             const now = new Date();
+             const cierreHoy = new Date(now);
+             cierreHoy.setHours(AppUI.QUINELA_CIERRE_HORA, 0, 0, 0);
+             targetDate = cierreHoy.getTime();
+             
+             // Si ya pasaron las 6 PM, contamos hasta mañana.
+             if (now.getTime() >= targetDate) {
+                 cierreHoy.setDate(cierreHoy.getDate() + 1);
+                 targetDate = cierreHoy.getTime();
+             }
+        }
+        
+        const f = (val) => String(val).padStart(2, '0');
+
+        const update = () => {
+            const nowTime = new Date().getTime();
+            const distance = targetDate - nowTime;
+
+            const hoursEl = document.getElementById('q-hours');
+            const minutesEl = document.getElementById('q-minutes');
+            
+            if (distance < 0) { 
+                if(hoursEl) hoursEl.textContent = "00";
+                if(minutesEl) minutesEl.textContent = "00";
+                
+                // Detener el contador y forzar la actualización para ir a "procesando"
+                if (AppState.sorteoTimer) clearInterval(AppState.sorteoTimer);
+                AppData.cargarDatos(false); // Forzar sondeo al pasar la hora
+                return;
+            }
+
+            const hours = f(Math.floor(distance / (1000 * 60 * 60)));
+            const minutes = f(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)));
+            
+            if(hoursEl) hoursEl.textContent = hours;
+            if(minutesEl) minutesEl.textContent = minutes;
+        };
+
+        update(); // Ejecutar una vez de inmediato
+        AppState.sorteoTimer = setInterval(update, 1000);
+    },
+
+    /**
+     * NUEVO V29.0: Renderiza la lista de ganadores en formato marquesina.
+     * @param {string} ganadoresString - Cadena de ganadores o mensaje de acumulación.
+     */
+    renderMarqueeGanadores: function(ganadoresString) {
+        const marqueeEl = document.getElementById('quiniela-ganadores-marquee');
+        if (!marqueeEl) return;
+        
+        // Limpiar estilos de animación y contenido previo
+        marqueeEl.style.animation = 'none';
+        
+        // Si es el mensaje de acumulación (ej: "Acumulado"), mostrarlo estático
+        if (ganadoresString.startsWith('Acumulado') || ganadoresString.startsWith('Nadie')) {
+            marqueeEl.innerHTML = `<span class="px-8">${ganadoresString}</span>`;
+            marqueeEl.style.paddingLeft = '0'; // Centrar
+            return;
+        }
+
+        // Si son nombres de ganadores, preparar la marquesina
+        // Formato esperado del backend: "¡Ganadores! Juan Perez, Maria Lopez, ... "
+        const nombresPuros = ganadoresString.replace('¡Ganadores! ', '').trim().split(', ').filter(n => n.length > 0);
+        
+        if (nombresPuros.length === 0) {
+            marqueeEl.innerHTML = `<span class="px-8">No hay información detallada de ganadores.</span>`;
+            marqueeEl.style.paddingLeft = '0';
+            return;
+        }
+
+        // Duplicar la lista varias veces para asegurar un desplazamiento continuo
+        const nombresAnimados = Array(5).fill(nombresPuros.join('<span class="marquee-separator">|</span>'));
+        
+        marqueeEl.innerHTML = nombresAnimados.join('<span class="marquee-separator">|</span>');
+        marqueeEl.style.paddingLeft = '100%'; // Reestablecer para que la animación funcione
+        
+        // Forzar un reflow para reiniciar la animación
+        void marqueeEl.offsetWidth; 
+        
+        // Aplicar animación (definida en style.css)
+        marqueeEl.style.animation = 'marquee-scroll 25s linear infinite';
     }
+    
+    // --- FIN FUNCIONES DE SORTEO DIARIO ---
+
 };
 
-// --- OBJETO TRANSACCIONES (Préstamos, Depósitos, P2P, Bonos, Tienda) ---
+// --- OBJETO TRANSACCIONES (Préstamos, Depósitos, P2P, Bonos, Tienda, Sorteo) ---
 const AppTransacciones = {
 
     realizarTransaccionMultiple: async function() {
@@ -2795,6 +3025,78 @@ const AppTransacciones = {
             AppTransacciones.setLoadingState(submitBtn, btnText, false, 'Realizar Transferencia');
         }
     },
+    
+    // --- NUEVO V27.0: LÓGICA DE SORTEO DIARIO ---
+
+    realizarApuestaQuiniela: async function() {
+        const statusMsg = document.getElementById('quiniela-status-msg-modal');
+        const submitBtn = document.getElementById('quiniela-submit-btn-modal');
+        const btnText = document.getElementById('quiniela-btn-text-modal');
+        
+        const nombreOrigen = AppState.currentSearch.quiniela.selected;
+        const studentInfo = AppState.currentSearch.quiniela.info;
+        const claveP2P = document.getElementById('quiniela-clave-p2p').value;
+        const numeroApostado = parseInt(document.getElementById('quiniela-numero').value, 10);
+        const costoTicket = AppState.datosAdicionales.quiniela.costoTicket;
+
+        // Validaciones (replicadas del frontend para rapidez)
+        let errorValidacion = "";
+        if (AppState.datosAdicionales.quiniela.estado !== 'abierto' && new Date().getHours() < AppUI.QUINELA_REAPERTURA_HORA) {
+             errorValidacion = "El Sorteo Diario está cerrado o en proceso de sorteo. Vuelve a partir de las 8:00 PM.";
+        } else if (!nombreOrigen || !studentInfo) {
+            errorValidacion = "Debe seleccionar su nombre de la lista.";
+        } else if (!claveP2P) {
+            errorValidacion = "Debe ingresar su Clave P2P.";
+        } else if (isNaN(numeroApostado) || numeroApostado < 1 || numeroApostado > 100) {
+            errorValidacion = "Debe ingresar un número válido entre 1 y 100.";
+        } else if (studentInfo.pinceles < costoTicket) {
+            errorValidacion = `Saldo insuficiente. Necesita ${AppFormat.formatNumber(costoTicket)} ℙ.`;
+        }
+        
+        if (errorValidacion) {
+            AppTransacciones.setError(statusMsg, errorValidacion);
+            return;
+        }
+
+        AppTransacciones.setLoadingState(submitBtn, btnText, true, 'Apostando...');
+        AppTransacciones.setLoading(statusMsg, `Registrando apuesta por ${numeroApostado}...`);
+        
+        try {
+            const payload = {
+                accion: 'registrar_apuesta_quiniela', 
+                nombre_origen: nombreOrigen,
+                clave_p2p_origen: claveP2P,
+                numero_apostado: numeroApostado
+            };
+
+            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload), 
+            });
+
+            const result = await response.json();
+
+            if (result.success === true) {
+                AppTransacciones.setSuccess(statusMsg, result.message || "¡Apuesta registrada con éxito!");
+                
+                document.getElementById('quiniela-numero').value = ""; // Limpiar solo el número
+                
+                // Forzar una recarga de datos INMEDIATA para ver el bote subir
+                // y para actualizar "Mis Apuestas" en el modal
+                AppData.cargarDatos(false); 
+
+            } else {
+                throw new Error(result.message || "Error desconocido de la API.");
+            }
+
+        } catch (error) {
+            AppTransacciones.setError(statusMsg, error.message);
+        } finally {
+            AppTransacciones.setLoadingState(submitBtn, btnText, false, 'Apostar');
+        }
+    },
+    
+    // --- FIN LÓGICA DE SORTEO DIARIO ---
 
     // --- LÓGICA DE BONOS (FLUJO DE 2 PASOS) ---
 
@@ -3440,6 +3742,8 @@ window.AppTransacciones.toggleStoreManual = AppTransacciones.toggleStoreManual;
 // NUEVO V22.0: Exponer las funciones de inicio de flujo
 window.AppTransacciones.iniciarCompra = AppTransacciones.iniciarCompra;
 window.AppTransacciones.iniciarCanje = AppTransacciones.iniciarCanje;
+// NUEVO V27.0: Exponer el lanzador del modal de Sorteo Diario
+window.AppUI.showQuinielaModal = AppUI.showQuinielaModal;
 
 
 window.onload = function() {
