@@ -2932,14 +2932,13 @@ const AppTransacciones = {
 };
 
 // --- CONTENIDO ESTATICOS (Términos, Privacidad) ---
-// CORRECCIÓN 1: Eliminación de los títulos duplicados (solo queda el que está en el <h2> del modal)
-// CORRECCIÓN 2: Eliminación de referencias a "real" o "mundo real" en textos legales
+// CORRECCIÓN: Eliminación de la clase mt-6 del primer subtítulo en ambos contenidos.
 
 const AppContent = {
     // Contenido actualizado y profesional para Términos y Condiciones
     terminosYCondiciones: `
         
-        <strong class="text-lg font-semibold text-slate-800 mt-6 mb-2 block">I. Alcance y Principios</strong>
+        <strong class="text-lg font-semibold text-slate-800 mb-2 block">I. Alcance y Principios</strong>
         <p>Los presentes Términos y Condiciones rigen el uso de todos los servicios de banca virtual proporcionados por el Banco del Pincel Dorado (BPD). La utilización de cualquiera de estos servicios implica la aceptación total de estas disposiciones y del Reglamento General.</p>
         <ul class="list-disc list-inside ml-4 space-y-1 text-sm">
             <li><strong>Usuario:</strong> Cualquier alumno activo dentro del ecosistema.</li>
@@ -2979,7 +2978,7 @@ const AppContent = {
     // Contenido actualizado y profesional para Acuerdo de Privacidad
     acuerdoDePrivacidad: `
         
-        <strong class="text-lg font-semibold text-slate-800 mt-6 mb-2 block">I. Compromiso de la Entidad</strong>
+        <strong class="text-lg font-semibold text-slate-800 mb-2 block">I. Compromiso de la Entidad</strong>
         <p>El Banco del Pincel Dorado (BPD) declara su firme compromiso con la máxima confidencialidad en el manejo de los datos operativos de sus Usuarios. La información es utilizada estrictamente para garantizar la funcionalidad, seguridad y estabilidad de este ecosistema académico-financiero.</p>
 
         <strong class="text-lg font-semibold text-slate-800 mt-6 mb-2 block">II. Datos Recopilados</strong>
