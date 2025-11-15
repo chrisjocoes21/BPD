@@ -499,7 +499,7 @@
                 <div class="flex border-b border-slate-200 px-4 overflow-x-auto">
                     <!-- Pestañas para P2P, Préstamos y Depósitos -->
                     <!-- CAMBIO: "Transferencia P2P" -> "Transferencia" -->
-                    <button data-tab="p2p_transfer" class="tab-btn active-tab whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 border-amber-600 text-amber-600 transition-colors hover:bg-slate-100">
+                    <button data-tab="p2p_transfer" class="tab-btn whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 border-amber-600 text-amber-600 transition-colors hover:bg-slate-100">
                         Transferencia
                     </button>
                     <button data-tab="prestamo_flex" class="tab-btn whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 border-transparent text-slate-700 transition-colors hover:bg-slate-100">
@@ -1076,9 +1076,10 @@
     <!-- MODAL TÉRMINOS Y CONDICIONES / PRIVACIDAD (SIN SCROLL) -->
     <div id="terminos-modal" class="fixed inset-0 bg-slate-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
         <div class="bg-white rounded-lg shadow-xl full-width-modal-dialog transform scale-95 transition-transform duration-300 border-2 border-amber-600">
+            <!-- CAMBIO 1: Se redujo mb-6 a mb-4. El título ahora es text-2xl. -->
             <div class="p-6 md:p-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 id="terminos-modal-title" class="text-xl font-semibold color-dorado-main">Términos y Condiciones</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 id="terminos-modal-title" class="text-2xl font-semibold color-dorado-main">Términos y Condiciones</h2>
                     <button id="terminos-modal-close" onclick="AppUI.hideModal('terminos-modal')" class="modal-close-btn text-slate-400 hover:color-dorado-main text-2xl p-1">&times;</button>
                 </div>
                 
