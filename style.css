@@ -175,13 +175,11 @@ body {
     align-items: center;
     justify-content: space-between; 
     text-align: left; 
-    /* AJUSTE USUARIO: Sombra de texto eliminada */
     text-shadow: none;
 }
 
 /* Estilos específicos para el slide de reglas */
 .hero-slide:nth-child(2) {
-    /* AJUSTE USUARIO: text-shadow: none; (eliminado por redundante) */
     justify-content: flex-start;
     align-items: flex-start;
 }
@@ -225,4 +223,85 @@ body {
   height: 8px;
   background: #cbd5e1; 
   border-radius: 4px;
+}
+
+/* =================================================================== */
+/* CLASES PERSONALIZADAS INTEGRADAS DESDE INDEX.HTML */
+/* =================================================================== */
+
+/* Definición de la Paleta Dorada (Amber Elegante) */
+.color-dorado-main { color: #d97706; /* amber-600 */ }
+.bg-dorado-light { background-color: #fffbeb; /* amber-50 */ }
+.border-dorado-main { border-color: #d97706; /* amber-600 }
+.ring-dorado-main { --tw-ring-color: #d97706; }
+.shadow-dorado-soft { --tw-shadow-color: #f59e0b; /* amber-500 */ } 
+
+/* CONTENEDOR UNIFICADO DE MODALES (96% ANCHO) */
+.full-width-modal-dialog {
+     width: 96vw !important; 
+     max-width: 96vw !important; 
+}
+
+/* ALTURA FIJA PARA CONTENIDO DE MODALES SIN SCROLL */
+.modal-content-fixed-height {
+    /* Altura del contenido interno del modal */
+    height: 550px; 
+    overflow: hidden; 
+}
+
+/* Homogeneización de botones de barra lateral */
+.sidebar-action-btn {
+    height: 40px; /* Altura fija para consistencia visual */
+    padding: 8px 12px;
+    font-weight: 600; /* Semibold para un look bancario */
+    text-align: center;
+}
+
+/* Ajuste para el contenedor del Hero para permitir el deslizamiento (Slide) */
+.hero-carousel-track {
+    display: flex; 
+    transition: transform 0.5s ease-in-out;
+    /* AJUSTE USUARIO: Altura más compacta */
+    height: 100%; 
+    min-height: 180px; 
+}
+
+.hero-carousel-container {
+    overflow: hidden; 
+}
+
+/* AJUSTE USUARIO: Contenedor interno más compacto */
+.hero-slide-content {
+    height: 100%;
+    min-height: 160px; /* Altura base para evitar el CLS */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.hero-slide {
+    flex-shrink: 0; 
+    width: 100%; 
+    position: relative !important; 
+    inset: auto !important; 
+    opacity: 1 !important; 
+    transition: none !important; 
+    pointer-events: auto !important; 
+    
+    /* Alinear el contenido al inicio del slide (Top-Left) */
+    align-items: flex-start !important; 
+    justify-content: flex-start !important; 
+    text-align: left !important;
+}
+
+/* Fondos específicos para el slide principal */
+.bg-slide-main {
+    background-image: linear-gradient(to right, #f59e0b, #d97706);
+}
+
+/* FIX 3: Homogeneización de botones de navegación del Hero */
+.hero-nav-btn {
+    width: 9rem; /* 144px de ancho para botones amplios */
+    height: 40px; 
+    min-width: 120px;
 }
