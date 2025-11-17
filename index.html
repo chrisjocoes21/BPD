@@ -1,5 +1,10 @@
 <!DOCTYPE html>
-<!-- BPD v29.7 - FIX: HERO COMPACTO, FLUJO, BOTONES CORTOS Y TEXTO HOME ELIMINADO + Terminología ajustada (v29.7) -->
+<!-- BPD v30.0 (Solución Integral) - Implementa: 
+    1. Correcciones de estabilidad en Modales (altura fija).
+    2. Eliminación de iconos y ajustes de color/compactación.
+    3. Home más compacto (reducción de padding y margen).
+    4. Referencias a script.js y style.css externas.
+-->
 <html lang="es" class="h-full bg-slate-50 overflow-hidden">
 <head>
     <meta charset="UTF-8">
@@ -12,13 +17,14 @@
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏦</text></svg>">
 
-    <!-- Archivo de estilos personalizados -->
+    <!-- Archivo de estilos personalizados (Mantenido separado) -->
     <link rel="stylesheet" href="style.css">
+    
     <style>
         /* Definición de la Paleta Dorada (Amber Elegante) */
         .color-dorado-main { color: #d97706; /* amber-600 */ }
         .bg-dorado-light { background-color: #fffbeb; /* amber-50 */ }
-        .border-dorado-main { border-color: #d97706; /* amber-600 */ }
+        .border-dorado-main { border-color: #d97706; /* amber-600 }
         .ring-dorado-main { --tw-ring-color: #d97706; }
         .shadow-dorado-soft { --tw-shadow-color: #f59e0b; /* amber-500 */ } 
 
@@ -28,10 +34,10 @@
              max-width: 96vw !important; 
         }
 
-        /* ALTURA FIJA PARA CONTENIDO DE MODALES SIN SCROLL */
+        /* ACCIÓN 2.3: ALTURA FIJA PARA CONTENIDO DE MODALES SIN SCROLL (Clase usada en Modales) */
         .modal-content-fixed-height {
-            height: 550px; /* Altura del contenido del modal */
-            overflow: hidden; /* ELIMINAR SCROLL */
+            height: 550px; 
+            overflow: hidden; 
         }
         
         /* Animación para el botón de cierre */
@@ -53,34 +59,34 @@
         
         /* Homogeneización de botones de barra lateral */
         .sidebar-action-btn {
-            height: 40px; /* Altura fija para consistencia visual */
+            height: 40px; 
             padding: 8px 12px;
-            font-weight: 600; /* Semibold para un look bancario */
+            font-weight: 600; 
             text-align: center;
         }
         
         /* Ajuste para el contenedor del Hero para permitir el deslizamiento (Slide) */
         .hero-carousel-track {
-            display: flex; /* Necesario para la animación de deslizamiento */
+            display: flex; 
             transition: transform 0.5s ease-in-out;
             /* AJUSTE USUARIO: Altura más compacta */
-            height: 100%; /* Asegura que la pista ocupe la altura del contenedor */
+            height: 100%; 
             min-height: 180px; 
         }
         .hero-carousel-container {
-            overflow: hidden; /* Oculta los slides fuera de vista */
+            overflow: hidden; 
         }
         /* AJUSTE USUARIO: Contenedor interno más compacto */
         .hero-slide-content {
             height: 100%;
-            min-height: 160px; /* Altura base para evitar el CLS */
+            min-height: 160px; 
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
         .hero-slide {
-            flex-shrink: 0; /* Evita que los slides se contraigan */
-            width: 100%; /* Cada slide ocupa el 100% del ancho del carrusel */
+            flex-shrink: 0; 
+            width: 100%; 
             position: relative !important; 
             inset: auto !important; 
             opacity: 1 !important; 
@@ -100,9 +106,18 @@
         
         /* FIX 3: Homogeneización de botones de navegación del Hero */
         .hero-nav-btn {
-            width: 9rem; /* 144px de ancho para botones amplios */
+            width: 9rem; 
             height: 40px; 
             min-width: 120px;
+        }
+
+        /* ACCIÓN 2.3: Clase de altura fija para mensajes de estado */
+        .status-msg-fixed-height {
+             height: 40px; /* h-10 en Tailwind */
+             min-height: 40px;
+             display: flex;
+             align-items: center;
+             justify-content: center;
         }
         
     </style>
@@ -129,7 +144,7 @@
                 </button>
             </div>
 
-            <!-- Contenedor de Grupos -->
+            <!-- Contenedor de Grupos (Los iconos se eliminan en script.js) -->
             <div id="sidebar-nav" class="flex-1 overflow-y-auto p-2 space-y-1 pt-4 no-scrollbar">
                 <div class="text-center p-4 text-slate-500 text-sm">
                     Cargando grupos...
@@ -139,7 +154,7 @@
             <!-- Footer de la Sidebar - SOLO GESTIÓN -->
             <div class="p-3 border-t border-slate-200 bg-white flex-shrink-0 space-y-2">
                 
-                <!-- Botón de Gestión (Homogeneizado - Icono Eliminado) -->
+                <!-- Botón de Gestión (Homogeneizado) -->
                 <button id="gestion-btn" class="sidebar-action-btn flex items-center justify-center w-full bg-white border border-amber-600 text-amber-600 text-sm rounded-lg hover:bg-amber-50 transition-colors shadow-sm">
                     <span>Administración</span>
                 </button>
@@ -164,13 +179,15 @@
                     Cargando...
                 </h1>
 
+                <!-- ACCIÓN 2.2: Se usa el color de la paleta BPD -->
                 <div id="status-indicator" class="ml-auto flex items-center pr-2" title="Estado de la conexión">
                     <div id="status-dot" class="w-3 h-3 rounded-full bg-slate-300"></div>
                 </div>
             </header>
             
             <!-- Contenido (scrollable) -->
-            <main id="main-content-area" class="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-6 lg:p-8 overflow-x-hidden">
+            <!-- ACCIÓN 4.1: Reducción del padding (Se elimina lg:p-8) -->
+            <main id="main-content-area" class="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-6 overflow-x-hidden">
                 <div id="page-subtitle" class="mb-6"></div>
                 
                 <div id="table-container" class="hidden">
@@ -178,7 +195,8 @@
                 </div>
 
                 <!-- Contenedor de Resumen Compacto (Home) -->
-                <div id="home-stats-container" class="mb-6 hidden">
+                <!-- ACCIÓN 4.2: Reducción del margen inferior de mb-6 a mb-4 -->
+                <div id="home-stats-container" class="mb-4 hidden">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-2">
                         <h3 class="text-base font-semibold text-slate-900">Resumen del Banco</h3>
                         <h3 class="text-base font-semibold text-slate-900">Alumnos Destacados</h3>
@@ -196,9 +214,8 @@
                         
                         <!-- Botones Principales -->
                         <div class="flex flex-col justify-between gap-4 px-3 bg-white rounded-xl shadow-lg shadow-dorado-soft/10 border border-amber-200 p-4 h-full">
-                            <!-- Timer (ACTUALIZADO: Horizontal, Oscuro y Mismo Tamaño que Números) -->
+                            <!-- Timer -->
                             <div id="countdown-timer" class="flex-shrink-0 text-sm font-medium text-slate-700 flex items-baseline justify-center gap-2">
-                                <!-- FIX 4: Color del texto a gris oscuro más claro (text-slate-600) -->
                                 <span class="text-xl font-bold text-slate-600">La tienda abre en:</span>
                                 <span id="days" class="text-xl font-bold color-dorado-main text-right">00</span><span class="text-xs text-slate-500 uppercase -ml-1">Días</span>
                                 <span id="hours" class="text-xl font-bold color-dorado-main text-right">00</span><span class="text-xs text-slate-500 uppercase -ml-1">Horas</span>
@@ -225,7 +242,6 @@
                 </div>
                 
                 <!-- MÓDULOS DE HOME - AHORA CONTIENE EL CARROUSEL DINÁMICO -->
-                <!-- ACCIÓN 1: Se elimina mb-6 para evitar el scroll innecesario en la página principal -->
                 <div id="home-modules-grid" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
                     
                     <!-- HERO SECTION DINÁMICA (CARRUSEL) -->
@@ -236,16 +252,12 @@
                             
                             <!-- SLIDE 0 (HOME): PROPÓSITO GENERAL Y LEMA (FONDO DORADO) -->
                             <div class="hero-slide bg-slide-main text-white p-6 md:p-8 flex">
-                                <!-- FIX 1: Contenido con altura fija para evitar saltos de pantalla -->
+                                <!-- AJUSTE USUARIO: Contenido con altura fija y compacta -->
                                 <div class="hero-slide-content w-full flex flex-col justify-between">
                                     <div>
-                                        <!-- FRASAE ELIMINADA: <p class="text-lg font-semibold opacity-90 mb-1">
-                                            Educación Financiera y Cívica Académica.
-                                        </p> -->
                                         <h2 class="text-4xl md:text-5xl font-extrabold mb-3 mt-1">
                                             Banco del Pincel Dorado
                                         </h2>
-                                        <!-- AJUSTE USUARIO: Se quitó mb-4 -->
                                         <p class="text-xl md:text-2xl opacity-90">
                                             "Donde el esfuerzo académico tiene su recompensa"
                                         </p>
@@ -256,7 +268,7 @@
                                         </ul>
                                     </div>
                                     
-                                    <!-- Botón CTA para saltar al siguiente slide (Transferencias) (AJUSTE USUARIO: Alinear a la derecha y texto a "Explorar") -->
+                                    <!-- Botón CTA para saltar al siguiente slide (Transferencias) -->
                                     <div class="w-full mt-6 flex justify-end">
                                         <button id="hero-slide-0-next" 
                                                 onclick="AppUI.goToHeroSlide(1)"
@@ -272,16 +284,13 @@
                                 <div class="hero-slide-content w-full">
                                     <div>
                                         <h2 class="text-2xl font-bold color-dorado-main mb-4">Portal de Transferencias (P2P)</h2>
-                                        <!-- AJUSTE USUARIO: Color de texto unificado (text-slate-800) -->
                                         <div id="slide-p2p-content" class="space-y-4 text-slate-800">
                                             <p><strong>Propósito:</strong> Fomentar la microeconomía y la gestión de pagos internos. Permite el intercambio de valor (ℙ) entre cuentas de estudiantes de forma rápida.</p>
                                             <ul class="list-disc list-inside ml-4 space-y-1 text-sm">
                                                 <li><span class="font-bold">Irrevocabilidad:</span> Toda Transferencia confirmada es definitiva e irreversible.</li>
-                                                <!-- AJUSTE USUARIO: Removido ** -->
                                                 <li><span class="font-bold">Costo Operacional:</span> Se aplica una comisión baja del <span class="font-bold">1.0%</span> sobre el monto enviado.</li>
                                                 <li><span class="font-bold">Seguridad:</span> Requiere la Clave P2P personal para la autorización.</li>
                                             </ul>
-                                            <!-- AJUSTE USUARIO: Color de texto consejo (text-slate-800) -->
                                             <p class="text-xs text-slate-800 italic mt-3">Consejo: Use las transferencias para liquidar deudas o hacer pagos por servicios menores entre compañeros.</p>
                                         </div>
                                     </div>
@@ -304,20 +313,15 @@
                                 <div class="hero-slide-content w-full">
                                     <div>
                                         <h2 class="text-2xl font-bold color-dorado-main mb-4">Préstamos Flexibles (Banca Activa)</h2>
-                                        <!-- AJUSTE USUARIO: Color de texto unificado (text-slate-800) -->
                                         <div id="slide-prestamos-content" class="space-y-4 text-slate-800">
                                             <p><strong>Propósito:</strong> Ofrecer liquidez a corto plazo para que los estudiantes puedan financiar proyectos o cubrir necesidades imprevistas.</p>
                                             <ul class="list-disc list-inside ml-4 space-y-1 text-sm">
                                                 <li><span class="font-bold">Montos:</span> Desde 10,000 ℙ hasta 150,000 ℙ.</li>
                                                 <li><span class="font-bold">Plazos:</span> De 3 a 21 días (ajustables).</li>
-                                                <!-- INICIO CORRECCIÓN TASA DE PRÉSTAMO -->
                                                 <li><span class="font-bold">Tasa:</span> Interés competitivo basado en las tasas activas del banco (aprox. 1.5% mensual base).</li>
-                                                <!-- FIN CORRECCIÓN TASA DE PRÉSTAMO -->
                                                 <li><span class="font-bold">Elegibilidad:</span> Requiere saldo positivo y una capacidad de pago suficiente (monto no debe exceder el 50% del saldo actual).</li>
                                             </ul>
-                                            <!-- INICIO CORRECCIÓN MORA PRÉSTAMO -->
                                             <p class="text-xs text-slate-800 italic mt-3">Consejo: Si no paga la cuota diaria, el préstamo acumulará la mora correspondiente sobre el saldo pendiente.</p>
-                                            <!-- FIN CORRECCIÓN MORA PRÉSTAMO -->
                                         </div>
                                     </div>
                                     <!-- AJUSTE: Botones con clase hero-nav-btn para tamaño consistente -->
@@ -339,18 +343,14 @@
                                 <div class="hero-slide-content w-full">
                                     <div>
                                         <h2 class="text-2xl font-bold color-dorado-main mb-4">Depósitos a Plazo (Inversión Pasiva)</h2>
-                                        <!-- AJUSTE USUARIO: Color de texto unificado (text-slate-800) -->
                                         <div id="slide-depositos-content" class="space-y-4 text-slate-800">
                                             <p><strong>Propósito:</strong> Incentivar el ahorro y la planificación financiera a medio plazo, generando rendimientos pasivos sobre el capital.</p>
                                             <ul class="list-disc list-inside ml-4 space-y-1 text-sm">
                                                 <li><span class="font-bold">Monto Mínimo:</span> 50,000 ℙ.</li>
                                                 <li><span class="font-bold">Plazos:</span> De 7 a 30 días (ajustables).</li>
-                                                <!-- INICIO CORRECCIÓN TASA DE DEPÓSITO -->
                                                 <li><span class="font-bold">Tasa:</span> Interés competitivo basado en las tasas pasivas del banco (aprox. 0.72% mensual base).</li>
-                                                <!-- FIN CORRECCIÓN TASA DE DEPÓSITO -->
                                                 <li><span class="font-bold">Condición:</span> Los fondos permanecen congelados hasta el vencimiento. No se puede invertir con un préstamo activo.</li>
                                             </ul>
-                                            <!-- AJUSTE USUARIO: Color de texto consejo (text-slate-800) -->
                                             <p class="text-xs text-slate-800 italic mt-3">Consejo: Si quieres que tu capital trabaje para ti, un depósito a plazo es la mejor opción de bajo riesgo.</p>
                                         </div>
                                     </div>
@@ -373,18 +373,13 @@
                                 <div class="hero-slide-content w-full">
                                     <div>
                                         <h2 class="text-2xl font-bold color-dorado-main mb-4">Impuestos y Comisiones (Regulación)</h2>
-                                        <!-- AJUSTE USUARIO: Color de texto unificado (text-slate-800) -->
                                         <div id="slide-impuestos-content" class="space-y-4 text-slate-800">
-                                            <!-- INICIO CORRECCIÓN PROPÓSITO IMPUESTOS -->
                                             <p><strong>Propósito:</strong> Mantener la Tesorería saludable y regular la economía interna mediante una carga tributaria.</p>
-                                            <!-- FIN CORRECCIÓN PROPÓSITO IMPUESTOS -->
                                             <ul class="list-disc list-inside ml-4 space-y-1 text-sm">
-                                                <!-- AJUSTE USUARIO: Removido ** -->
                                                 <li><span class="font-bold">ITBIS (Tienda):</span> <span class="font-bold">18.0%</span> aplicado a todas las compras de artículos.</li>
                                                 <li><span class="font-bold">Comisión P2P:</span> <span class="font-bold">1.0%</span> de comisión sobre el monto enviado por cada transferencia.</li>
                                                 <li><span class="font-bold">ISP (Riqueza):</span> Impuesto Progresivo diario sobre saldos mayores a <span class="font-bold">100,000 ℙ</span>.</li>
                                             </ul>
-                                            <!-- AJUSTE USUARIO: Color de texto consejo (text-slate-800) -->
                                             <p class="text-xs text-slate-800 italic mt-3">Consejo: Si tienes mucho capital, invierte o gástalo antes de que el ISP comience a aplicarse.</p>
                                         </div>
                                     </div>
@@ -407,11 +402,9 @@
                                 <div class="hero-slide-content w-full">
                                     <div>
                                         <h2 class="text-2xl font-bold color-dorado-main mb-4">Recompensas y Compras (Tienda/Bonos)</h2>
-                                        <!-- AJUSTE USUARIO: Color de texto unificado (text-slate-800) -->
                                         <div id="slide-bonos-tienda-content" class="space-y-4 text-slate-800">
                                             <p><strong>Propósito:</strong> Recompensar el mérito y proporcionar un destino final para el capital ganado a través del esfuerzo académico.</p>
                                             <ul class="list-disc list-inside ml-4 space-y-1 text-sm">
-                                                <!-- AJUSTE USUARIO: Removido ** -->
                                                 <li><span class="font-bold">Bonos:</span> Códigos de canje por logros o tareas de recuperación (<span class="font-bold">Salida Autónoma de Cicla</span>). Son gratuitos.</li>
                                                 <li><span class="font-bold">Tienda:</span> Artículos de privilegio o mejoras de estatus que se compran con Pinceles (+ <span class="font-bold">18% ITBIS</span>).</li>
                                                 <li><span class="font-bold">Consejo:</span> La Tienda tiene stock limitado y abre por tiempo limitado. ¡Prepárate!</li>
@@ -452,7 +445,7 @@
     </div>
 
     <!-- Overlay de Carga - Sin cambios -->
-    <div id="loading-overlay" class="fixed inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-[10000] transition-opacity duration-300">
+    <div id="loading-overlay" class="fixed inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-[10000] transition-opacity duration-300 opacity-0 pointer-events-none">
         <!-- Contenido del loader (sin cambios) -->
         <div class="text-center">
             <h1 class="text-5xl font-bold color-dorado-main mb-2">
@@ -499,7 +492,6 @@
                 </div>
                 <div class="flex border-b border-slate-200 px-4 overflow-x-auto">
                     <!-- Pestañas para P2P, Préstamos y Depósitos -->
-                    <!-- CAMBIO: "Transferencia P2P" -> "Transferencia" -->
                     <button data-tab="p2p_transfer" class="tab-btn whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 border-amber-600 text-amber-600 transition-colors hover:bg-slate-100">
                         Transferencia
                     </button>
@@ -515,7 +507,6 @@
             <div id="transacciones-combinadas-content-wrapper" class="p-6 md:p-8 space-y-4 modal-content-fixed-height">
                 
                 <!-- PESTAÑA 1: TRANSFERENCIA P2P -->
-                <!-- Reducción de columnas a 1 en móvil y 2 en desktop, pero usando 1 columna para todo el formulario en desktop para simplificar y evitar scroll. -->
                 <div id="tab-p2p_transfer" class="tab-content"> 
                     <div class="grid grid-cols-1 gap-6 max-w-lg mx-auto">
                          <h3 class="text-base font-semibold text-slate-800">Transferencia de Fondos entre Cuentas</h3>
@@ -544,9 +535,10 @@
                         </div>
                     </div>
                     
-                    <div id="p2p-status-msg" class="text-sm text-center font-medium px-6 pt-4 h-auto min-h-[1rem]"></div>
+                    <!-- ACCIÓN 2.3: Altura fija h-10 -->
+                    <div id="p2p-status-msg" class="text-sm text-center font-medium px-6 pt-4 status-msg-fixed-height"></div>
                     
-                    <div class="mt-8 flex justify-center">
+                    <div class="mt-4 flex justify-center">
                         <button id="p2p-submit-btn" class="px-8 py-2 bg-white border border-amber-600 text-amber-600 text-sm font-medium rounded-lg hover:bg-amber-50 transition-colors shadow-sm min-w-[200px]">
                             <span id="p2p-btn-text">Realizar Transferencia</span>
                         </button>
@@ -555,7 +547,6 @@
 
                 <!-- PESTAÑA 2: SOLICITAR PRÉSTAMO FLEXIBLE -->
                 <div id="tab-prestamo_flex" class="tab-content hidden"> 
-                    <!-- UPDATED: max-w-4xl REMOVIDO (Ancho Completo) -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         
                         <!-- COLUMNA IZQUIERDA: CALCULADORA DE INPUTS -->
@@ -592,7 +583,8 @@
                                     <input type="text" id="prestamo-search-alumno" placeholder="Busca tu nombre..." class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:bg-amber-50/50">
                                     <div id="prestamo-origen-results" class="search-results-container hidden absolute z-10 w-full bg-white border border-slate-300 rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto"></div>
                                 </div>
-                                <div id="prestamo-elegibilidad-msg" class="text-sm text-center font-medium h-auto min-h-[1rem] text-slate-600">Busque su nombre y defina parámetros.</div>
+                                <!-- ACCIÓN 2.3: Altura fija h-10. Ahora es solo un placeholder, la lógica de elegibilidad lo actualiza -->
+                                <div id="prestamo-elegibilidad-msg" class="text-sm text-center font-medium status-msg-fixed-height text-slate-600">Busque su nombre y defina parámetros.</div>
                             </div>
                         </div>
                         
@@ -622,7 +614,8 @@
                                     <input type="password" id="prestamo-clave-p2p" placeholder="Ingresa tu clave de 5 dígitos" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:bg-amber-50/50">
                                 </div>
 
-                                <div id="prestamo-status-msg" class="text-sm text-center font-medium px-6 pt-2 h-auto min-h-[1rem]"></div>
+                                <!-- ACCIÓN 2.3: Altura fija h-10 -->
+                                <div id="prestamo-status-msg" class="text-sm text-center font-medium px-6 pt-2 status-msg-fixed-height"></div>
                                 
                                 <button id="prestamo-submit-btn" disabled class="w-full px-4 py-2 bg-white border border-amber-600 text-amber-600 text-sm font-medium rounded-lg hover:bg-amber-50 transition-colors shadow-sm">
                                     <span id="prestamo-btn-text">Confirmar Solicitud</span>
@@ -634,7 +627,6 @@
 
                 <!-- PESTAÑA 3: CREAR INVERSIÓN FLEXIBLE (DEPÓSITO) -->
                 <div id="tab-deposito_flex" class="tab-content hidden"> 
-                    <!-- UPDATED: max-w-4xl REMOVIDO (Ancho Completo) -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         
                         <!-- COLUMNA IZQUIERDA: CALCULADORA DE INPUTS -->
@@ -671,7 +663,8 @@
                                     <input type="text" id="deposito-search-alumno" placeholder="Busca tu nombre..." class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:bg-amber-50/50">
                                     <div id="deposito-origen-results" class="search-results-container hidden absolute z-10 w-full bg-white border border-slate-300 rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto"></div>
                                 </div>
-                                <div id="deposito-elegibilidad-msg" class="text-sm text-center font-medium h-auto min-h-[1rem] text-slate-600">Busque su nombre y defina parámetros.</div>
+                                <!-- ACCIÓN 2.3: Altura fija h-10. Ahora es solo un placeholder, la lógica de elegibilidad lo actualiza -->
+                                <div id="deposito-elegibilidad-msg" class="text-sm text-center font-medium status-msg-fixed-height text-slate-600">Busque su nombre y defina parámetros.</div>
                             </div>
 
                         </div>
@@ -682,11 +675,11 @@
                             
                             <div class="bg-amber-50 border border-amber-200 p-4 rounded-lg shadow-inner grid grid-cols-2 gap-3 min-h-[220px]">
                                 <div class="col-span-2">
-                                    <p class="text-xs font-medium text-slate-600">Tasa de Interés Total (5% Base + Bono):</p>
+                                    <p class="text-xs font-medium text-slate-600">Tasa de Interés Total:</p>
                                     <p id="deposito-tasa-display" class="text-2xl font-bold color-dorado-main">-</p>
                                 </div>
                                 <div>
-                                    <p class="text-xs font-medium text-slate-600">Ganancia Neta (0% Retención):</p>
+                                    <p class="text-xs font-medium text-slate-600">Ganancia Estimada:</p>
                                     <p id="deposito-ganancia-display" class="text-xl font-bold text-slate-800">-</p>
                                 </div>
                                 <div>
@@ -702,7 +695,8 @@
                                     <input type="password" id="deposito-clave-p2p" placeholder="Ingresa tu clave de 5 dígitos" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:bg-amber-50/50">
                                 </div>
 
-                                <div id="deposito-status-msg" class="text-sm text-center font-medium px-6 pt-2 h-auto min-h-[1rem]"></div>
+                                <!-- ACCIÓN 2.3: Altura fija h-10 -->
+                                <div id="deposito-status-msg" class="text-sm text-center font-medium px-6 pt-2 status-msg-fixed-height"></div>
                                 
                                 <button id="deposito-submit-btn" disabled class="w-full px-4 py-2 bg-white border border-amber-600 text-amber-600 text-sm font-medium rounded-lg hover:bg-amber-50 transition-colors shadow-sm">
                                     <span id="deposito-btn-text">Confirmar Inversión</span>
@@ -714,7 +708,8 @@
             </div>
             
             <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-end">
-                <div id="transacciones-combinadas-status-msg" class="text-sm text-left font-medium color-dorado-main h-auto min-h-[1rem] flex-1 items-center flex"></div>
+                 <!-- ACCIÓN 2.3: Altura fija h-10 -->
+                <div id="transacciones-combinadas-status-msg" class="text-sm text-left font-medium color-dorado-main status-msg-fixed-height flex-1 items-center flex"></div>
             </div>
         </div>
     </div>
@@ -751,7 +746,6 @@
             <div id="transaccion-modal-content-wrapper" class="p-6">
                 
                 <!-- PESTAÑA 1: TRANSACCIÓN MÚLTIPLE -->
-                <!-- Mantengo el scroll en estas subsecciones para no limitar las listas, pero elimino el scroll principal -->
                 <div id="tab-transaccion" class="tab-content active no-scrollbar"> 
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
@@ -824,7 +818,8 @@
                                     <button type="button" id="bono-admin-clear-btn" class="px-4 py-2 bg-white border border-amber-600 text-amber-600 text-sm font-medium rounded-lg hover:bg-amber-50 transition-colors shadow-sm">Limpiar</button>
                                     <button type="submit" id="bono-admin-submit-btn" class="px-4 py-2 bg-white border border-amber-600 text-amber-600 text-sm font-medium rounded-lg hover:bg-amber-50 transition-colors shadow-sm">Crear / Actualizar Bono</button>
                                 </div>
-                                <div id="bono-admin-status-msg" class="text-sm text-center font-medium pt-2 h-auto min-h-[1rem]"></div>
+                                 <!-- ACCIÓN 2.3: Altura fija h-10 -->
+                                <div id="bono-admin-status-msg" class="text-sm text-center font-medium pt-2 status-msg-fixed-height"></div>
                             </form>
                         </div>
                         <div id="bonos-admin-lista-container" class="lg:col-span-3 overflow-y-auto max-h-[480px] pr-2 no-scrollbar">
@@ -898,7 +893,8 @@
                                     <button type="button" id="tienda-admin-clear-btn" class="px-4 py-2 bg-white border border-amber-600 text-amber-600 text-sm font-medium rounded-lg hover:bg-amber-50 transition-colors shadow-sm">Limpiar</button>
                                     <button type="submit" id="tienda-admin-submit-btn" class="px-4 py-2 bg-white border border-amber-600 text-amber-600 text-sm font-medium rounded-lg hover:bg-amber-50 transition-colors shadow-sm">Crear / Actualizar</button>
                                 </div>
-                                <div id="tienda-admin-status-msg" class="text-sm text-center font-medium pt-2 h-auto min-h-[1rem]"></div>
+                                <!-- ACCIÓN 2.3: Altura fija h-10 -->
+                                <div id="tienda-admin-status-msg" class="text-sm text-center font-medium pt-2 status-msg-fixed-height"></div>
                             </form>
                         </div>
                         <div id="tienda-admin-controls-container">
@@ -939,8 +935,8 @@
                         </div>
                     </div>
                 </div>
-
-                <div id="transaccion-status-msg" class="text-sm text-center font-medium px-6 pt-4 h-auto min-h-[1rem]"></div>
+                <!-- ACCIÓN 2.3: Altura fija h-10 -->
+                <div id="transaccion-status-msg" class="text-sm text-center font-medium px-6 pt-4 status-msg-fixed-height"></div>
             </div>
             <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-between gap-3 flex-shrink-0">
                 <a id="db-link-btn" href="https." target="_blank" class="px-4 py-2 bg-white border border-amber-600 text-amber-600 text-sm font-medium rounded-lg hover:bg-amber-50 transition-colors shadow-sm flex items-center">
@@ -955,7 +951,6 @@
     
     <!-- MODAL DE BONOS - SIN SCROLL -->
     <div id="bonos-modal" class="fixed inset-0 bg-slate-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <!-- Contenido del modal (sin cambios) -->
         <div id="bonos-modal-dialog" class="bg-white rounded-lg shadow-xl full-width-modal-dialog transform scale-95 transition-transform duration-300 overflow-hidden border-2 border-amber-600">
             <div class="bg-slate-50 border-b border-slate-200">
                 <div class="flex justify-between items-center p-4">
@@ -965,16 +960,13 @@
             </div>
             
             <!-- CONTENIDO MODAL BONOS (INICIO DE CORRECCIONES) -->
-            <!-- AÑADIR ID FALTANTE PARA RESOLVER EL ERROR SILENCIOSO EN showBonoStep1() -->
             <div id="bono-step-list-container" class="p-6 modal-content-fixed-height">
                 <h3 class="text-lg font-semibold color-dorado-main mb-4">Bonos Disponibles</h3>
                 
-                <!-- PROBLEMA 4 (CORRECCIÓN): Se mueve el div de estado aquí para que siempre esté visible y encima de la lista con scroll -->
-                <div id="bono-status-msg" class="text-sm text-left font-medium color-dorado-main h-auto min-h-[1rem] flex-1 items-center flex px-2 mb-2"></div>
+                <!-- ACCIÓN 2.3: Altura fija h-10 -->
+                <div id="bono-status-msg" class="text-sm text-left font-medium color-dorado-main status-msg-fixed-height flex-1 items-center flex px-2 mb-2"></div>
                 
-                <!-- PROBLEMA 2 (CORRECCIÓN): Se cambia gap-2 a gap-1 para hacerlo más compacto -->
-                <!-- CAMBIO: h-[460px] -> max-h-[460px] -->
-                <div id="bonos-lista-disponible" class="grid grid-cols-1 md:grid-cols-3 gap-1 pr-2 overflow-y-auto max-h-[460px]">
+                <div id="bonos-lista-disponible" class="grid grid-cols-1 md:grid-cols-3 gap-1 pr-2 overflow-y-auto max-h-[440px]">
                     <p class="text-sm text-slate-500 text-center col-span-3">Cargando bonos...</p>
                 </div>
             </div>
@@ -1000,7 +992,8 @@
                     </div>
                     <input type="hidden" id="bono-clave-input-step2">
 
-                    <div id="bono-step2-status-msg" class="text-sm text-center font-medium px-6 pt-2 h-auto min-h-[1rem]"></div>
+                    <!-- ACCIÓN 2.3: Altura fija h-10 -->
+                    <div id="bono-step2-status-msg" class="text-sm text-center font-medium px-6 pt-2 status-msg-fixed-height"></div>
 
                     <div class="flex justify-between gap-3 pt-2">
                         <button id="bono-step-back-btn" type="button" class="px-4 py-2 bg-white border border-amber-600 text-amber-600 text-sm font-medium rounded-lg hover:bg-amber-50 transition-colors shadow-sm">Volver</button>
@@ -1011,16 +1004,14 @@
                  </div>
             </div>
 
-            <!-- PROBLEMA 4 (CORRECCIÓN): Se quita el div de estado de aquí, ya que fue movido arriba. Se mantiene el footer vacío o con otra información si es necesario. -->
             <div id="bonos-modal-footer" class="bg-slate-50 p-4 border-t border-slate-200 flex justify-end gap-3 flex-shrink-0">
-                <!-- <div id="bono-status-msg" class="text-sm text-left font-medium color-dorado-main h-auto min-h-[1rem] flex-1 items-center flex"></div> -->
+                <!-- Vacio, el mensaje se movió al list-container -->
             </div>
         </div>
     </div>
     
     <!-- MODAL DE TIENDA - SIN SCROLL -->
     <div id="tienda-modal" class="fixed inset-0 bg-slate-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <!-- Contenido del modal (sin cambios) -->
         <div id="tienda-modal-dialog" class="bg-white rounded-lg shadow-xl full-width-modal-dialog transform scale-95 transition-transform duration-300 overflow-hidden border-2 border-amber-600">
             <div class="bg-slate-50 border-b border-slate-200">
                 <div class="flex justify-between items-center p-4">
@@ -1031,11 +1022,12 @@
             
             <div id="tienda-step-list-container" class="p-6 space-y-4 modal-content-fixed-height">
                 <h3 class="text-lg font-semibold color-dorado-main mb-4">Artículos Disponibles</h3>
-                <!-- PROBLEMA 2 (CORRECCIÓN): Se cambia gap-2 a gap-1 para hacerlo más compacto -->
-                <!-- CAMBIO: h-[460px] -> max-h-[460px] -->
+                
                 <div id="tienda-items-container" class="grid grid-cols-1 lg:grid-cols-3 gap-1 pr-2 bg-white p-4 rounded-lg border border-slate-200 shadow-inner overflow-y-auto max-h-[460px]">
                     <p class="text-sm text-slate-500 text-center col-span-3">Cargando artículos...</p>
                 </div>
+                 <!-- ACCIÓN 2.3: Altura fija h-10 -->
+                <div id="tienda-status-msg" class="text-sm text-left font-medium color-dorado-main status-msg-fixed-height flex items-center justify-center"></div>
             </div>
             
             <div id="tienda-step-form-container" class="p-6 hidden modal-content-fixed-height flex items-center justify-center">
@@ -1059,7 +1051,8 @@
                         <input type="password" id="tienda-clave-p2p-step2" placeholder="Ingresa tu clave de 5 dígitos" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:bg-amber-50/50">
                     </div>
                     
-                    <div id="tienda-step2-status-msg" class="text-sm text-center font-medium px-6 pt-2 h-auto min-h-[1rem]"></div>
+                    <!-- ACCIÓN 2.3: Altura fija h-10 -->
+                    <div id="tienda-step2-status-msg" class="text-sm text-center font-medium px-6 pt-2 status-msg-fixed-height"></div>
 
                     <div class="flex justify-between gap-3 pt-2">
                         <button id="tienda-step-back-btn" type="button" class="px-4 py-2 bg-white border border-amber-600 text-amber-600 text-sm font-medium rounded-lg hover:bg-amber-50 transition-colors shadow-sm">Volver a Tienda</button>
@@ -1071,7 +1064,7 @@
             </div>
 
             <div id="tienda-modal-footer" class="bg-slate-50 p-4 border-t border-slate-200 flex flex-col gap-2">
-                <div id="tienda-status-msg" class="text-sm text-left font-medium color-dorado-main h-auto min-h-[1rem] flex-1 items-center flex"></div>
+                <!-- Vacio, el mensaje se movió al list-container -->
             </div>
         </div>
     </div>
@@ -1086,7 +1079,6 @@
     <!-- MODAL TÉRMINOS Y CONDICIONES / PRIVACIDAD (SIN SCROLL) -->
     <div id="terminos-modal" class="fixed inset-0 bg-slate-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
         <div class="bg-white rounded-lg shadow-xl full-width-modal-dialog transform scale-95 transition-transform duration-300 border-2 border-amber-600">
-            <!-- CAMBIO 1: Se redujo mb-6 a mb-4. El título ahora es text-2xl. -->
             <div class="p-6 md:p-8">
                 <div class="flex justify-between items-center mb-4">
                     <h2 id="terminos-modal-title" class="text-2xl font-semibold color-dorado-main">Términos y Condiciones</h2>
@@ -1101,7 +1093,7 @@
         </div>
     </div>
     
-    <!-- Lógica de la Aplicación -->
+    <!-- Lógica de la Aplicación (Mantenido Separado) -->
     <script src="script.js" type="module" defer></script>
 </body>
 </html>
