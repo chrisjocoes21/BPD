@@ -10,7 +10,7 @@ const AppConfig = {
     CACHE_DURATION: 300000,
     
     APP_STATUS: 'RC', 
-    APP_VERSION: 'v29.8 (Fixes)', // Versión actualizada
+    APP_VERSION: 'v30.0 (Solución Integral)', // Versión actualizada
     
     // --- REGLAS DE ECONOMÍA REBALANCEADA Y FLEXIBLE (AJUSTE) ---
     IMPUESTO_P2P_TASA: 0.01,        // 1.0%
@@ -67,14 +67,14 @@ const AppState = {
     },
     
     bonos: {
-        // ACCIÓN 1.1: Se cambia [] a null para forzar la recarga de datos si es necesario
+        // ACCIÓN 1.1: Cambiado de [] a null
         disponibles: null,
         canjeados: [],
         selectedBono: null,
     },
 
     tienda: {
-        // ACCIÓN 1.1: Se cambia {} a null para forzar la recarga de datos si es necesario
+        // ACCIÓN 1.1: Cambiado de {} a null
         items: null,
         isStoreOpen: false,
         storeManualStatus: 'auto',
@@ -214,8 +214,8 @@ const AppData = {
         AppState.datosAdicionales.prestamosActivos = data.prestamosActivos || [];
         AppState.datosAdicionales.depositosActivos = data.depositosActivos || [];
         // NOTA: bonos y tienda se cargan de forma perezosa, pero se inicializan aquí si vienen en la carga base
-        AppState.bonos.disponibles = data.bonosDisponibles || null; 
-        AppState.tienda.items = data.tiendaStock || null;
+        AppState.bonos.disponibles = data.bonosDisponibles || AppState.bonos.disponibles || []; 
+        AppState.tienda.items = data.tiendaStock || AppState.tienda.items || {};
         AppState.tienda.storeManualStatus = data.storeManualStatus || 'auto';
 
         const allGroups = data.gruposData;
@@ -491,7 +491,8 @@ const AppUI = {
         const totalPagarDisplay = document.getElementById('prestamo-total-pagar-display');
         const cuotaDiariaDisplay = document.getElementById('prestamo-cuota-diaria-display');
         const btn = document.getElementById('prestamo-submit-btn');
-        const statusMsg = document.getElementById('prestamo-elegibilidad-msg');
+        // FIX: Cambiado de 'prestamo-elegibilidad-msg' (interno) a 'prestamo-status-msg' (de estado de envío) para el mensaje de elegibilidad.
+        const statusMsg = document.getElementById('prestamo-status-msg');
         
         if (!montoInput || !plazoInput) return;
 
@@ -509,6 +510,7 @@ const AppUI = {
             tasaDisplay.textContent = '-';
             totalPagarDisplay.textContent = 'Monto/Plazo Inválido';
             cuotaDiariaDisplay.textContent = '-';
+            // Mensaje de validación básica
             AppTransacciones.setEligibilityState(btn, statusMsg, false, `Monto entre ${AppFormat.formatNumber(minMonto)} ℙ y ${AppFormat.formatNumber(maxMonto)} ℙ.`, true);
             return;
         }
@@ -541,7 +543,8 @@ const AppUI = {
         const gananciaDisplay = document.getElementById('deposito-ganancia-display');
         const totalRecibirDisplay = document.getElementById('deposito-total-recibir-display');
         const btn = document.getElementById('deposito-submit-btn');
-        const statusMsg = document.getElementById('deposito-elegibilidad-msg');
+        // FIX: Cambiado de 'deposito-elegibilidad-msg' (interno) a 'deposito-status-msg' (de estado de envío) para el mensaje de elegibilidad.
+        const statusMsg = document.getElementById('deposito-status-msg');
 
         if (!montoInput || !plazoInput) return;
 
@@ -558,6 +561,7 @@ const AppUI = {
             tasaDisplay.textContent = '-';
             gananciaDisplay.textContent = 'Monto/Plazo Inválido';
             totalRecibirDisplay.textContent = '0 ℙ';
+            // Mensaje de validación básica
             AppTransacciones.setEligibilityState(btn, statusMsg, false, `Monto mínimo: ${AppFormat.formatNumber(minMonto)} ℙ. Plazo: 7-30 días.`, true);
             return;
         }
@@ -649,6 +653,8 @@ const AppUI = {
             
             AppUI.resetFlexibleForm('prestamo');
             AppUI.resetFlexibleForm('deposito');
+            // Limpiar mensaje de estado en el footer
+            document.getElementById('transacciones-combinadas-status-msg').textContent = "";
         }
         
         if (modalId === 'bonos-modal') {
@@ -689,6 +695,7 @@ const AppUI = {
         if (montoInput) montoInput.value = type === 'prestamo' ? AppConfig.PRESTAMO_MIN_MONTO : AppConfig.DEPOSITO_MIN_MONTO;
         if (plazoInput) plazoInput.value = type === 'prestamo' ? AppConfig.PRESTAMO_MIN_PLAZO_DIAS : AppConfig.DEPOSITO_MIN_PLAZO_DIAS;
 
+        // Limpiar el mensaje de estado principal (prestamo/deposito-status-msg)
         document.getElementById(`${type}-status-msg`).textContent = "";
         
         // Forzar el recálculo y actualización de slider fill
@@ -749,6 +756,8 @@ const AppUI = {
 
         if (!input) return;
 
+        input.dataset.resultsId = resultsId; // Guardar ID de resultados para reset
+        
         input.addEventListener('input', (e) => {
             const query = e.target.value;
             AppState.currentSearch[stateKey].query = query;
@@ -970,9 +979,10 @@ const AppUI = {
 
         const container = document.getElementById('bonos-lista-disponible');
 
-        if (!AppState.datosActuales) {
+        if (!AppState.datosActuales || AppState.bonos.disponibles === null) {
             // Mostrar estado de carga si los datos aún no están
             if(container) container.innerHTML = `<p class="text-sm text-slate-500 text-center col-span-3">Cargando bonos...</p>`;
+            if(AppState.bonos.disponibles === null) AppData.cargarDatos(false); // Forzar recarga si el estado es null
         } else {
             // Si los datos ya existen, proceder con la lógica normal
             AppUI.populateBonoList();
@@ -1009,6 +1019,13 @@ const AppUI = {
     },
 
     populateBonoList: function() {
+        // Se valida el estado nulo por la corrección 1.1
+        if (AppState.bonos.disponibles === null) {
+             const container = document.getElementById('bonos-lista-disponible');
+             if(container) container.innerHTML = `<p class="text-sm text-slate-500 text-center col-span-3">Cargando bonos...</p>`;
+             return;
+        }
+
         if (document.getElementById('bonos-modal').classList.contains('opacity-0')) return;
         
         const container = document.getElementById('bonos-lista-disponible');
@@ -1081,7 +1098,8 @@ const AppUI = {
     
     populateBonoAdminList: function() {
         const tbody = document.getElementById('bonos-admin-lista');
-        const bonos = AppState.bonos.disponibles;
+        // Se valida el estado nulo por la corrección 1.1
+        const bonos = AppState.bonos.disponibles || []; 
 
         if (bonos.length === 0) {
             tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">No hay bonos configurados.</td></tr>`;
@@ -1162,9 +1180,10 @@ const AppUI = {
         
         const container = document.getElementById('tienda-items-container');
         
-        if (!AppState.datosActuales) {
+        if (!AppState.datosActuales || AppState.tienda.items === null) {
             // Mostrar estado de carga si los datos aún no están
             if(container) container.innerHTML = `<p class="text-sm text-slate-500 text-center col-span-3">Cargando artículos...</p>`;
+            if(AppState.tienda.items === null) AppData.cargarDatos(false); // Forzar recarga si el estado es null
         } else {
             // Si los datos ya existen, proceder con la lógica normal
             AppUI.renderTiendaItems();
@@ -1212,6 +1231,14 @@ const AppUI = {
     },
 
     renderTiendaItems: function() {
+        // Se valida el estado nulo por la corrección 1.1
+        if (AppState.tienda.items === null) {
+             const container = document.getElementById('tienda-items-container');
+             // Ya usa col-span-3 y text-center
+             if(container) container.innerHTML = `<p class="text-sm text-slate-500 text-center col-span-3">Cargando artículos...</p>`;
+             return;
+        }
+
         if (document.getElementById('tienda-modal').classList.contains('opacity-0')) return;
 
         // Seguridad: Si aún no hay datos, muestra carga.
@@ -1274,13 +1301,13 @@ const AppUI = {
                     </div>
                     <p class="text-base font-semibold text-slate-900 truncate">
                         <span class="tooltip-container">
-                            ${item.nombre}
-                            <div class="tooltip-text hidden md:block w-48">${item.descripcion}</div>
+                            ${item.Nombre}
+                            <div class="tooltip-text hidden md:block w-48">${item.Descripcion}</div>
                         </span>
                     </p>
                     <!-- PROBLEMA 2 (CORRECCIÓN): Se elimina mt-1 -->
                     <div class="flex justify-between items-baseline">
-                        <span class="text-xs text-slate-500">Base: ${AppFormat.formatNumber(item.precio)} ℙ (+ITBIS)</span>
+                        <span class="text-xs text-slate-500">Base: ${AppFormat.formatNumber(item.PrecioBase)} ℙ (+ITBIS)</span>
                         
                         <div class="flex items-center space-x-3">
                             <span class="text-xl font-bold color-dorado-main">${AppFormat.formatNumber(costoFinal)} ℙ</span>
@@ -1363,7 +1390,8 @@ const AppUI = {
 
     populateTiendaAdminList: function() {
         const tbody = document.getElementById('tienda-admin-lista');
-        const items = AppState.tienda.items;
+        // Se valida el estado nulo por la corrección 1.1
+        const items = AppState.tienda.items || {};
         const itemKeys = Object.keys(items);
 
         if (itemKeys.length === 0) {
@@ -1376,8 +1404,8 @@ const AppUI = {
 
         itemsOrdenados.forEach(itemId => {
             const item = items[itemId];
-            const precio = AppFormat.formatNumber(item.precio);
-            const stock = item.stock;
+            const precio = AppFormat.formatNumber(item.PrecioBase);
+            const stock = item.Stock;
             const rowClass = (stock <= 0 && item.ItemID !== 'filantropo') ? 'opacity-60 bg-slate-50' : 'hover:bg-slate-100';
             
             const itemIdEscapado = escapeHTML(item.ItemID);
@@ -1385,7 +1413,7 @@ const AppUI = {
             html += `
                 <tr id="tienda-item-row-${itemIdEscapado}" class="${rowClass}">
                     <td class="px-4 py-2 text-sm font-semibold text-slate-800">${item.ItemID}</td>
-                    <td class="px-4 py-2 text-sm text-slate-700 truncate" title="${item.nombre}">${item.nombre}</td>
+                    <td class="px-4 py-2 text-sm text-slate-700 truncate" title="${item.Nombre}">${item.Nombre}</td>
                     <td class="px-4 py-2 text-sm text-slate-800 text-right">${precio} ℙ</td>
                     <td class="px-4 py-2 text-sm text-slate-700 text-right">${stock}</td>
                     <td class="px-4 py-2 text-right text-sm">
@@ -1403,11 +1431,11 @@ const AppUI = {
         if (!item) return;
 
         document.getElementById('tienda-admin-itemid-input').value = item.ItemID;
-        document.getElementById('tienda-admin-nombre-input').value = item.nombre;
-        document.getElementById('tienda-admin-desc-input').value = item.descripcion;
-        document.getElementById('tienda-admin-tipo-input').value = item.tipo;
-        document.getElementById('tienda-admin-precio-input').value = item.precio;
-        document.getElementById('tienda-admin-stock-input').value = item.stock;
+        document.getElementById('tienda-admin-nombre-input').value = item.Nombre;
+        document.getElementById('tienda-admin-desc-input').value = item.Descripcion;
+        document.getElementById('tienda-admin-tipo-input').value = item.Tipo;
+        document.getElementById('tienda-admin-precio-input').value = item.PrecioBase;
+        document.getElementById('tienda-admin-stock-input').value = item.Stock;
         
         const expiracionInput = document.getElementById('tienda-admin-expiracion-input');
         if (item.ExpiracionFecha) {
@@ -1599,7 +1627,7 @@ const AppUI = {
         } else if (status === 'loading') {
             dot.classList.add('bg-amber-400', 'animate-pulse');
         } else if (status === 'error') {
-            dot.classList.add('bg-slate-400');
+            dot.classList.add('bg-slate-400'); // Error de red/API
         } else {
             dot.classList.add('bg-slate-300');
         }
@@ -1650,7 +1678,7 @@ const AppUI = {
 
         let html = '';
 
-        // Botón de Inicio (Home) - ACCIÓN 2.1: Eliminar Iconos y dejar solo "Inicio"
+        // Botón de Inicio (Home) - ACCIÓN 2.1: Eliminar Iconos
         html += `
             <a href="#" id="home-nav-btn" data-grupo-nombre="" class="flex items-center p-3 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100 sidebar-nav-item transition-colors mb-2">
                 Inicio
@@ -1663,7 +1691,7 @@ const AppUI = {
             const isActive = AppState.selectedGrupo === grupo.nombre;
             const classActive = isActive ? 'bg-amber-50 text-amber-600 font-bold' : 'text-slate-700 hover:bg-slate-100';
 
-            // ACCIÓN 2.1: Eliminar Iconos y dejar solo nombre y cantidad
+            // ACCIÓN 2.1: Eliminar Iconos
             html += `
                 <a href="#" data-grupo-nombre="${grupo.nombre}" class="flex items-center justify-between p-3 rounded-lg text-sm sidebar-nav-item ${classActive} transition-colors">
                     <span class="truncate">${grupo.nombre}</span>
@@ -2200,7 +2228,7 @@ const AppTransacciones = {
         let errorValidacion = "";
         
         // ACCIÓN 3.1: Mejorar mensajes de validación
-        if (!student) {
+        if (!student || student.nombre !== alumnoNombre) {
             errorValidacion = 'Debe seleccionar su nombre de la lista de búsqueda.';
         } else if (!claveP2P || claveP2P.length !== 5) {
             errorValidacion = 'La Clave P2P debe tener 5 dígitos.';
@@ -2265,7 +2293,7 @@ const AppTransacciones = {
         let errorValidacion = "";
         
         // ACCIÓN 3.1: Mejorar mensajes de validación
-        if (!student) {
+        if (!student || student.nombre !== alumnoNombre) {
             errorValidacion = 'Debe seleccionar su nombre de la lista de búsqueda.';
         } else if (!claveP2P || claveP2P.length !== 5) {
             errorValidacion = 'La Clave P2P debe tener 5 dígitos.';
@@ -2530,7 +2558,7 @@ const AppTransacciones = {
 
 
         let errorValidacion = "";
-        if (!alumnoNombre || !student) {
+        if (!alumnoNombre || !student || student.nombre !== alumnoNombre) {
             errorValidacion = "Alumno no encontrado. Por favor, seleccione su nombre de la lista.";
         } else if (!claveP2P) {
             errorValidacion = "Debe ingresar su Clave P2P.";
@@ -2720,7 +2748,7 @@ const AppTransacciones = {
 
         if (!item) {
             AppTransacciones.setError(statusMsg, "Error interno: Artículo no encontrado.");
-        } else if (item.stock <= 0 && item.ItemID !== 'filantropo') {
+        } else if (item.Stock <= 0 && item.ItemID !== 'filantropo') {
             AppTransacciones.setError(statusMsg, "El artículo está agotado.");
         } else if (item.ExpiracionFecha && new Date(item.ExpiracionFecha).getTime() < Date.now()) {
             AppTransacciones.setError(statusMsg, "Este artículo ha expirado.");
@@ -2751,15 +2779,15 @@ const AppTransacciones = {
         let errorValidacion = "";
         if (!itemId || !item) {
             errorValidacion = "Error interno: Artículo no seleccionado.";
-        } else if (!alumnoNombre || !student) {
+        } else if (!alumnoNombre || !student || student.nombre !== alumnoNombre) {
             errorValidacion = "Alumno no encontrado. Por favor, seleccione su nombre de la lista.";
         } else if (!claveP2P) {
             errorValidacion = "Debe ingresar su Clave P2P.";
         } else {
-            const costoFinal = Math.round(item.precio * (1 + AppConfig.TASA_ITBIS));
+            const costoFinal = Math.round(item.PrecioBase * (1 + AppConfig.TASA_ITBIS));
             if (student.pinceles < costoFinal) {
                 errorValidacion = "Saldo insuficiente para completar la compra.";
-            } else if (item.stock <= 0 && item.ItemID !== 'filantropo') {
+            } else if (item.Stock <= 0 && item.ItemID !== 'filantropo') {
                 errorValidacion = "El artículo está agotado.";
             } else {
                 if (item.GruposPermitidos) {
@@ -3005,22 +3033,25 @@ const AppTransacciones = {
     
     setLoading: function(statusMsgEl, message) {
         if (statusMsgEl) {
+            // Acción 2.3: Clase de altura fija
             statusMsgEl.textContent = message;
-            statusMsgEl.className = "text-sm text-center font-medium color-dorado-main h-auto min-h-[1rem]";
+            statusMsgEl.className = "text-sm text-center font-medium color-dorado-main h-10 flex items-center justify-center";
         }
     },
 
     setSuccess: function(statusMsgEl, message) {
         if (statusMsgEl) {
+            // Acción 2.3: Clase de altura fija
             statusMsgEl.textContent = message;
-            statusMsgEl.className = "text-sm text-center font-medium color-dorado-main h-auto min-h-[1rem]";
+            statusMsgEl.className = "text-sm text-center font-medium color-dorado-main h-10 flex items-center justify-center";
         }
     },
 
     setError: function(statusMsgEl, message, colorClass = 'text-red-600') {
         if (statusMsgEl) {
+            // Acción 2.3: Clase de altura fija
             statusMsgEl.textContent = `Error: ${message}`;
-            statusMsgEl.className = `text-sm text-center font-medium ${colorClass} h-auto min-h-[1em]`;
+            statusMsgEl.className = `text-sm text-center font-medium ${colorClass} h-10 flex items-center justify-center`;
         }
     }
 };
