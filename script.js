@@ -10,7 +10,7 @@ const AppConfig = {
     CACHE_DURATION: 300000,
     
     APP_STATUS: 'RC', 
-    APP_VERSION: 'v29.7', 
+    APP_VERSION: 'v29.8 (Fixes)', // Versión actualizada
     
     // --- REGLAS DE ECONOMÍA REBALANCEADA Y FLEXIBLE (AJUSTE) ---
     IMPUESTO_P2P_TASA: 0.01,        // 1.0%
@@ -67,13 +67,15 @@ const AppState = {
     },
     
     bonos: {
-        disponibles: [],
+        // ACCIÓN 1.1: Se cambia [] a null para forzar la recarga de datos si es necesario
+        disponibles: null,
         canjeados: [],
         selectedBono: null,
     },
 
     tienda: {
-        items: {},
+        // ACCIÓN 1.1: Se cambia {} a null para forzar la recarga de datos si es necesario
+        items: null,
         isStoreOpen: false,
         storeManualStatus: 'auto',
         selectedItem: null,
@@ -211,8 +213,9 @@ const AppData = {
         AppState.datosAdicionales.saldoTesoreria = data.saldoTesoreria || 0;
         AppState.datosAdicionales.prestamosActivos = data.prestamosActivos || [];
         AppState.datosAdicionales.depositosActivos = data.depositosActivos || [];
-        AppState.bonos.disponibles = data.bonosDisponibles || [];
-        AppState.tienda.items = data.tiendaStock || {};
+        // NOTA: bonos y tienda se cargan de forma perezosa, pero se inicializan aquí si vienen en la carga base
+        AppState.bonos.disponibles = data.bonosDisponibles || null; 
+        AppState.tienda.items = data.tiendaStock || null;
         AppState.tienda.storeManualStatus = data.storeManualStatus || 'auto';
 
         const allGroups = data.gruposData;
@@ -713,7 +716,14 @@ const AppUI = {
         document.getElementById(`tab-${tabId}`).classList.remove('hidden');
         
         if (tabId === 'transaccion') {
-            AppUI.populateGruposTransaccion();
+            // ACCIÓN 1.2: Asegurar que la función solo se llama si los datos ya están disponibles
+            if (AppState.datosActuales) {
+                AppUI.populateGruposTransaccion();
+            } else {
+                // Mostrar mensaje de espera si los datos principales aún no han llegado
+                document.getElementById('transaccion-lista-grupos-container').innerHTML = '<span class="text-sm text-slate-500 p-2">Cargando datos base...</span>';
+                document.getElementById('transaccion-lista-usuarios-container').innerHTML = '<span class="text-sm text-slate-500 p-2">Espere...</span>';
+            }
         } else if (tabId === 'bonos_admin') { 
             if (AppState.lastKnownGroupsHash === '') {
                 AppUI.populateAdminGroupCheckboxes('bono-admin-grupos-checkboxes-container', 'bonos');
@@ -1580,16 +1590,18 @@ const AppUI = {
         
         indicator.title = title;
 
+        // ACCIÓN 2.2: Se cambian los colores a la paleta Amber/Slate
         dot.classList.remove('bg-green-600', 'bg-amber-600', 'bg-red-600', 'animate-pulse-dot', 'bg-slate-300');
+        dot.className = 'w-3 h-3 rounded-full'; // Reset Tailwind classes for dot
 
-        switch (status) {
-            case 'ok':
-            case 'loading':
-                dot.classList.add('bg-amber-600', 'animate-pulse-dot');
-                break;
-            case 'error':
-                dot.classList.add('bg-red-600'); 
-                break;
+        if (status === 'ok') {
+            dot.classList.add('bg-amber-500'); 
+        } else if (status === 'loading') {
+            dot.classList.add('bg-amber-400', 'animate-pulse');
+        } else if (status === 'error') {
+            dot.classList.add('bg-slate-400');
+        } else {
+            dot.classList.add('bg-slate-300');
         }
     },
 
@@ -1629,63 +1641,91 @@ const AppUI = {
     },
 
     actualizarSidebar: function(grupos) {
-        const nav = document.getElementById('sidebar-nav');
-        nav.innerHTML = ''; 
-        
-        const homeLink = document.createElement('button');
-        homeLink.dataset.groupName = "home"; 
-        homeLink.className = "flex items-center justify-center w-full px-3 py-2 border border-amber-600 text-amber-600 text-sm font-medium rounded-lg hover:bg-amber-50 transition-colors shadow-sm mb-1 nav-link";
-        homeLink.innerHTML = `<span class="truncate">Inicio</span>`;
-        homeLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (AppState.selectedGrupo === null) {
-                AppUI.hideSidebar();
-                return;
-            }
-            AppState.selectedGrupo = null;
-            AppUI.mostrarPantallaNeutral(AppState.datosActuales || []);
-            AppUI.actualizarSidebarActivo();
-            AppUI.hideSidebar();
-        });
-        nav.appendChild(homeLink);
+        const navContainer = document.getElementById('sidebar-nav');
+        if (!navContainer) return;
 
-        (grupos || []).forEach(grupo => {
-            const link = document.createElement('button');
-            link.dataset.groupName = grupo.nombre;
-            link.className = "flex items-center justify-center w-full px-3 py-2 border border-amber-600 text-amber-600 text-sm font-medium rounded-lg hover:bg-amber-50 transition-colors shadow-sm mb-1 nav-link";
-            
-            link.innerHTML = `
-                <span class="truncate">${grupo.nombre}</span>
+        // Se mantiene el grupo "Cicla" pero se añade al final de la lista de navegación visual
+        const gruposFiltrados = grupos.filter(g => g.nombre !== 'Cicla' && g.nombre !== 'Banco');
+        const ciclaGroup = grupos.find(g => g.nombre === 'Cicla');
+
+        let html = '';
+
+        // Botón de Inicio (Home) - ACCIÓN 2.1: Eliminar Iconos y dejar solo "Inicio"
+        html += `
+            <a href="#" id="home-nav-btn" data-grupo-nombre="" class="flex items-center p-3 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100 sidebar-nav-item transition-colors mb-2">
+                Inicio
+            </a>
+            <div class="text-xs font-semibold text-slate-500 uppercase px-3 py-2 border-t border-slate-200">Grupos Activos</div>
+        `;
+        
+        gruposFiltrados.forEach(grupo => {
+            const totalF = AppFormat.formatNumber(grupo.total);
+            const isActive = AppState.selectedGrupo === grupo.nombre;
+            const classActive = isActive ? 'bg-amber-50 text-amber-600 font-bold' : 'text-slate-700 hover:bg-slate-100';
+
+            // ACCIÓN 2.1: Eliminar Iconos y dejar solo nombre y cantidad
+            html += `
+                <a href="#" data-grupo-nombre="${grupo.nombre}" class="flex items-center justify-between p-3 rounded-lg text-sm sidebar-nav-item ${classActive} transition-colors">
+                    <span class="truncate">${grupo.nombre}</span>
+                    <span class="text-xs font-semibold">${totalF} ℙ</span>
+                </a>
             `;
-            link.addEventListener('click', (e) => {
+        });
+        
+        // Agregar grupo Cicla al final
+        if (ciclaGroup) {
+             const totalF = AppFormat.formatNumber(ciclaGroup.total);
+             const isActive = AppState.selectedGrupo === ciclaGroup.nombre;
+             const classActive = isActive ? 'bg-amber-50 text-amber-600 font-bold' : 'text-slate-700 hover:bg-slate-100';
+             
+             html += `
+                <div class="text-xs font-semibold text-slate-500 uppercase px-3 py-2 border-t border-slate-200 mt-4">Otros Grupos</div>
+                <a href="#" data-grupo-nombre="${ciclaGroup.nombre}" class="flex items-center justify-between p-3 rounded-lg text-sm sidebar-nav-item ${classActive} transition-colors">
+                    <span class="truncate">${ciclaGroup.nombre}</span>
+                    <span class="text-xs font-semibold">${totalF} ℙ</span>
+                </a>
+            `;
+        }
+
+        navContainer.innerHTML = html;
+        
+        // Agregar listener para todos los elementos de navegación
+        document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
                 e.preventDefault();
-                if (AppState.selectedGrupo === grupo.nombre) {
-                    AppUI.hideSidebar();
-                    return;
+                const grupoNombre = e.currentTarget.dataset.grupoNombre;
+                
+                AppState.selectedGrupo = grupoNombre; 
+                
+                if (grupoNombre === '') {
+                    AppUI.mostrarPantallaNeutral(grupos);
+                } else {
+                    const selectedGrupoData = grupos.find(g => g.nombre === grupoNombre);
+                    if (selectedGrupoData) {
+                        AppUI.mostrarDatosGrupo(selectedGrupoData);
+                    }
                 }
-                AppState.selectedGrupo = grupo.nombre;
-                AppUI.mostrarDatosGrupo(grupo);
+                
+                AppUI.hideSidebar(); 
                 AppUI.actualizarSidebarActivo();
-                AppUI.hideSidebar();
             });
-            nav.appendChild(link);
         });
     },
 
     actualizarSidebarActivo: function() {
-        const links = document.querySelectorAll('#sidebar-nav .nav-link');
-        links.forEach(link => {
-            const groupName = link.dataset.groupName;
-            const isActive = (AppState.selectedGrupo === null && groupName === 'home') || (AppState.selectedGrupo === groupName);
-
-            link.classList.remove('bg-amber-50', 'text-amber-700', 'font-semibold', 'bg-white', 'text-amber-600', 'border-amber-600', 'hover:bg-amber-50', 'shadow-sm');
-
-            if (isActive) {
-                link.classList.add('bg-amber-50', 'text-amber-700', 'font-semibold', 'border-amber-600');
-            } else {
-                link.classList.add('bg-white', 'border', 'border-amber-600', 'text-amber-600', 'hover:bg-amber-50', 'shadow-sm');
-            }
-        });
+         document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+             const grupoNombre = item.dataset.grupoNombre;
+             item.classList.remove('bg-amber-50', 'text-amber-600', 'font-bold');
+             item.classList.add('text-slate-700', 'hover:bg-slate-100');
+             
+             if (grupoNombre === AppState.selectedGrupo) {
+                 item.classList.add('bg-amber-50', 'text-amber-600', 'font-bold');
+                 item.classList.remove('text-slate-700', 'hover:bg-slate-100');
+             } else if (AppState.selectedGrupo === null && grupoNombre === '') {
+                 item.classList.add('bg-amber-50', 'text-amber-600', 'font-bold');
+                 item.classList.remove('text-slate-700', 'hover:bg-slate-100');
+             }
+         });
     },
     
     // --- Lógica del Carrusel Hero ---
@@ -2158,14 +2198,19 @@ const AppTransacciones = {
         const student = AppState.currentSearch.prestamoAlumno.info;
 
         let errorValidacion = "";
-        if (!student || student.nombre !== alumnoNombre) {
-            errorValidacion = "Alumno no encontrado. Seleccione de la lista.";
-        } else if (!claveP2P) {
-            errorValidacion = "Clave P2P requerida.";
+        
+        // ACCIÓN 3.1: Mejorar mensajes de validación
+        if (!student) {
+            errorValidacion = 'Debe seleccionar su nombre de la lista de búsqueda.';
+        } else if (!claveP2P || claveP2P.length !== 5) {
+            errorValidacion = 'La Clave P2P debe tener 5 dígitos.';
+        } else if (montoSolicitado <= 0 || plazoSolicitado <= 0) {
+            errorValidacion = 'El monto y el plazo deben ser válidos.';
         } else {
             const elegibilidad = AppTransacciones.checkLoanEligibility(student, montoSolicitado);
             if (!elegibilidad.isEligible) errorValidacion = `No elegible: ${elegibilidad.message}`;
         }
+        
 
         if (errorValidacion) {
             AppTransacciones.setError(statusMsg, errorValidacion);
@@ -2218,14 +2263,19 @@ const AppTransacciones = {
         const student = AppState.currentSearch.depositoAlumno.info;
 
         let errorValidacion = "";
-        if (!student || student.nombre !== alumnoNombre) {
-            errorValidacion = "Alumno no encontrado. Seleccione de la lista.";
-        } else if (!claveP2P) {
-            errorValidacion = "Clave P2P requerida.";
+        
+        // ACCIÓN 3.1: Mejorar mensajes de validación
+        if (!student) {
+            errorValidacion = 'Debe seleccionar su nombre de la lista de búsqueda.';
+        } else if (!claveP2P || claveP2P.length !== 5) {
+            errorValidacion = 'La Clave P2P debe tener 5 dígitos.';
+        } else if (montoADepositar <= 0 || plazoEnDias <= 0) {
+            errorValidacion = 'El monto y el plazo deben ser válidos.';
         } else {
             const elegibilidad = AppTransacciones.checkDepositEligibility(student, montoADepositar);
             if (!elegibilidad.isEligible) errorValidacion = `No elegible: ${elegibilidad.message}`;
         }
+        
 
         if (errorValidacion) {
             AppTransacciones.setError(statusMsg, errorValidacion);
