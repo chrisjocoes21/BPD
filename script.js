@@ -11,7 +11,7 @@ const AppConfig = {
     CACHE_DURATION: 300000,
     
     APP_STATUS: 'RC', 
-    APP_VERSION: 'v32.1 (Fix Bonos y Botones)', 
+    APP_VERSION: 'v32.1 (Fix Bonos)', 
     
     IMPUESTO_P2P_TASA: 0.01,        
     IMPUESTO_DEPOSITO_TASA: 0.0,    
