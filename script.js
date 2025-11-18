@@ -1,5 +1,6 @@
 // --- CONFIGURACIÓN ---
 const AppConfig = {
+    // Asegúrate de que esta URL sea la correcta del despliegue de tu Apps Script
     API_URL: 'https://script.google.com/macros/s/AKfycbyhPHZuRmC7_t9z20W4h-VPqVFk0z6qKFG_W-YXMgnth4BMRgi8ibAfjeOtIeR5OrFPXw/exec',
     TRANSACCION_API_URL: 'https://script.google.com/macros/s/AKfycbyhPHZuRmC7_t9z20W4h-VPqVFk0z6qKFG_W-YXMgnth4BMRgi8ibAfjeOtIeR5OrFPXw/exec',
     CLAVE_MAESTRA: 'PinceladasM25-26',
@@ -10,15 +11,13 @@ const AppConfig = {
     CACHE_DURATION: 300000,
     
     APP_STATUS: 'RC', 
-    APP_VERSION: 'v30.0 (Solución Integral)', // Versión actualizada
+    APP_VERSION: 'v32.1 (Fix Bonos y Botones)', 
     
-    // --- REGLAS DE ECONOMÍA REBALANCEADA Y FLEXIBLE (AJUSTE) ---
-    IMPUESTO_P2P_TASA: 0.01,        // 1.0%
+    IMPUESTO_P2P_TASA: 0.01,        
     IMPUESTO_DEPOSITO_TASA: 0.0,    
     IMPUESTO_DEPOSITO_ADMIN: 0.05,
-    TASA_ITBIS: 0.18,               // 18.0%
+    TASA_ITBIS: 0.18,               
     
-    // REGLAS DE PRÉSTAMOS FLEXIBLES (AJUSTE 2.4)
     PRESTAMO_TASA_BASE: 0.015,       
     PRESTAMO_BONUS_POR_DIA: 0.0003,  
     PRESTAMO_MIN_MONTO: 10000,
@@ -26,7 +25,6 @@ const AppConfig = {
     PRESTAMO_MIN_PLAZO_DIAS: 3,
     PRESTAMO_MAX_PLAZO_DIAS: 21,
     
-    // REGLAS DE DEPÓSITOS FLEXIBLES (AJUSTE 2.3)
     DEPOSITO_TASA_BASE: 0.005,       
     DEPOSITO_BONUS_POR_DIA: 0.000075, 
     DEPOSITO_MIN_MONTO: 50000,
@@ -56,7 +54,6 @@ const AppState = {
     transaccionSelectAll: {}, 
     lastKnownGroupsHash: '',
     
-    // Estado para Modales de Autoservicio
     currentSearch: {
         p2pOrigen: { query: '', selected: null, info: null },
         p2pDestino: { query: '', selected: null, info: null },
@@ -67,21 +64,18 @@ const AppState = {
     },
     
     bonos: {
-        // ACCIÓN 1.1: Cambiado de [] a null
-        disponibles: null,
+        disponibles: [],
         canjeados: [],
         selectedBono: null,
     },
 
     tienda: {
-        // ACCIÓN 1.1: Cambiado de {} a null
-        items: null,
+        items: {},
         isStoreOpen: false,
         storeManualStatus: 'auto',
         selectedItem: null,
     },
     
-    // AJUSTE 4.2: Hero ahora tiene 6 slides (0-5)
     heroSlideIndex: 0,
     heroSlideCount: 6, 
 };
@@ -91,10 +85,8 @@ const AppAuth = {
     verificarClave: function() {
         const claveInput = document.getElementById('clave-input');
         if (claveInput.value === AppConfig.CLAVE_MAESTRA) {
-            
             AppUI.hideModal('gestion-modal');
-            AppUI.showTransaccionModal('transaccion'); // Abre el modal de administración
-            
+            AppUI.showTransaccionModal('transaccion'); 
             claveInput.value = '';
             claveInput.classList.remove('shake', 'border-red-500');
         } else {
@@ -109,31 +101,23 @@ const AppAuth = {
 
 // --- NÚMEROS Y FORMATO ---
 const AppFormat = {
-    formatNumber: (num) => new Intl.NumberFormat('es-DO', { maximumFractionDigits: 0 }).format(num),
+    formatNumber: (num) => new Intl.NumberFormat('es-DO', { maximumFractionDigits: 0 }).format(Math.round(num)),
     toLocalISOString: (date) => {
         const pad = (num) => String(num).padStart(2, '0');
-        
-        const year = date.getFullYear();
-        const month = pad(date.getMonth() + 1);
-        const day = pad(date.getDate());
-        const hours = pad(date.getHours());
-        const minutes = pad(date.getMinutes());
-
-        return `${year}-${month}-${day}T${hours}:${minutes}`;
+        const d = new Date(date);
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
     },
-    // NUEVO: Calculadora de Tasa de Interés de Préstamo
-    calculateLoanRate: (days) => {
-        const rate = AppConfig.PRESTAMO_TASA_BASE + (days * AppConfig.PRESTAMO_BONUS_POR_DIA);
-        return Math.min(rate, 1.0); // No debería pasar del 100%
+    formatDateSimple: (date) => {
+        if (!date) return 'N/A';
+        const d = new Date(date);
+        const pad = (num) => String(num).padStart(2, '0');
+        return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
     },
-    // NUEVO: Calculadora de Tasa de Interés de Depósito
-    calculateDepositRate: (days) => {
-        const rate = AppConfig.DEPOSITO_TASA_BASE + (days * AppConfig.DEPOSITO_BONUS_POR_DIA);
-        return Math.min(rate, 1.0); // No debería pasar del 100%
-    }
+    calculateLoanRate: (days) => Math.min(AppConfig.PRESTAMO_TASA_BASE + (days * AppConfig.PRESTAMO_BONUS_POR_DIA), 1.0),
+    calculateDepositRate: (days) => Math.min(AppConfig.DEPOSITO_TASA_BASE + (days * AppConfig.DEPOSITO_BONUS_POR_DIA), 1.0)
 };
 
-// --- MANEJO de datos ---
+// --- MANEJO DE DATOS ---
 const AppData = {
     
     isCacheValid: () => AppState.cachedData && AppState.lastCacheTime && (Date.now() - AppState.lastCacheTime < AppConfig.CACHE_DURATION),
@@ -165,17 +149,15 @@ const AppData = {
             } else {
                 AppState.isOffline = false;
                 
-                const url = `${AppConfig.API_URL}?cacheBuster=${new Date().getTime()}`;
-                const response = await fetch(url, { method: 'GET', cache: 'no-cache', redirect: 'follow' });
-
-                if (!response.ok) {
-                    throw new Error(`Error de red: ${response.status} ${response.statusText}`);
-                }
+                const url = `${AppConfig.API_URL}?action=getDatosBase&cacheBuster=${new Date().getTime()}`;
                 
-                const data = await response.json();
+                // BLINDAJE 1: Usar función segura que maneja errores de Fetch/HTML
+                const data = await AppTransacciones.fetchWithExponentialBackoff(url, { method: 'GET', cache: 'no-cache' });
                 
-                if (data && data.error) {
-                    throw new Error(`Error de API: ${data.message}`);
+                // CORRECCIÓN: Si data.success es falso O data.message no existe, lanza un error claro.
+                if (!data || data.error || data.success === false) {
+                    const errorMessage = data && data.message ? data.message : 'El servidor no devolvió un mensaje de error específico. (Backend no implementado o error interno)';
+                    throw new Error(`Error de API: ${errorMessage}`);
                 }
                 
                 AppData.procesarYMostrarDatos(data);
@@ -187,7 +169,7 @@ const AppData = {
 
         } catch (error) {
             console.error("Error al cargar datos:", error.message);
-            AppUI.setConnectionStatus('error', 'Error de conexión.');
+            AppUI.setConnectionStatus('error', `Error de conexión: ${error.message}`);
             
             if (AppState.retryCount < AppConfig.MAX_RETRIES) {
                 AppState.retryCount++;
@@ -210,14 +192,17 @@ const AppData = {
     },
     
     procesarYMostrarDatos: function(data) {
+        // 1. Datos Base
         AppState.datosAdicionales.saldoTesoreria = data.saldoTesoreria || 0;
         AppState.datosAdicionales.prestamosActivos = data.prestamosActivos || [];
         AppState.datosAdicionales.depositosActivos = data.depositosActivos || [];
-        // NOTA: bonos y tienda se cargan de forma perezosa, pero se inicializan aquí si vienen en la carga base
-        AppState.bonos.disponibles = data.bonosDisponibles || AppState.bonos.disponibles || []; 
-        AppState.tienda.items = data.tiendaStock || AppState.tienda.items || {};
+        
+        // 2. Datos Unificados de Bonos y Tienda
+        AppState.bonos.disponibles = data.bonosDisponibles || []; 
+        AppState.tienda.items = data.tiendaStock || {};
         AppState.tienda.storeManualStatus = data.storeManualStatus || 'auto';
-
+        
+        // 3. Procesar Usuarios y Grupos
         const allGroups = data.gruposData;
         
         let gruposOrdenados = Object.entries(allGroups).map(([nombre, info]) => ({ nombre, total: info.total || 0, usuarios: info.usuarios || [] }));
@@ -257,7 +242,6 @@ const AppData = {
         if (AppState.selectedGrupo) {
             const grupoActualizado = activeGroups.find(g => g.nombre === AppState.selectedGrupo);
             if (grupoActualizado) {
-                // PROBLEMA 1 (SOLUCIÓN): Se usa 'grupoActualizado' como parámetro aquí.
                 AppUI.mostrarDatosGrupo(grupoActualizado); 
             } else {
                 AppState.selectedGrupo = null;
@@ -269,27 +253,17 @@ const AppData = {
         
         AppUI.actualizarSidebarActivo();
         
-        // Actualización de Modales de Usuario
+        // 4. Actualización de Modales
         const isBonoModalOpen = document.getElementById('bonos-modal').classList.contains('opacity-0') === false;
         const isTiendaModalOpen = document.getElementById('tienda-modal').classList.contains('opacity-0') === false;
         const isTransaccionesCombinadasOpen = document.getElementById('transacciones-combinadas-modal').classList.contains('opacity-0') === false;
+        const isReportVisible = document.getElementById('transacciones-combinadas-report-container')?.classList.contains('hidden') === false;
         
-        // Si los modales están abiertos, forzar el renderizado de la lista
-        if (isBonoModalOpen) AppUI.populateBonoList();
-        if (isTiendaModalOpen) AppUI.renderTiendaItems();
-        
-        if (isBonoModalOpen || isTiendaModalOpen) {
-            // Si el paso 2 de Bonos/Tienda está visible, actualizar el estado de carga
-            const activeModal = isBonoModalOpen ? 'bono' : 'tienda';
-            const submitBtn = document.getElementById(`${activeModal}-submit-step2-btn`);
-            const btnText = document.getElementById(`${activeModal}-btn-text-step2`);
-            if (submitBtn && !document.getElementById(`${activeModal}-step-form-container`).classList.contains('hidden')) {
-                 AppTransacciones.setLoadingState(submitBtn, btnText, false, activeModal === 'bono' ? 'Confirmar Canje' : 'Confirmar Compra');
-            }
-        }
+        // Si los modales están abiertos y el reporte NO está visible, forzar el renderizado de la lista
+        if (isBonoModalOpen && !isReportVisible) AppUI.populateBonoList();
+        if (isTiendaModalOpen && !isReportVisible) AppUI.renderTiendaItems();
         
         if (isTransaccionesCombinadasOpen) {
-             // Si el modal combinado está abierto, forzar recálculos
              AppUI.updatePrestamoCalculadora();
              AppUI.updateDepositoCalculadora();
              AppUI.updateP2PCalculoImpuesto();
@@ -305,6 +279,8 @@ const AppData = {
             } else if (tabId === 'tienda_gestion' || tabId === 'tienda_inventario') {
                 AppUI.populateTiendaAdminList();
                 AppUI.updateTiendaAdminStatusLabel();
+            } else if (tabId === 'transaccion') {
+                 AppUI.populateGruposTransaccion();
             }
         }
 
@@ -320,7 +296,7 @@ const AppUI = {
         document.getElementById('gestion-btn').addEventListener('click', () => AppUI.showModal('gestion-modal'));
         document.getElementById('modal-submit').addEventListener('click', AppAuth.verificarClave);
         
-        // LISTENERS NUEVOS: MODAL COMBINADO DE TRANSACCIONES
+        // LISTENERS: MODAL COMBINADO DE TRANSACCIONES
         document.getElementById('transacciones-btn').addEventListener('click', () => AppUI.showTransaccionesCombinadasModal('p2p_transfer'));
         document.getElementById('transacciones-combinadas-modal-close').addEventListener('click', () => AppUI.hideModal('transacciones-combinadas-modal'));
 
@@ -331,8 +307,6 @@ const AppUI = {
         });
         
         // Listeners para Hero Carousel
-        // Se establecen los listeners para los botones de navegación del carrusel
-        // AJUSTE 4.2: Actualización de listeners (el botón "Conoce Más" ha sido eliminado del HTML)
         document.getElementById('hero-slide-0-next')?.addEventListener('click', () => AppUI.goToHeroSlide(1));
 
         document.querySelectorAll('.slide-next-btn').forEach(btn => {
@@ -354,11 +328,10 @@ const AppUI = {
         document.getElementById('prestamo-submit-btn').addEventListener('click', AppTransacciones.solicitarPrestamoFlexible);
         document.getElementById('deposito-submit-btn').addEventListener('click', AppTransacciones.crearDepositoFlexible);
 
-        // Listeners P2P/Bonos/Tienda/Reglas
+        // Listeners P2P/Bonos/Tienda
         document.getElementById('modal-cancel').addEventListener('click', () => AppUI.hideModal('gestion-modal'));
         document.getElementById('transaccion-modal-close-btn').addEventListener('click', () => AppUI.hideModal('transaccion-modal'));
         
-        // FIX: Listener para el botón de bonos, asegurando que siempre intenta abrir el modal.
         const bonosBtn = document.getElementById('bonos-btn');
         if (bonosBtn) {
             bonosBtn.addEventListener('click', () => AppUI.showBonoModal());
@@ -366,16 +339,12 @@ const AppUI = {
         
         document.getElementById('bonos-modal-close').addEventListener('click', () => AppUI.hideModal('bonos-modal'));
         
-        // FIX: Listener para el botón de tienda
         const tiendaBtn = document.getElementById('tienda-btn');
         if (tiendaBtn) {
             tiendaBtn.addEventListener('click', () => AppUI.showTiendaModal());
         }
         
-        // FIX: Listener para el botón de cierre de la tienda (X)
         document.getElementById('tienda-modal-close').addEventListener('click', () => AppUI.hideModal('tienda-modal'));
-        
-        // Reglas modal ELIMINADO
         
         // Listeners P2P (Ahora en el modal combinado)
         document.getElementById('p2p-submit-btn').addEventListener('click', AppTransacciones.realizarTransferenciaP2P);
@@ -431,16 +400,237 @@ const AppUI = {
         AppUI.mostrarVersionApp();
         
         AppData.cargarDatos(false);
-        // AJUSTE 4.3: Reducir la frecuencia de recarga de datos de 10s a 30s
         setInterval(() => AppData.cargarDatos(false), 30000); 
         AppUI.updateCountdown();
         setInterval(AppUI.updateCountdown, 1000);
     },
     
-    // --- NUEVAS FUNCIONES DE MODALES FLEXIBLES (PRESTAMOS Y DEPÓSITOS) ---
+    // --- FUNCIÓN DE INFORME DE CONFIRMACIÓN (CORREGIDA) ---
+    showSuccessSummary: function(modalId, reportData, reportType) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+        
+        // CORRECCIÓN: Lógica específica para IDs de contenedores que no siguen el patrón estándar
+        let formContainerId, reportContainerId;
+
+        if (modalId === 'bonos-modal') {
+            // FIX: bonos-modal (plural) usa contenedores bono- (singular) en el HTML
+            formContainerId = 'bono-main-step-container';
+            reportContainerId = 'bono-report-container';
+        } else if (modalId === 'transacciones-combinadas-modal') {
+            formContainerId = 'transacciones-combinadas-step-container';
+            reportContainerId = 'transacciones-combinadas-report-container';
+        } else if (modalId === 'transaccion-modal') {
+            formContainerId = 'transaccion-admin-step-container';
+            reportContainerId = 'transaccion-admin-report-container';
+        } else {
+            // Default para Tienda u otros que sigan la regla: modalId -> prefix
+            formContainerId = modalId.replace('-modal', '-main-step-container');
+            reportContainerId = modalId.replace('-modal', '-report-container');
+        }
+
+        const formContainer = document.getElementById(formContainerId);
+        const reportContainer = document.getElementById(reportContainerId);
+        
+        if (!formContainer || !reportContainer) {
+            console.error(`Contenedores no encontrados para ${modalId}: form=${formContainerId}, report=${reportContainerId}`);
+            AppUI.hideModal(modalId);
+            return;
+        }
+
+        formContainer.classList.add('hidden');
+        reportContainer.classList.remove('hidden');
+
+        let title, detailsHtml = '';
+
+        const formatValue = (value, unit = 'ℙ', color = 'text-slate-900') => `
+            <p class="text-lg font-bold ${color}">${AppFormat.formatNumber(value)} ${unit}</p>
+        `;
+        
+        const detailRow = (label, valueHtml) => `
+            <div class="flex justify-between items-center py-2 border-b border-slate-100">
+                <span class="text-sm font-medium text-slate-600">${label}</span>
+                ${valueHtml}
+            </div>
+        `;
+        
+        const primaryStat = (label, valueHtml, colorClass = 'bg-amber-100') => `
+            <div class="${colorClass} p-4 rounded-lg text-center shadow-inner">
+                <p class="text-xs font-medium text-slate-700 uppercase">${label}</p>
+                ${valueHtml}
+            </div>
+        `;
+
+        switch (reportType) {
+            case 'p2p':
+                title = 'Transferencia de Fondos Exitosa';
+                const totalDebitado = reportData.cantidad_enviada + reportData.impuesto_cobrado;
+                detailsHtml = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        ${primaryStat('Remitente', `<p class="text-xl font-bold text-slate-800">${reportData.remitente}</p>`)}
+                        ${primaryStat('Destinatario', `<p class="text-xl font-bold color-dorado-main">${reportData.destino}</p>`, 'bg-green-50')}
+                    </div>
+                    ${detailRow('Monto Enviado (Neto)', formatValue(reportData.cantidad_enviada))}
+                    ${detailRow('Comisión P2P', formatValue(reportData.impuesto_cobrado, 'ℙ', 'text-red-500'))}
+                    <div class="report-divider"></div>
+                    ${detailRow('Total Debitado de tu Cuenta', formatValue(totalDebitado, 'ℙ', 'text-red-600'))}
+                    <div class="report-divider"></div>
+                    ${primaryStat('Nuevo Saldo Restante', formatValue(reportData.saldo_restante_origen), 'bg-slate-50')}
+                `;
+                break;
+            case 'prestamo':
+                 title = 'Préstamo Solicitado y Aprobado';
+                 const interesTotalP = reportData.total_a_pagar - reportData.monto_solicitado;
+                 
+                 detailsHtml = `
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        ${primaryStat('Monto Recibido', formatValue(reportData.monto_solicitado), 'bg-green-50')}
+                        ${primaryStat('Plazo (Días)', `<p class="text-2xl font-bold text-slate-800">${reportData.plazo_dias} Días</p>`, 'bg-slate-50')}
+                    </div>
+                    ${detailRow('Tasa de Interés', `<p class="text-lg font-bold text-slate-900">${reportData.tasa_final}%</p>`)}
+                    ${detailRow('Intereses Totales', formatValue(interesTotalP))}
+                    ${detailRow('Cuota Diaria (Aproximada)', formatValue(reportData.cuota_diaria))}
+                    <div class="report-divider"></div>
+                    ${detailRow('Total a Pagar (Capital + Interés)', formatValue(reportData.total_a_pagar, 'ℙ', 'text-red-600'))}
+                    <div class="report-divider"></div>
+                    ${primaryStat('Nuevo Saldo en Cuenta', formatValue(reportData.saldo_final), 'bg-slate-50')}
+                `;
+                break;
+            case 'deposito':
+                 title = 'Inversión Creada con Éxito';
+                 const gananciaNeta = reportData.ganancia_neta;
+                 detailsHtml = `
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        ${primaryStat('Monto Invertido', formatValue(reportData.monto_depositado), 'bg-red-50')}
+                        ${primaryStat('Plazo (Días)', `<p class="text-2xl font-bold text-slate-800">${reportData.plazo_dias} Días</p>`, 'bg-slate-50')}
+                    </div>
+                    ${detailRow('Tasa de Rendimiento', `<p class="text-lg font-bold text-slate-900">${reportData.tasa_final}%</p>`)}
+                    ${detailRow('Ganancia Estimada', formatValue(gananciaNeta))}
+                    <div class="report-divider"></div>
+                    ${detailRow('Total a Recibir al Vencimiento', formatValue(reportData.total_a_recibir, 'ℙ', 'text-green-600'))}
+                    <div class="report-divider"></div>
+                    ${primaryStat('Nuevo Saldo en Cuenta', formatValue(reportData.saldo_final), 'bg-slate-50')}
+                `;
+                break;
+            case 'bono':
+                title = '¡Bono Canjeado con Éxito!';
+                detailsHtml = `
+                    ${primaryStat('Bono Canjeado', `<p class="text-xl font-bold text-slate-800">${reportData.bono_clave}</p>`)}
+                    <div class="report-divider"></div>
+                    ${detailRow('Recompensa Otorgada', formatValue(reportData.recompensa, 'ℙ', 'text-green-600'))}
+                    <div class="report-divider"></div>
+                    ${primaryStat('Tu Nuevo Saldo', formatValue(reportData.saldo_final), 'bg-slate-50')}
+                `;
+                break;
+            case 'tienda':
+                title = 'Compra de Artículo Exitosa';
+                const costoBase = reportData.costo_base;
+                const itbis = reportData.itbis;
+                const costoTotalT = reportData.costo_total;
+
+                detailsHtml = `
+                    ${primaryStat('Artículo Comprado', `<p class="text-xl font-bold text-slate-800">${reportData.item_nombre}</p>`)}
+                    <div class="report-divider"></div>
+                    ${detailRow('Precio Base', formatValue(costoBase))}
+                    ${detailRow(`ITBIS (${AppConfig.TASA_ITBIS * 100}%)`, formatValue(itbis, 'ℙ', 'text-red-500'))}
+                    <div class="report-divider"></div>
+                    ${detailRow('Total Debitado', formatValue(costoTotalT, 'ℙ', 'text-red-600'))}
+                    <div class="report-divider"></div>
+                    ${primaryStat('Nuevo Saldo Restante', formatValue(reportData.saldo_final), 'bg-slate-50')}
+                `;
+                break;
+            case 'admin_multi':
+                title = 'Transacción Múltiple Completada';
+                const cantidadPorUser = reportData.cantidad_por_usuario;
+                const esDeposito = cantidadPorUser > 0;
+                
+                let resumenAdmin = `
+                    <div class="grid grid-cols-2 gap-4">
+                        ${primaryStat('Cantidad por Alumno', formatValue(Math.abs(cantidadPorUser), 'ℙ', esDeposito ? 'text-green-600' : 'text-red-600'))}
+                        ${primaryStat('Total Usuarios', `<p class="text-lg font-bold">${reportData.totalUsuariosAfectados} Usuarios</p>`, 'bg-slate-100')}
+                    </div>
+                    
+                    ${detailRow('Transacciones Exitosas', `<p class="text-lg font-bold text-green-600">${reportData.exitos.length}</p>`)}
+                    ${reportData.errores.length > 0 ? detailRow('Transacciones Fallidas', `<p class="text-lg font-bold text-red-600">${reportData.errores.length}</p>`) : ''}
+                `;
+
+                if (esDeposito) {
+                    const costoBruto = reportData.costoTotalBruto;
+                    const comision = reportData.comisionTotal;
+                    resumenAdmin += `
+                        ${detailRow('Costo Bruto a Tesorería', formatValue(costoBruto))}
+                        ${detailRow('Comisión Tesorería', formatValue(comision))}
+                        <div class="report-divider"></div>
+                        ${detailRow('Impacto Neto Tesorería', formatValue(costoBruto - comision, 'ℙ', 'text-red-600'))}
+                    `;
+                } else {
+                    resumenAdmin += detailRow('Ingreso Total a Tesorería', formatValue(reportData.ingresoTotal, 'ℙ', 'text-green-600'));
+                }
+
+                detailsHtml = resumenAdmin;
+                
+                break;
+
+            default:
+                title = 'Proceso Completado';
+                detailsHtml = `<p class="text-center text-slate-600">La operación se realizó con éxito.</p>`;
+        }
+        
+        // FIX: ID Único para el botón para evitar colisiones de eventos si hay otros modales "activos" pero ocultos
+        const confirmBtnId = `report-confirm-btn-${modalId}`;
+
+        reportContainer.innerHTML = `
+            <div class="confirmation-report-card">
+                <div class="flex justify-center items-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="#10b981" class="w-12 h-12 mr-3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                    <h2 class="text-2xl font-bold text-green-600">${title}</h2>
+                </div>
+                
+                <div class="bg-slate-50 p-4 rounded-lg shadow-inner mb-4">
+                    ${detailsHtml}
+                </div>
+
+                <div class="flex justify-center mt-6">
+                    <button id="${confirmBtnId}" class="px-6 py-2 bg-white border border-amber-600 text-amber-600 text-sm font-medium rounded-lg hover:bg-amber-50 transition-colors shadow-sm">
+                        Confirmar y Cerrar
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // FIX: Event Listener adjunto al ID único generado dinámicamente
+        const confirmBtn = document.getElementById(confirmBtnId);
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', () => {
+                 // Ocultar reporte y mostrar el formulario (limpio)
+                 reportContainer.classList.add('hidden');
+                 formContainer.classList.remove('hidden');
+                 AppUI.hideModal(modalId);
+                 
+                 // Esto asegura que la pestaña activa se limpie completamente
+                 if (modalId === 'transacciones-combinadas-modal') {
+                     const activeTab = document.querySelector('#transacciones-combinadas-modal .tab-btn.active-tab');
+                     if (activeTab) AppUI.changeTransaccionesCombinadasTab(activeTab.dataset.tab);
+                 } else if (modalId === 'transaccion-modal') {
+                     const activeTab = document.querySelector('#transaccion-modal .tab-btn.active-tab');
+                     if (activeTab) AppUI.changeAdminTab(activeTab.dataset.tab);
+                 }
+            });
+        } else {
+            console.error("Error fatal: No se pudo adjuntar evento al botón de confirmación.");
+        }
+    },
+
+    // --- FUNCIONES DE MODALES FLEXIBLES (PRESTAMOS Y DEPÓSITOS) ---
     
     showTransaccionesCombinadasModal: function(initialTab = 'p2p_transfer') {
         if (!AppState.datosActuales) return;
+        
+        document.getElementById('transacciones-combinadas-report-container').classList.add('hidden');
+        document.getElementById('transacciones-combinadas-step-container').classList.remove('hidden');
+
         AppUI.changeTransaccionesCombinadasTab(initialTab);
         AppUI.showModal('transacciones-combinadas-modal');
     },
@@ -459,8 +649,11 @@ const AppUI = {
         document.querySelector(`#transacciones-combinadas-modal [data-tab="${tabId}"]`).classList.remove('border-transparent', 'text-slate-700', 'hover:bg-slate-100');
         document.getElementById(`tab-${tabId}`).classList.remove('hidden');
 
-        // Forzar recalculo y reset visual al cambiar de pestaña
         if (tabId === 'p2p_transfer') {
+            AppUI.resetSearchInput('p2pOrigen');
+            AppUI.resetSearchInput('p2pDestino');
+            document.getElementById('p2p-clave').value = "";
+            document.getElementById('p2p-cantidad').value = "";
             AppUI.updateP2PCalculoImpuesto();
             document.getElementById('p2p-clave').focus();
         } else if (tabId === 'prestamo_flex') {
@@ -472,6 +665,8 @@ const AppUI = {
         }
         
         document.getElementById('transacciones-combinadas-status-msg').textContent = "";
+        document.getElementById('transacciones-combinadas-report-container').classList.add('hidden');
+        document.getElementById('transacciones-combinadas-step-container').classList.remove('hidden');
     },
 
     setupFlexibleInputListeners: function(type) {
@@ -491,10 +686,11 @@ const AppUI = {
         const totalPagarDisplay = document.getElementById('prestamo-total-pagar-display');
         const cuotaDiariaDisplay = document.getElementById('prestamo-cuota-diaria-display');
         const btn = document.getElementById('prestamo-submit-btn');
-        // FIX: Cambiado de 'prestamo-elegibilidad-msg' (interno) a 'prestamo-status-msg' (de estado de envío) para el mensaje de elegibilidad.
-        const statusMsg = document.getElementById('prestamo-status-msg');
         
         if (!montoInput || !plazoInput) return;
+
+        AppUI.updateSliderFill(montoInput);
+        AppUI.updateSliderFill(plazoInput);
 
         const monto = parseInt(montoInput.value) || 0;
         const plazo = parseInt(plazoInput.value) || 0;
@@ -510,8 +706,8 @@ const AppUI = {
             tasaDisplay.textContent = '-';
             totalPagarDisplay.textContent = 'Monto/Plazo Inválido';
             cuotaDiariaDisplay.textContent = '-';
-            // Mensaje de validación básica
-            AppTransacciones.setEligibilityState(btn, statusMsg, false, `Monto entre ${AppFormat.formatNumber(minMonto)} ℙ y ${AppFormat.formatNumber(maxMonto)} ℙ.`, true);
+            document.getElementById('prestamo-elegibilidad-msg').textContent = `Monto entre ${AppFormat.formatNumber(minMonto)} ℙ y ${AppFormat.formatNumber(maxMonto)} ℙ.`;
+            btn.disabled = true;
             return;
         }
 
@@ -521,18 +717,19 @@ const AppUI = {
         const totalAPagar = Math.ceil(monto + interesTotal);
         const cuotaDiaria = Math.ceil(totalAPagar / plazo);
         
-        tasaDisplay.textContent = `${(tasaDecimal * 100).toFixed(2)}%`; // Mostrar más decimales para las tasas bajas
+        tasaDisplay.textContent = `${(tasaDecimal * 100).toFixed(2)}%`; 
         totalPagarDisplay.textContent = `${AppFormat.formatNumber(totalAPagar)} ℙ`;
         cuotaDiariaDisplay.textContent = `${AppFormat.formatNumber(cuotaDiaria)} ℙ`;
-
+        document.getElementById('prestamo-elegibilidad-msg').textContent = 'Defina los parámetros para evaluar elegibilidad.';
+        
         // 3. Validaciones de Elegibilidad (Alumno)
         if (!student) {
-            AppTransacciones.setEligibilityState(btn, statusMsg, false, 'Busque su nombre para validar elegibilidad.', true);
+            AppTransacciones.setEligibilityState(btn, document.getElementById('prestamo-elegibilidad-msg'), false, 'Busque su nombre para validar elegibilidad.', true);
             return;
         }
         
         const elegibilidad = AppTransacciones.checkLoanEligibility(student, monto);
-        AppTransacciones.setEligibilityState(btn, statusMsg, elegibilidad.isEligible, elegibilidad.message);
+        AppTransacciones.setEligibilityState(btn, document.getElementById('prestamo-elegibilidad-msg'), elegibilidad.isEligible, elegibilidad.message);
     },
 
     updateDepositoCalculadora: function() {
@@ -543,11 +740,12 @@ const AppUI = {
         const gananciaDisplay = document.getElementById('deposito-ganancia-display');
         const totalRecibirDisplay = document.getElementById('deposito-total-recibir-display');
         const btn = document.getElementById('deposito-submit-btn');
-        // FIX: Cambiado de 'deposito-elegibilidad-msg' (interno) a 'deposito-status-msg' (de estado de envío) para el mensaje de elegibilidad.
-        const statusMsg = document.getElementById('deposito-status-msg');
-
+        
         if (!montoInput || !plazoInput) return;
 
+        AppUI.updateSliderFill(montoInput);
+        AppUI.updateSliderFill(plazoInput);
+        
         const monto = parseInt(montoInput.value) || 0;
         const plazo = parseInt(plazoInput.value) || 0;
         const student = AppState.currentSearch.depositoAlumno.info;
@@ -561,8 +759,8 @@ const AppUI = {
             tasaDisplay.textContent = '-';
             gananciaDisplay.textContent = 'Monto/Plazo Inválido';
             totalRecibirDisplay.textContent = '0 ℙ';
-            // Mensaje de validación básica
-            AppTransacciones.setEligibilityState(btn, statusMsg, false, `Monto mínimo: ${AppFormat.formatNumber(minMonto)} ℙ. Plazo: 7-30 días.`, true);
+            document.getElementById('deposito-elegibilidad-msg').textContent = `Monto mínimo: ${AppFormat.formatNumber(minMonto)} ℙ. Plazo: 7-30 días.`;
+            btn.disabled = true;
             return;
         }
 
@@ -571,18 +769,20 @@ const AppUI = {
         const interesBruto = monto * tasaDecimal;
         const totalARecibir = Math.ceil(monto + interesBruto);
         
-        tasaDisplay.textContent = `${(tasaDecimal * 100).toFixed(3)}%`; // Mostrar más decimales para las tasas bajas
+        tasaDisplay.textContent = `${(tasaDecimal * 100).toFixed(3)}%`; 
         gananciaDisplay.textContent = `${AppFormat.formatNumber(Math.ceil(interesBruto))} ℙ`;
         totalRecibirDisplay.textContent = `${AppFormat.formatNumber(totalARecibir)} ℙ`;
+        document.getElementById('deposito-elegibilidad-msg').textContent = 'Defina los parámetros para evaluar elegibilidad.';
+
         
         // 3. Validaciones de Elegibilidad (Alumno)
         if (!student) {
-            AppTransacciones.setEligibilityState(btn, statusMsg, false, 'Busque su nombre para validar elegibilidad.', true);
+            AppTransacciones.setEligibilityState(btn, document.getElementById('deposito-elegibilidad-msg'), false, 'Busque su nombre para validar elegibilidad.', true);
             return;
         }
 
         const elegibilidad = AppTransacciones.checkDepositEligibility(student, monto);
-        AppTransacciones.setEligibilityState(btn, statusMsg, elegibilidad.isEligible, elegibilidad.message);
+        AppTransacciones.setEligibilityState(btn, document.getElementById('deposito-elegibilidad-msg'), elegibilidad.isEligible, elegibilidad.message);
     },
     
     selectFlexibleStudent: function(student) {
@@ -598,8 +798,6 @@ const AppUI = {
              }
         }
     },
-    
-    // --- FIN NUEVAS FUNCIONES DE MODALES FLEXIBLES ---
     
     showLoading: function() {
         document.getElementById('loading-overlay').classList.remove('opacity-0', 'pointer-events-none');
@@ -629,6 +827,9 @@ const AppUI = {
         modal.querySelector('[class*="transform"]').classList.add('scale-95');
 
         if (modalId === 'transaccion-modal') {
+            document.getElementById('transaccion-admin-report-container').classList.add('hidden');
+            document.getElementById('transaccion-admin-step-container').classList.remove('hidden');
+            
             document.getElementById('transaccion-lista-grupos-container').innerHTML = '';
             document.getElementById('transaccion-lista-usuarios-container').innerHTML = '';
             document.getElementById('transaccion-cantidad-input').value = "";
@@ -642,35 +843,32 @@ const AppUI = {
         }
         
         if (modalId === 'transacciones-combinadas-modal') {
-            // Resetear todos los formularios combinados
+            document.getElementById('transacciones-combinadas-report-container').classList.add('hidden');
+            document.getElementById('transacciones-combinadas-step-container').classList.remove('hidden');
+            
             AppUI.resetSearchInput('p2pOrigen');
             AppUI.resetSearchInput('p2pDestino');
             document.getElementById('p2p-clave').value = "";
             document.getElementById('p2p-cantidad').value = "";
             document.getElementById('p2p-calculo-impuesto').textContent = "";
-            document.getElementById('p2p-status-msg').textContent = "";
             AppTransacciones.setLoadingState(document.getElementById('p2p-submit-btn'), document.getElementById('p2p-btn-text'), false, 'Realizar Transferencia');
             
             AppUI.resetFlexibleForm('prestamo');
             AppUI.resetFlexibleForm('deposito');
-            // Limpiar mensaje de estado en el footer
             document.getElementById('transacciones-combinadas-status-msg').textContent = "";
         }
         
         if (modalId === 'bonos-modal') {
+            // FIX: Resetear estado de Bonos al cerrar, asegurando que el reporte se oculte
+            document.getElementById('bono-report-container').classList.add('hidden');
+            document.getElementById('bono-main-step-container').classList.remove('hidden');
             AppUI.showBonoStep1();
-            document.getElementById('bono-clave-p2p-step2').value = "";
-            document.getElementById('bono-status-msg').textContent = ""; 
-            document.getElementById('bono-step2-status-msg').textContent = "";
-            AppUI.resetSearchInput('bonoAlumno');
         }
 
         if (modalId === 'tienda-modal') {
+            document.getElementById('tienda-report-container').classList.add('hidden');
+            document.getElementById('tienda-main-step-container').classList.remove('hidden');
             AppUI.showTiendaStep1();
-            document.getElementById('tienda-clave-p2p-step2').value = "";
-            document.getElementById('tienda-status-msg').textContent = "";
-            document.getElementById('tienda-step2-status-msg').textContent = "";
-            AppUI.resetSearchInput('tiendaAlumno');
         }
         
         if (modalId === 'gestion-modal') {
@@ -679,7 +877,6 @@ const AppUI = {
         }
         
         if (modalId === 'terminos-modal') {
-             // Limpiar contenido al cerrar
              document.getElementById('terminos-modal-content').innerHTML = '<p class="text-center text-sm text-slate-500">Cargando el contrato de uso...</p>';
              document.getElementById('terminos-modal-title').textContent = 'Términos y Condiciones';
         }
@@ -695,16 +892,11 @@ const AppUI = {
         if (montoInput) montoInput.value = type === 'prestamo' ? AppConfig.PRESTAMO_MIN_MONTO : AppConfig.DEPOSITO_MIN_MONTO;
         if (plazoInput) plazoInput.value = type === 'prestamo' ? AppConfig.PRESTAMO_MIN_PLAZO_DIAS : AppConfig.DEPOSITO_MIN_PLAZO_DIAS;
 
-        // Limpiar el mensaje de estado principal (prestamo/deposito-status-msg)
         document.getElementById(`${type}-status-msg`).textContent = "";
         
-        // Forzar el recálculo y actualización de slider fill
         const updateFunc = type === 'prestamo' ? AppUI.updatePrestamoCalculadora : AppUI.updateDepositoCalculadora;
         updateFunc(); 
-        AppUI.updateSliderFill(montoInput);
-        AppUI.updateSliderFill(plazoInput);
 
-        // Resetear estado del botón (deshabilitado por defecto)
         document.getElementById(`${type}-submit-btn`).disabled = true;
     },
 
@@ -722,12 +914,13 @@ const AppUI = {
         document.querySelector(`#transaccion-modal [data-tab="${tabId}"]`).classList.remove('border-transparent', 'text-slate-700', 'hover:bg-slate-100');
         document.getElementById(`tab-${tabId}`).classList.remove('hidden');
         
+        document.getElementById('transaccion-admin-report-container').classList.add('hidden');
+        document.getElementById('transaccion-admin-step-container').classList.remove('hidden');
+        
         if (tabId === 'transaccion') {
-            // ACCIÓN 1.2: Asegurar que la función solo se llama si los datos ya están disponibles
             if (AppState.datosActuales) {
                 AppUI.populateGruposTransaccion();
             } else {
-                // Mostrar mensaje de espera si los datos principales aún no han llegado
                 document.getElementById('transaccion-lista-grupos-container').innerHTML = '<span class="text-sm text-slate-500 p-2">Cargando datos base...</span>';
                 document.getElementById('transaccion-lista-usuarios-container').innerHTML = '<span class="text-sm text-slate-500 p-2">Espere...</span>';
             }
@@ -756,7 +949,7 @@ const AppUI = {
 
         if (!input) return;
 
-        input.dataset.resultsId = resultsId; // Guardar ID de resultados para reset
+        input.dataset.resultsId = resultsId; 
         
         input.addEventListener('input', (e) => {
             const query = e.target.value;
@@ -799,7 +992,7 @@ const AppUI = {
         const lowerQuery = query.toLowerCase();
         let studentList = AppState.datosAdicionales.allStudents;
         
-        const ciclaAllowed = ['p2pDestino', 'prestamoAlumno', 'depositoAlumno']; // Permitir Cicla en Destino, Préstamos y Depósitos.
+        const ciclaAllowed = ['p2pDestino', 'prestamoAlumno', 'depositoAlumno']; 
         if (!ciclaAllowed.includes(stateKey) && stateKey !== 'bonoAlumno' && stateKey !== 'tiendaAlumno') {
             studentList = studentList.filter(s => s.grupoNombre !== 'Cicla');
         }
@@ -878,8 +1071,6 @@ const AppUI = {
         AppUI.updateTiendaButtonStates();
     },
 
-    // --- FUNCIONES ADMIN AVANZADAS ---
-    
     populateAdminGroupCheckboxes: function(containerId, entityType) {
         const container = document.getElementById(containerId);
         if (!container) return;
@@ -952,8 +1143,6 @@ const AppUI = {
         });
     },
 
-    // --- FUNCIONES P2P (Ahora en Modal Combinado) ---
-    
     updateP2PCalculoImpuesto: function() {
         const cantidadInput = document.getElementById('p2p-cantidad');
         const calculoMsg = document.getElementById('p2p-calculo-impuesto');
@@ -970,23 +1159,13 @@ const AppUI = {
         calculoMsg.innerHTML = `<span class="color-dorado-main">Impuesto (${AppConfig.IMPUESTO_P2P_TASA * 100}%): ${AppFormat.formatNumber(impuesto)} ℙ | Total a debitar: ${AppFormat.formatNumber(total)} ℙ</span>`;
     },
 
-    // --- FUNCIONES DE BONOS (FLUJO DE 2 PASOS) ---
-    
     showBonoModal: function() {
-        // CORRECCIÓN: Se asegura que el flujo de apertura se inicia siempre, incluso si los datos aún están cargando.
         AppUI.showBonoStep1();
         AppUI.showModal('bonos-modal');
+        AppUI.populateBonoList(); 
 
-        const container = document.getElementById('bonos-lista-disponible');
-
-        if (!AppState.datosActuales || AppState.bonos.disponibles === null) {
-            // Mostrar estado de carga si los datos aún no están
-            if(container) container.innerHTML = `<p class="text-sm text-slate-500 text-center col-span-3">Cargando bonos...</p>`;
-            if(AppState.bonos.disponibles === null) AppData.cargarDatos(false); // Forzar recarga si el estado es null
-        } else {
-            // Si los datos ya existen, proceder con la lógica normal
-            AppUI.populateBonoList();
-        }
+        document.getElementById('bono-report-container').classList.add('hidden');
+        document.getElementById('bono-main-step-container').classList.remove('hidden');
     },
 
     showBonoStep1: function() {
@@ -1019,10 +1198,9 @@ const AppUI = {
     },
 
     populateBonoList: function() {
-        // Se valida el estado nulo por la corrección 1.1
-        if (AppState.bonos.disponibles === null) {
+        if (!AppState.datosActuales || AppState.bonos.disponibles === null) {
              const container = document.getElementById('bonos-lista-disponible');
-             if(container) container.innerHTML = `<p class="text-sm text-slate-500 text-center col-span-3">Cargando bonos...</p>`;
+             if(container) container.innerHTML = `<p class="text-sm text-slate-500 text-center col-span-4">Cargando bonos...</p>`;
              return;
         }
 
@@ -1031,7 +1209,7 @@ const AppUI = {
         const container = document.getElementById('bonos-lista-disponible');
         const bonos = AppState.bonos.disponibles;
         
-        const student = AppState.currentSearch.bonoAlumno.info || { grupoNombre: null };
+        const student = AppState.currentSearch.bonoAlumno.info || { grupoNombre: AppState.selectedGrupo };
         const studentGroup = student.grupoNombre;
         const now = Date.now();
 
@@ -1052,43 +1230,40 @@ const AppUI = {
 
 
         if (bonosActivos.length === 0) {
-            // AJUSTE 2: Usar col-span-3 para centrar correctamente el mensaje
-            container.innerHTML = `<p class="text-sm text-slate-500 text-center col-span-3">No hay bonos disponibles en este momento.</p>`;
+            container.innerHTML = `<p class="text-sm text-slate-500 text-center col-span-4">No hay bonos disponibles en este momento.</p>`;
             return;
         }
         
         container.innerHTML = bonosActivos.map(bono => {
             const recompensa = AppFormat.formatNumber(bono.recompensa);
-            const usosRestantes = bono.usos_totales - bono.usos_actuales;
+            const usosRestantes = bono.usos_totales === 9999 ? 'Ilimitado' : (bono.usos_totales - bono.usos_actuales);
             
             const isCanjeado = AppState.bonos.canjeados.includes(bono.clave);
-            // PROBLEMA 2 (CORRECCIÓN): Reducción de relleno de p-2 a p-1.
-            const cardClass = isCanjeado ? 'bg-slate-50 shadow-inner border-slate-200 opacity-60' : 'bg-white shadow-md border-slate-200';
+            const cardClass = isCanjeado ? 'bg-slate-50 shadow-inner border-slate-200 opacity-60' : 'bg-white shadow-md border-amber-200 hover:shadow-lg transition-all';
             
             const badge = isCanjeado ? 
                 `<span class="text-xs font-bold bg-slate-200 text-slate-700 rounded-full px-2 py-0.5">CANJEADO</span>` :
-                `<span class="text-xs font-bold bg-amber-100 text-amber-700 rounded-full px-2 py-0.5">DISPONIBLE</span>`;
+                `<span class="text-xs font-bold bg-green-100 text-green-700 rounded-full px-2 py-0.5">ACTIVO</span>`;
 
             const claveEscapada = escapeHTML(bono.clave);
 
             return `
-                <!-- PROBLEMA 2 (CORRECCIÓN): Reducción de relleno de p-2 a p-1 -->
-                <div class="rounded-lg shadow-sm p-1 border transition-all ${cardClass}">
-                    <!-- PROBLEMA 2 (CORRECCIÓN): Se eliminan mb-1 y mt-1 -->
-                    <div class="flex justify-between items-center"> 
-                        <span class="text-sm font-medium text-slate-500 truncate">${bono.clave}</span>
+                <div class="rounded-xl shadow-sm p-3 border compact-card ${cardClass}">
+                    <div class="flex justify-between items-center mb-2"> 
+                        <span class="text-xs font-medium text-slate-500 truncate">${bono.clave}</span>
                         ${badge}
                     </div>
-                    <p class="text-base font-semibold text-slate-900 truncate">${bono.nombre}</p>
-                    <!-- PROBLEMA 2 (CORRECCIÓN): Se elimina mt-1 -->
-                    <div class="flex justify-between items-baseline">
-                        <span class="text-xs text-slate-500">Quedan ${usosRestantes}</span>
-                        <div class="flex items-center space-x-3">
-                            <span class="text-xl font-bold color-dorado-main">${recompensa} ℙ</span>
-                            <button id="bono-btn-${bono.clave}" 
+                    <p class="text-sm font-bold text-slate-900 truncate mb-1 title-text">${bono.nombre}</p>
+                    
+                    <div class="flex justify-between items-baseline mt-2">
+                        <span class="text-xs text-slate-500 small-text">Usos restantes: ${usosRestantes}</span>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xl font-extrabold color-dorado-main price-text">${recompensa} ℙ</span>
+                            <button 
                                     data-bono-clave="${bono.clave}"
                                     onclick="AppTransacciones.iniciarCanje('${claveEscapada}')" 
-                                    class="bono-buy-btn px-3 py-1 text-xs font-medium rounded-lg bg-white border border-amber-600 text-amber-600 hover:bg-amber-50 shadow-sm">Canjear</button>
+                                    ${isCanjeado ? 'disabled' : ''}
+                                    class="bono-buy-btn px-3 py-1 text-xs font-medium rounded-lg bg-white border border-amber-600 text-amber-600 hover:bg-amber-50 shadow-sm transition-colors buy-btn">Canjear</button>
                         </div>
                     </div>
                 </div>
@@ -1098,7 +1273,6 @@ const AppUI = {
     
     populateBonoAdminList: function() {
         const tbody = document.getElementById('bonos-admin-lista');
-        // Se valida el estado nulo por la corrección 1.1
         const bonos = AppState.bonos.disponibles || []; 
 
         if (bonos.length === 0) {
@@ -1171,24 +1345,14 @@ const AppUI = {
         AppUI.selectAdminGroupCheckboxes('bono-admin-grupos-checkboxes-container', '');
     },
     
-    // --- FUNCIONES DE TIENDA ---
-
-    // PROBLEMA 3 (SOLUCIÓN): Se elimina la restricción inicial para abrir el modal, se abre siempre.
     showTiendaModal: function() {
         AppUI.showModal('tienda-modal'); 
         AppUI.showTiendaStep1();
-        
-        const container = document.getElementById('tienda-items-container');
-        
-        if (!AppState.datosActuales || AppState.tienda.items === null) {
-            // Mostrar estado de carga si los datos aún no están
-            if(container) container.innerHTML = `<p class="text-sm text-slate-500 text-center col-span-3">Cargando artículos...</p>`;
-            if(AppState.tienda.items === null) AppData.cargarDatos(false); // Forzar recarga si el estado es null
-        } else {
-            // Si los datos ya existen, proceder con la lógica normal
-            AppUI.renderTiendaItems();
-        }
-        
+        AppUI.renderTiendaItems(); 
+
+        document.getElementById('tienda-report-container').classList.add('hidden');
+        document.getElementById('tienda-main-step-container').classList.remove('hidden');
+
         AppUI.updateTiendaAdminStatusLabel();
     },
 
@@ -1213,11 +1377,11 @@ const AppUI = {
         document.getElementById('tienda-step-list-container').classList.add('hidden');
         document.getElementById('tienda-step-form-container').classList.remove('hidden');
 
-        const costoFinal = Math.round(item.precio * (1 + AppConfig.TASA_ITBIS));
-        const costoItbis = costoFinal - item.precio;
+        const costoFinal = Math.round(item.PrecioBase * (1 + AppConfig.TASA_ITBIS));
+        const costoItbis = costoFinal - item.PrecioBase;
 
-        document.getElementById('tienda-item-name-display').textContent = item.nombre;
-        document.getElementById('tienda-item-price-display').textContent = `Precio Base: ${AppFormat.formatNumber(item.precio)} ℙ`;
+        document.getElementById('tienda-item-name-display').textContent = item.Nombre;
+        document.getElementById('tienda-item-price-display').textContent = `Precio Base: ${AppFormat.formatNumber(item.PrecioBase)} ℙ`;
         document.getElementById('tienda-item-cost-display').innerHTML = `
             Costo Final (incl. ${AppConfig.TASA_ITBIS * 100}% ITBIS): 
             <span class="font-bold text-slate-800">${AppFormat.formatNumber(costoFinal)} ℙ</span>
@@ -1231,28 +1395,19 @@ const AppUI = {
     },
 
     renderTiendaItems: function() {
-        // Se valida el estado nulo por la corrección 1.1
-        if (AppState.tienda.items === null) {
+        // CORRECCIÓN: Manejar estado nulo o vacío de la tienda de manera segura
+        if (!AppState.datosActuales || !AppState.tienda.items || Object.keys(AppState.tienda.items).length === 0) {
              const container = document.getElementById('tienda-items-container');
-             // Ya usa col-span-3 y text-center
-             if(container) container.innerHTML = `<p class="text-sm text-slate-500 text-center col-span-3">Cargando artículos...</p>`;
+             if(container) container.innerHTML = `<p class="text-sm text-slate-500 text-center col-span-4">No hay artículos cargados en el inventario.</p>`;
              return;
         }
 
         if (document.getElementById('tienda-modal').classList.contains('opacity-0')) return;
 
-        // Seguridad: Si aún no hay datos, muestra carga.
-        if (!AppState.datosActuales) {
-             const container = document.getElementById('tienda-items-container');
-             // Ya usa col-span-3 y text-center
-             if(container) container.innerHTML = `<p class="text-sm text-slate-500 text-center col-span-3">Cargando artículos...</p>`;
-             return;
-        }
-
         const container = document.getElementById('tienda-items-container');
         const items = AppState.tienda.items;
         
-        const student = AppState.currentSearch.tiendaAlumno.info || { grupoNombre: null };
+        const student = AppState.currentSearch.tiendaAlumno.info || { grupoNombre: AppState.selectedGrupo };
         const studentGroup = student.grupoNombre;
         const now = Date.now();
 
@@ -1260,7 +1415,7 @@ const AppUI = {
         
         const itemsActivos = itemKeys.filter(itemId => {
             const item = items[itemId];
-            if (item.stock <= 0 && item.ItemID !== 'filantropo') return false;
+            if (item.Stock <= 0 && item.ItemID !== 'filantropo') return false;
             if (item.ExpiracionFecha && new Date(item.ExpiracionFecha).getTime() < now) return false;
 
             const allowedGroups = (item.GruposPermitidos || '').split(',').map(g => g.trim()).filter(g => g.length > 0);
@@ -1276,56 +1431,90 @@ const AppUI = {
 
 
         if (itemsActivos.length === 0) {
-            // Ya usa col-span-3 y text-center
-            container.innerHTML = `<p class="text-sm text-slate-500 text-center col-span-3">No hay artículos disponibles para ti en este momento.</p>`;
+            container.innerHTML = `<p class="text-sm text-slate-500 text-center col-span-4">No hay artículos disponibles para ti en este momento.</p>`;
             return;
         }
 
         let html = '';
-        itemsActivos.sort((a,b) => items[a].precio - items[b].precio).forEach(itemId => {
+        itemsActivos.sort((a,b) => items[a].PrecioBase - items[b].PrecioBase).forEach(itemId => {
             const item = items[itemId];
-            const costoFinal = Math.round(item.precio * (1 + AppConfig.TASA_ITBIS));
+            const costoFinal = Math.round(item.PrecioBase * (1 + AppConfig.TASA_ITBIS));
             
             const itemIdEscapado = escapeHTML(item.ItemID);
 
-            const cardClass = 'bg-white shadow-md border-slate-200';
-            const stockText = item.stock === 9999 ? 'Ilimitado' : `Stock: ${item.stock}`;
+            const cardClass = 'bg-white shadow-md border-amber-200 hover:shadow-lg transition-all';
+            const stockText = item.Stock === 9999 ? 'Ilimitado' : `Stock: ${item.Stock}`;
 
-            return `
-                <!-- PROBLEMA 2 (CORRECCIÓN): Reducción de relleno de p-2 a p-1 -->
-                <div class="rounded-lg shadow-sm p-1 border transition-all ${cardClass}">
-                    <!-- PROBLEMA 2 (CORRECCIÓN): Se eliminan mb-1 y mt-1 -->
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-medium text-slate-500 truncate">${item.Tipo} | ${stockText}</span>
-                        <span class="text-xs font-bold bg-amber-100 text-amber-700 rounded-full px-2 py-0.5">DISPONIBLE</span>
+            html += `
+                <div class="rounded-xl shadow-sm p-3 border compact-card ${cardClass}">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-medium text-slate-500 truncate small-text">${item.Tipo} | ${stockText}</span>
+                        <span class="text-xs font-bold bg-green-100 text-green-700 rounded-full px-2 py-0.5">ACTIVO</span>
                     </div>
-                    <p class="text-base font-semibold text-slate-900 truncate">
+                    <p class="text-sm font-bold text-slate-900 truncate title-text mb-1">
                         <span class="tooltip-container">
                             ${item.Nombre}
                             <div class="tooltip-text hidden md:block w-48">${item.Descripcion}</div>
                         </span>
                     </p>
-                    <!-- PROBLEMA 2 (CORRECCIÓN): Se elimina mt-1 -->
-                    <div class="flex justify-between items-baseline">
-                        <span class="text-xs text-slate-500">Base: ${AppFormat.formatNumber(item.PrecioBase)} ℙ (+ITBIS)</span>
+                    
+                    <div class="flex justify-between items-baseline mt-2">
+                        <span class="text-xs text-slate-500 small-text">Base: ${AppFormat.formatNumber(item.PrecioBase)} ℙ (+ITBIS)</span>
                         
-                        <div class="flex items-center space-x-3">
-                            <span class="text-xl font-bold color-dorado-main">${AppFormat.formatNumber(costoFinal)} ℙ</span>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xl font-extrabold color-dorado-main price-text">${AppFormat.formatNumber(costoFinal)} ℙ</span>
                             
                             <button id="buy-btn-${itemId}" 
                                     data-item-id="${itemId}"
                                     onclick="AppTransacciones.iniciarCompra('${itemIdEscapado}')"
-                                    class="tienda-buy-btn px-3 py-1 text-xs font-medium rounded-lg transition-colors shadow-sm">
+                                    class="tienda-buy-btn px-3 py-1 text-xs font-medium rounded-lg bg-white border border-amber-600 text-amber-600 hover:bg-amber-50 transition-colors shadow-sm buy-btn">
                                 <span class="btn-text">Comprar</span>
                             </button>
                         </div>
                     </div>
                 </div>
             `;
-        }).join('');
+        });
         
         container.innerHTML = html;
         AppUI.updateTiendaButtonStates();
+    },
+
+    updateTiendaButtonStates: function() {
+         // Lógica para habilitar/deshabilitar botones de compra según el saldo del usuario seleccionado
+         const student = AppState.currentSearch.tiendaAlumno.info;
+         const buttons = document.querySelectorAll('.tienda-buy-btn');
+
+         buttons.forEach(btn => {
+             const itemId = btn.dataset.itemId;
+             const item = AppState.tienda.items[itemId];
+             if (!item) return;
+             
+             // Si la tienda no está abierta manualmente, desactivar botones visualmente
+             if (!AppState.tienda.isStoreOpen) {
+                 btn.disabled = true;
+                 btn.classList.add('bg-slate-100', 'text-slate-500', 'border-slate-300', 'cursor-not-allowed');
+                 btn.classList.remove('bg-white', 'text-amber-600', 'border-amber-600', 'hover:bg-amber-50');
+                 return;
+             }
+
+             if (student) {
+                  const costoFinal = Math.round(item.PrecioBase * (1 + AppConfig.TASA_ITBIS));
+                  if (student.pinceles < costoFinal) {
+                       btn.disabled = true;
+                       btn.classList.add('opacity-50', 'cursor-not-allowed');
+                       btn.title = "Saldo insuficiente";
+                  } else {
+                       btn.disabled = false;
+                       btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                       btn.title = "";
+                  }
+             } else {
+                  // Estado neutral si no hay usuario seleccionado (permitir click para iniciar flujo)
+                  btn.disabled = false;
+                  btn.classList.remove('opacity-50', 'cursor-not-allowed');
+             }
+         });
     },
 
     updateTiendaAdminStatusLabel: function() {
@@ -1390,7 +1579,6 @@ const AppUI = {
 
     populateTiendaAdminList: function() {
         const tbody = document.getElementById('tienda-admin-lista');
-        // Se valida el estado nulo por la corrección 1.1
         const items = AppState.tienda.items || {};
         const itemKeys = Object.keys(items);
 
@@ -1467,22 +1655,25 @@ const AppUI = {
         AppUI.selectAdminGroupCheckboxes('tienda-admin-grupos-checkboxes-container', '');
     },
     
-    // --- FIN FUNCIONES DE TIENDA ---
-    
     updateAdminDepositoCalculo: function() {
         const cantidadInput = document.getElementById('transaccion-cantidad-input');
         const calculoMsg = document.getElementById('transaccion-calculo-impuesto');
         const cantidad = parseInt(cantidadInput.value, 10);
 
-        if (isNaN(cantidad) || cantidad <= 0) {
+        if (isNaN(cantidad) || cantidad === 0) {
             calculoMsg.textContent = "";
             return;
         }
 
-        const comision = Math.round(cantidad * AppConfig.IMPUESTO_DEPOSITO_ADMIN);
-        const costoNeto = cantidad - comision;
+        if (cantidad > 0) {
+            const comision = Math.round(cantidad * AppConfig.IMPUESTO_DEPOSITO_ADMIN);
+            const costoNeto = cantidad - comision;
 
-        calculoMsg.innerHTML = `<span class="color-dorado-main">Monto a depositar: ${AppFormat.formatNumber(cantidad)} ℙ | Costo Neto Tesorería: ${AppFormat.formatNumber(costoNeto)} ℙ (Comisión: ${AppFormat.formatNumber(comision)} ℙ)</span>`;
+            calculoMsg.innerHTML = `<span class="color-dorado-main">Monto a depositar: ${AppFormat.formatNumber(cantidad)} ℙ | Costo Neto Tesorería: ${AppFormat.formatNumber(costoNeto)} ℙ (Comisión: ${AppFormat.formatNumber(comision)} ℙ)</span>`;
+        } else {
+            const ingresoTotal = Math.abs(cantidad);
+            calculoMsg.innerHTML = `<span class="color-dorado-main">Monto a Multar: ${AppFormat.formatNumber(Math.abs(cantidad))} ℙ | Ingreso Neto Tesorería: ${AppFormat.formatNumber(ingresoTotal)} ℙ</span>`;
+        }
     },
 
     showTransaccionModal: function(tab) {
@@ -1500,9 +1691,7 @@ const AppUI = {
         grupoContainer.innerHTML = ''; 
 
         AppState.datosActuales.forEach(grupo => {
-            // SOLUCIÓN 3.2: Permitir que "Cicla" aparezca en el panel de Admin, siempre y cuando no sea un grupo vacío (a menos que sea Cicla).
-            // (Se deja el grupo.nombre !== 'Banco' fuera de este filtro, ya que 'Banco' nunca tiene usuarios).
-            if (grupo.total === 0 && grupo.nombre !== 'Cicla') return;
+            if (grupo.usuarios.length === 0 && grupo.nombre !== 'Cicla') return;
 
             const div = document.createElement('div');
             div.className = "flex items-center p-1 rounded hover:bg-slate-200";
@@ -1609,8 +1798,6 @@ const AppUI = {
         btn.textContent = isChecked ? "Ninguno" : "Todos";
     },
 
-    // --- Utilidades UI ---
-    
     setConnectionStatus: function(status, title) {
         const dot = document.getElementById('status-dot');
         const indicator = document.getElementById('status-indicator');
@@ -1618,16 +1805,15 @@ const AppUI = {
         
         indicator.title = title;
 
-        // ACCIÓN 2.2: Se cambian los colores a la paleta Amber/Slate
-        dot.classList.remove('bg-green-600', 'bg-amber-600', 'bg-red-600', 'animate-pulse-dot', 'bg-slate-300');
-        dot.className = 'w-3 h-3 rounded-full'; // Reset Tailwind classes for dot
+        dot.classList.remove('bg-green-600', 'bg-amber-600', 'bg-red-600', 'animate-pulse-dot', 'bg-slate-300', 'animate-pulse');
+        dot.className = 'w-3 h-3 rounded-full'; 
 
         if (status === 'ok') {
             dot.classList.add('bg-amber-500'); 
         } else if (status === 'loading') {
             dot.classList.add('bg-amber-400', 'animate-pulse');
         } else if (status === 'error') {
-            dot.classList.add('bg-slate-400'); // Error de red/API
+            dot.classList.add('bg-slate-400'); 
         } else {
             dot.classList.add('bg-slate-300');
         }
@@ -1672,13 +1858,11 @@ const AppUI = {
         const navContainer = document.getElementById('sidebar-nav');
         if (!navContainer) return;
 
-        // Se mantiene el grupo "Cicla" pero se añade al final de la lista de navegación visual
         const gruposFiltrados = grupos.filter(g => g.nombre !== 'Cicla' && g.nombre !== 'Banco');
         const ciclaGroup = grupos.find(g => g.nombre === 'Cicla');
 
         let html = '';
 
-        // Botón de Inicio (Home) - ACCIÓN 2.1: Eliminar Iconos
         html += `
             <a href="#" id="home-nav-btn" data-grupo-nombre="" class="flex items-center p-3 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100 sidebar-nav-item transition-colors mb-2">
                 Inicio
@@ -1691,7 +1875,6 @@ const AppUI = {
             const isActive = AppState.selectedGrupo === grupo.nombre;
             const classActive = isActive ? 'bg-amber-50 text-amber-600 font-bold' : 'text-slate-700 hover:bg-slate-100';
 
-            // ACCIÓN 2.1: Eliminar Iconos
             html += `
                 <a href="#" data-grupo-nombre="${grupo.nombre}" class="flex items-center justify-between p-3 rounded-lg text-sm sidebar-nav-item ${classActive} transition-colors">
                     <span class="truncate">${grupo.nombre}</span>
@@ -1700,7 +1883,6 @@ const AppUI = {
             `;
         });
         
-        // Agregar grupo Cicla al final
         if (ciclaGroup) {
              const totalF = AppFormat.formatNumber(ciclaGroup.total);
              const isActive = AppState.selectedGrupo === ciclaGroup.nombre;
@@ -1717,7 +1899,6 @@ const AppUI = {
 
         navContainer.innerHTML = html;
         
-        // Agregar listener para todos los elementos de navegación
         document.querySelectorAll('.sidebar-nav-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -1756,15 +1937,10 @@ const AppUI = {
          });
     },
     
-    // --- Lógica del Carrusel Hero ---
-    
-    // AJUSTE 4.2: Lógica de navegación ajustada para 6 slides y sin dots
     goToHeroSlide: function(index) {
-        // Validación de límites del carrusel (Ahora 0 a 5)
         if (index < 0 || index >= AppState.heroSlideCount) {
-             // Si intenta ir más allá, regresa al inicio o permanece en el límite
              index = Math.max(0, Math.min(index, AppState.heroSlideCount - 1));
-             if (index === 0) return; // Si ya estaba en 0 y intenta ir a -1
+             if (index === 0) return; 
         }
         
         AppState.heroSlideIndex = index;
@@ -1776,21 +1952,15 @@ const AppUI = {
         }
     },
     
-    // Se elimina populateReglasContent() ya que el contenido se mueve al HTML (index.html)
-    
-    // --- Fin Lógica del Carrusel Hero ---
-
     mostrarPantallaNeutral: function(grupos) {
         document.getElementById('main-header-title').textContent = "Bienvenido al Banco del Pincel Dorado";
         
-        // CORRECCIÓN 2: Ocultar el subtítulo que genera el espacio vacío en el Home
         document.getElementById('page-subtitle').innerHTML = ''; 
         document.getElementById('page-subtitle').classList.add('hidden');
 
         document.getElementById('table-container').innerHTML = '';
         document.getElementById('table-container').classList.add('hidden');
 
-        // 1. MOSTRAR RESUMEN COMPACTO
         const homeStatsContainer = document.getElementById('home-stats-container');
         const bovedaContainer = document.getElementById('boveda-card-container');
         const tesoreriaContainer = document.getElementById('tesoreria-card-container');
@@ -1888,7 +2058,6 @@ const AppUI = {
                                     <span class="font-bold">Capital Total</span>
                                     <div class="flex justify-between mt-1 text-xs"><span>Capital Líquido:</span> <span>${pincelesLiquidosF} ℙ</span></div>
                                     <div class="flex justify-between text-xs"><span>Capital Invertido:</span> <span>${totalInvertidoF} ℙ</span></div>
-                                    <svg class="absolute text-gray-800 h-2 w-full left-0 bottom-full" x="0px" y="0px" viewBox="0 0 255 255" xml:space="preserve"><polygon class="fill-current" points="0,255 127.5,127.5 255,255"/></svg>
                                 </div>
                             </div>
                         </div>
@@ -1920,16 +2089,11 @@ const AppUI = {
         
         homeStatsContainer.classList.remove('hidden');
         
-        // 2. MOSTRAR MÓDULOS (AHORA SOLO EL HERO SECTION)
         document.getElementById('home-modules-grid').classList.remove('hidden');
         
     },
 
     mostrarDatosGrupo: function(grupo) {
-        // CORRECCIÓN PROBLEMA 1 (SOLUCIÓN): El parámetro ahora es 'grupo'
-        // Esto soluciona el problema de que la barra lateral no navegaba.
-
-        // CORRECCIÓN 2: Mostrar el subtítulo cuando se ven los datos de un grupo
         document.getElementById('page-subtitle').classList.remove('hidden');
 
         document.getElementById('main-header-title').textContent = grupo.nombre;
@@ -2002,62 +2166,70 @@ const AppUI = {
         document.getElementById('home-modules-grid').classList.add('hidden');
     },
 
+    // CORRECCIÓN: Tarjeta de alumno rediseñada (Light/Bancaria) sin Clave P2P.
     showStudentModal: function(nombreGrupo, nombreUsuario, rank) {
         const student = AppState.datosAdicionales.allStudents.find(u => u.nombre === nombreUsuario);
-        const grupo = AppState.datosActuales.find(g => g.nombre === nombreGrupo);
         
-        if (!student || !grupo) return;
+        if (!student) return;
 
         const modalContent = document.getElementById('student-modal-content');
         const totalPinceles = student.pinceles || 0;
         
-        const gruposRankeados = AppState.datosActuales.filter(g => g.nombre !== 'Cicla');
-        const rankGrupo = gruposRankeados.findIndex(g => g.nombre === nombreGrupo) + 1;
-        
         const prestamoActivo = AppState.datosAdicionales.prestamosActivos.find(p => p.alumno === student.nombre);
         const depositoActivo = AppState.datosAdicionales.depositosActivos.find(d => d.alumno === student.nombre);
 
-        const createStat = (label, value, valueClass = 'text-slate-900') => `
-            <div class="bg-slate-50 p-4 rounded-lg text-center border border-slate-200">
-                <div class="text-xs font-medium text-slate-500 uppercase tracking-wide">${label}</div>
-                <div class="2xl font-bold ${valueClass} truncate">${value}</div>
+        // Calcular Capital Invertido
+        const totalInvertido = AppState.datosAdicionales.depositosActivos
+            .filter(deposito => (deposito.alumno || '').trim() === (student.nombre || '').trim() && deposito.estado.startsWith('Activo'))
+            .reduce((sum, deposito) => sum + (Number(deposito.monto) || 0), 0);
+
+        // Crear una estadística con el nuevo formato CSS
+        const createStat = (label, value, valueClass = 'text-slate-800') => `
+            <div class="stat-box">
+                <div class="stat-label">${label}</div>
+                <div class="stat-value ${valueClass} truncate">${value}</div>
             </div>
         `;
 
         let extraHtml = '';
         if (prestamoActivo) {
-            extraHtml += `<p class="text-sm font-bold text-slate-800 text-center mt-3 p-2 bg-slate-200 rounded-lg border border-slate-300">⚠️ Préstamo Activo</p>`;
+            // Diseño Light/Bancario
+            extraHtml += `<p class="text-sm font-bold text-red-600 text-center mt-3 p-2 bg-red-50 rounded-lg border border-red-200">⚠️ Préstamo Activo</p>`;
         }
         if (depositoActivo) {
             const vencimiento = new Date(depositoActivo.vencimiento);
-            const fechaString = `${vencimiento.getDate()}/${vencimiento.getMonth() + 1}`;
-            extraHtml += `<p class="text-sm font-bold text-amber-700 text-center mt-3 p-2 bg-amber-100 rounded-lg border border-amber-200">🏦 Depósito Activo (Vence: ${fechaString})</p>`;
+            const fechaString = AppFormat.formatDateSimple(vencimiento);
+            // Diseño Light/Bancario
+            extraHtml += `<p class="text-sm font-bold text-green-600 text-center mt-3 p-2 bg-green-50 rounded-lg border border-green-200">🏦 Depósito Activo (Vence: ${fechaString})</p>`;
         }
         
         modalContent.innerHTML = `
-            <div class="p-6 relative">
-                <div class="flex justify-between items-start mb-4 pr-12">
+            <div class="personal-student-card p-6 relative">
+                <div class="flex justify-between items-start mb-6 pr-12">
                     <div>
-                        <h2 class="xl font-semibold color-dorado-main">${student.nombre}</h2>
-                        <p class="text-sm font-medium text-slate-500">${grupo.nombre}</p>
+                        <h2 class="text-2xl font-bold text-slate-800">${student.nombre}</h2>
+                        <p class="text-sm font-medium text-slate-500">${student.grupoNombre}</p>
                     </div>
                 </div>
+
                 <div class="grid grid-cols-2 gap-4">
-                    ${createStat('Rank en Grupo', `${rank}º`, 'color-dorado-main')}
-                    ${createStat('Rank de Grupo', `${rankGrupo > 0 ? rankGrupo + 'º' : 'N/A'}`, 'color-dorado-main')}
-                    ${createStat('Total Pinceles', `${AppFormat.formatNumber(totalPinceles)} ℙ`, 'text-slate-800')}
-                    ${createStat('Total Grupo', `${AppFormat.formatNumber(grupo.total)} ℙ`, 'text-slate-800')}
-                    ${createStat('% del Grupo', `${grupo.total !== 0 ? ((totalPinceles / grupo.total) * 100).toFixed(1) : 0}%`, 'text-slate-800')}
-                    ${createStat('Grupo Original', student.grupoNombre || 'N/A', 'text-slate-800')}
+                    ${createStat('Saldo Líquido', `${AppFormat.formatNumber(totalPinceles)} ℙ`, 'color-dorado-main')}
+                    ${createStat('Capital Invertido', `${AppFormat.formatNumber(totalInvertido)} ℙ`)}
+                    
+                    ${createStat('Estado de Cuenta', totalPinceles >= 0 ? 'Solvente' : 'Agotado', totalPinceles >= 0 ? 'text-green-600' : 'text-red-600')}
+                    ${createStat('Rank Personal', `${rank}º`)}
                 </div>
+                
                 ${extraHtml}
+                
+                <p class="text-xs text-slate-400 mt-4 text-center">Banco del Pincel Dorado | ${student.grupoOriginal ? `Original: ${student.grupoOriginal}` : 'ID: N/A'}</p>
+                
                 <button onclick="AppUI.hideModal('student-modal')" class="modal-close-btn absolute top-2 right-2 text-slate-400 hover:color-dorado-main text-2xl p-1">&times;</button>
             </div>
         `;
         AppUI.showModal('student-modal');
     },
     
-    // Función para actualizar el contador (sin segundos)
     updateCountdown: function() {
         const getLastThursday = (year, month) => {
             const lastDayOfMonth = new Date(year, month + 1, 0);
@@ -2115,13 +2287,11 @@ const AppUI = {
                 const days = f(Math.floor(distance / (1000 * 60 * 60 * 24)));
                 const hours = f(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)));
                 const minutes = f(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)));
-                // Segundos eliminados
                 
                 const daysEl = document.getElementById('days');
                 const hoursEl = document.getElementById('hours');
                 const minutesEl = document.getElementById('minutes');
                 
-                // Estos elementos son inyectados como texto plano y sus clases CSS controlan el tamaño/estilo/espaciado
                 if(daysEl) daysEl.textContent = days;
                 if(hoursEl) hoursEl.textContent = hours;
                 if(minutesEl) minutesEl.textContent = minutes;
@@ -2137,7 +2307,6 @@ const AppUI = {
         }
     },
     
-    // Utilidad para forzar el relleno del input range
     updateSliderFill: (input) => {
         if (!input || input.type !== 'range') return;
         const min = input.min ? input.min : 0;
@@ -2147,7 +2316,6 @@ const AppUI = {
         input.style.background = `linear-gradient(to right, #d97706 0%, #d97706 ${percent}%, #cbd5e1 ${percent}%, #cbd5e1 100%)`;
     },
     
-    // Función para mostrar modales legales y cargar contenido
     showLegalModal: function(type) {
         const titleEl = document.getElementById('terminos-modal-title');
         const contentEl = document.getElementById('terminos-modal-content');
@@ -2174,8 +2342,6 @@ const AppUI = {
 // --- OBJETO TRANSACCIONES (Préstamos, Depósitos, P2P, Bonos, Tienda) ---
 const AppTransacciones = {
     
-    // --- NUEVAS FUNCIONES DE BANCA FLEXIBLE ---
-
     checkLoanEligibility: function(student, montoSolicitado) {
         if (student.pinceles < 0) {
             return { isEligible: false, message: 'Saldo negativo no es elegible para préstamos.' };
@@ -2184,7 +2350,7 @@ const AppTransacciones = {
         if (montoSolicitado > capacity) {
             return { isEligible: false, message: `Monto excede el 50% de tu saldo. Máx: ${AppFormat.formatNumber(capacity)} ℙ.` };
         }
-        if (AppState.datosAdicionales.prestamosActivos.some(p => p.alumno === student.nombre)) {
+        if (AppState.datosAdicionales.prestamosActivos.some(p => p.alumno === student.nombre && (p.estado === 'Activo' || p.estado.startsWith('Vencido')))) {
             return { isEligible: false, message: 'Ya tienes un préstamo activo.' };
         }
         if (AppState.datosAdicionales.saldoTesoreria < montoSolicitado) {
@@ -2194,7 +2360,7 @@ const AppTransacciones = {
     },
 
     checkDepositEligibility: function(student, montoADepositar) {
-        if (AppState.datosAdicionales.prestamosActivos.some(p => p.alumno === student.nombre)) {
+        if (AppState.datosAdicionales.prestamosActivos.some(p => p.alumno === student.nombre && (p.estado === 'Activo' || p.estado.startsWith('Vencido')))) {
             return { isEligible: false, message: 'No puedes invertir con un préstamo activo.' };
         }
         if (student.pinceles < montoADepositar) {
@@ -2227,7 +2393,6 @@ const AppTransacciones = {
 
         let errorValidacion = "";
         
-        // ACCIÓN 3.1: Mejorar mensajes de validación
         if (!student || student.nombre !== alumnoNombre) {
             errorValidacion = 'Debe seleccionar su nombre de la lista de búsqueda.';
         } else if (!claveP2P || claveP2P.length !== 5) {
@@ -2257,20 +2422,23 @@ const AppTransacciones = {
                 plazoSolicitado: plazoSolicitado
             };
 
-            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
+            const result = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
                 method: 'POST',
                 body: JSON.stringify(payload), 
             });
 
-            const result = await response.json();
-
-            if (result.success === true) {
-                AppTransacciones.setSuccess(statusMsg, result.message || "¡Préstamo otorgado con éxito!");
-                AppUI.resetFlexibleForm('prestamo');
-                AppData.cargarDatos(false); 
-            } else {
+            if (!result.success) {
                 throw new Error(result.message || "Error al otorgar el préstamo.");
             }
+            
+            AppUI.showSuccessSummary('transacciones-combinadas-modal', {
+                ...result,
+                monto_solicitado: montoSolicitado,
+                plazo_dias: plazoSolicitado,
+            }, 'prestamo');
+            
+            AppData.cargarDatos(false); 
+
         } catch (error) {
             AppTransacciones.setError(statusMsg, error.message);
         } finally {
@@ -2292,7 +2460,6 @@ const AppTransacciones = {
 
         let errorValidacion = "";
         
-        // ACCIÓN 3.1: Mejorar mensajes de validación
         if (!student || student.nombre !== alumnoNombre) {
             errorValidacion = 'Debe seleccionar su nombre de la lista de búsqueda.';
         } else if (!claveP2P || claveP2P.length !== 5) {
@@ -2322,20 +2489,23 @@ const AppTransacciones = {
                 plazoEnDias: plazoEnDias
             };
 
-            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
+            const result = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
                 method: 'POST',
                 body: JSON.stringify(payload), 
             });
 
-            const result = await response.json();
-
-            if (result.success === true) {
-                AppTransacciones.setSuccess(statusMsg, result.message || "¡Depósito creado con éxito!");
-                AppUI.resetFlexibleForm('deposito');
-                AppData.cargarDatos(false); 
-            } else {
+            if (!result.success) {
                 throw new Error(result.message || "Error al crear el depósito.");
             }
+            
+            AppUI.showSuccessSummary('transacciones-combinadas-modal', {
+                ...result,
+                monto_depositado: montoADepositar,
+                plazo_dias: plazoEnDias,
+            }, 'deposito');
+            
+            AppData.cargarDatos(false); 
+
         } catch (error) {
             AppTransacciones.setError(statusMsg, error.message);
         } finally {
@@ -2343,8 +2513,6 @@ const AppTransacciones = {
         }
     },
     
-    // --- FIN NUEVAS FUNCIONES DE BANCA FLEXIBLE ---
-
     realizarTransaccionMultiple: async function() {
         const cantidadInput = document.getElementById('transaccion-cantidad-input');
         const statusMsg = document.getElementById('transaccion-status-msg');
@@ -2389,31 +2557,28 @@ const AppTransacciones = {
         try {
             const payload = {
                 accion: 'transaccion_multiple', 
-                clave: AppConfig.CLAVE_MAESTRA,
+                clave: AppConfig.CLAVE_MAESTRA, // ADMIN FIX: Clave Maestra enviada
                 cantidad: pinceles, 
                 transacciones: transacciones 
             };
 
-            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.TRANSACCION_API_URL, {
+            const result = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.TRANSACCION_API_URL, {
                 method: 'POST',
                 body: JSON.stringify(payload), 
             });
 
-            const result = await response.json();
-
-            if (result.success === true) {
-                const successMsg = result.message || "¡Transacción(es) exitosa(s)!";
-                AppTransacciones.setSuccess(statusMsg, successMsg);
-                
-                cantidadInput.value = "";
-                document.getElementById('transaccion-calculo-impuesto').textContent = "";
-                AppData.cargarDatos(false); 
-                AppUI.populateGruposTransaccion(); 
-                AppUI.populateUsuariosTransaccion(); 
-
-            } else {
+            if (!result.success) {
                 throw new Error(result.message || "Error desconocido de la API.");
             }
+            
+            AppUI.showSuccessSummary('transaccion-modal', result.detalles, 'admin_multi');
+            
+            cantidadInput.value = "";
+            document.getElementById('transaccion-calculo-impuesto').textContent = "";
+            
+            AppData.cargarDatos(false); 
+            AppUI.populateGruposTransaccion(); 
+            AppUI.populateUsuariosTransaccion(); 
 
         } catch (error) {
             AppTransacciones.setError(statusMsg, error.message);
@@ -2432,6 +2597,8 @@ const AppTransacciones = {
         const claveP2P = document.getElementById('p2p-clave').value;
         const cantidad = parseInt(document.getElementById('p2p-cantidad').value, 10);
         
+        const estudianteOrigen = AppState.currentSearch.p2pOrigen.info;
+
         let errorValidacion = "";
         if (!nombreOrigen) {
             errorValidacion = "Debe seleccionar su nombre (Remitente) de la lista.";
@@ -2462,26 +2629,22 @@ const AppTransacciones = {
                 cantidad: cantidad
             };
 
-            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
+            const result = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
                 method: 'POST',
                 body: JSON.stringify(payload), 
             });
 
-            const result = await response.json();
-
-            if (result.success === true) {
-                AppTransacciones.setSuccess(statusMsg, result.message || "¡Transferencia exitosa!");
-                
-                AppUI.resetSearchInput('p2pDestino');
-                document.getElementById('p2p-clave').value = "";
-                document.getElementById('p2p-cantidad').value = "";
-                document.getElementById('p2p-calculo-impuesto').textContent = "";
-                
-                AppData.cargarDatos(false); 
-
-            } else {
+            if (!result.success) {
                 throw new Error(result.message || "Error desconocido de la API.");
             }
+            
+            AppUI.showSuccessSummary('transacciones-combinadas-modal', {
+                ...result,
+                remitente: nombreOrigen,
+                destino: nombreDestino
+            }, 'p2p');
+            
+            AppData.cargarDatos(false); 
 
         } catch (error) {
             AppTransacciones.setError(statusMsg, error.message);
@@ -2490,37 +2653,20 @@ const AppTransacciones = {
         }
     },
     
-    // --- LÓGICA DE BONOS (FLUJO DE 2 PASOS) ---
     iniciarCanje: function(bonoClave) {
         const bono = AppState.bonos.disponibles.find(b => b.clave === bonoClave);
         const statusMsg = document.getElementById('bono-status-msg');
         
         const listContainer = document.getElementById('bonos-lista-disponible');
-        const clickedBtn = listContainer.querySelector(`#bono-btn-${bonoClave}`);
+        const clickedBtn = listContainer.querySelector(`[data-bono-clave="${bonoClave}"]`);
         
-        // --- CORRECCIÓN DE FLUJO: Deshabilitar temporalmente el botón ---
         if (clickedBtn) {
-            clickedBtn.classList.remove('bg-white', 'hover:bg-amber-50', 'text-amber-600', 'border-amber-600');
-            clickedBtn.classList.add('bg-slate-100', 'text-slate-600', 'border-slate-300', 'cursor-not-allowed', 'shadow-none');
-            clickedBtn.disabled = true;
-            clickedBtn.textContent = "Cargando...";
+            AppTransacciones.setLoadingState(clickedBtn, clickedBtn.querySelector('.buy-btn'), true, 'Cargando...');
         }
 
         if (!bono) {
             AppTransacciones.setError(statusMsg, "Error interno: Bono no encontrado.");
-            // Restaurar el botón al estado por defecto:
-            setTimeout(() => {
-                if (clickedBtn) {
-                    clickedBtn.textContent = "Canjear";
-                    clickedBtn.classList.remove('bg-slate-100', 'text-slate-600', 'border-slate-300', 'cursor-not-allowed', 'shadow-none');
-                    clickedBtn.classList.add('bg-white', 'hover:bg-amber-50', 'text-amber-600', 'border-amber-600');
-                    clickedBtn.disabled = false;
-                }
-            }, 50); 
-            return;
-        }
-
-        if (bono.usos_actuales >= bono.usos_totales) {
+        } else if (bono.usos_actuales >= bono.usos_totales) {
              AppTransacciones.setError(statusMsg, "Bono agotado, intente más tarde.");
         } else if (bono.expiracion_fecha && new Date(bono.expiracion_fecha).getTime() < Date.now()) {
              AppTransacciones.setError(statusMsg, "Este bono ha expirado.");
@@ -2528,18 +2674,15 @@ const AppTransacciones = {
             AppUI.showBonoStep2(bonoClave);
         }
 
-        // --- CORRECCIÓN DE FLUJO: Restablecer el botón inmediatamente después de la validación ---
-        setTimeout(() => {
-            if (clickedBtn) {
-                clickedBtn.textContent = "Canjear";
-                clickedBtn.classList.remove('bg-slate-100', 'text-slate-600', 'border-slate-300', 'cursor-not-allowed', 'shadow-none');
-                // Solo restablecer si no está agotado o expirado
-                if (bono.usos_actuales < bono.usos_totales && (!bono.expiracion_fecha || new Date(bono.expiracion_fecha).getTime() >= Date.now())) {
-                    clickedBtn.classList.add('bg-white', 'hover:bg-amber-50', 'text-amber-600', 'border-amber-600');
-                    clickedBtn.disabled = false;
+        if (clickedBtn) {
+            setTimeout(() => {
+                AppTransacciones.setLoadingState(clickedBtn, clickedBtn.querySelector('.buy-btn'), false, 'Canjear');
+                if (bono.usos_actuales >= bono.usos_totales || (bono.expiracion_fecha && new Date(bono.expiracion_fecha).getTime() < Date.now())) {
+                    clickedBtn.disabled = true;
+                    clickedBtn.classList.add('bg-slate-100', 'text-slate-600', 'border-slate-300', 'cursor-not-allowed', 'shadow-none');
                 }
-            }
-        }, 50); 
+            }, 50); 
+        }
     },
 
     confirmarCanje: async function() {
@@ -2592,24 +2735,23 @@ const AppTransacciones = {
                 claveBono: claveBono
             };
 
-            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
+            const result = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
                 method: 'POST',
                 body: JSON.stringify(payload),
             });
 
-            const result = await response.json();
-
-            if (result.success === true) {
-                AppTransacciones.setSuccess(statusMsg, result.message || "¡Bono canjeado con éxito!");
-                
-                document.getElementById('bono-clave-p2p-step2').value = "";
-                AppUI.showBonoStep1(); 
-                
-                AppData.cargarDatos(false); 
-
-            } else {
+            if (!result.success) {
                 throw new Error(result.message || "Error desconocido de la API.");
             }
+            
+            // FIX: Usar 'bonos-modal' para que el nuevo showSuccessSummary maneje la excepción correctamente
+            AppUI.showSuccessSummary('bonos-modal', {
+                ...result,
+                recompensa: bono.recompensa,
+                bono_clave: claveBono
+            }, 'bono');
+            
+            AppData.cargarDatos(false); 
 
         } catch (error) {
             AppTransacciones.setError(statusMsg, error.message);
@@ -2660,7 +2802,7 @@ const AppTransacciones = {
         try {
             const payload = {
                 accion: 'admin_crear_bono',
-                clave: AppConfig.CLAVE_MAESTRA,
+                clave: AppConfig.CLAVE_MAESTRA, // ADMIN FIX: Clave Maestra enviada
                 bono: {
                     clave: clave,
                     nombre: nombre,
@@ -2671,22 +2813,19 @@ const AppTransacciones = {
                 }
             };
 
-            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
+            const result = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
                 method: 'POST',
                 body: JSON.stringify(payload),
             });
 
-            const result = await response.json();
-
-            if (result.success === true) {
-                AppTransacciones.setSuccess(statusMsg, result.message || "¡Bono guardado con éxito!");
-                AppUI.clearBonoAdminForm();
-                await AppData.cargarDatos(false);
-                AppUI.populateBonoList(); 
-                
-            } else {
+            if (!result.success) {
                 throw new Error(result.message || "Error al guardar el bono.");
             }
+            
+            AppTransacciones.setSuccess(statusMsg, result.message || "¡Bono guardado con éxito!");
+            AppUI.clearBonoAdminForm();
+            await AppData.cargarDatos(false);
+            AppUI.populateBonoList(); 
 
         } catch (error) {
             AppTransacciones.setError(statusMsg, error.message);
@@ -2704,25 +2843,22 @@ const AppTransacciones = {
         try {
             const payload = {
                 accion: 'admin_eliminar_bono',
-                clave: AppConfig.CLAVE_MAESTRA,
+                clave: AppConfig.CLAVE_MAESTRA, // ADMIN FIX: Clave Maestra enviada
                 claveBono: claveBono
             };
 
-            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
+            const result = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
                 method: 'POST',
                 body: JSON.stringify(payload),
             });
 
-            const result = await response.json();
-
-            if (result.success === true) {
-                AppTransacciones.setSuccess(statusMsg, result.message || "¡Bono eliminado con éxito!");
-                await AppData.cargarDatos(false);
-                AppUI.populateBonoList();
-                
-            } else {
+            if (!result.success) {
                 throw new Error(result.message || "Error al eliminar el bono.");
             }
+            
+            AppTransacciones.setSuccess(statusMsg, result.message || "¡Bono eliminado con éxito!");
+            await AppData.cargarDatos(false);
+            AppUI.populateBonoList();
 
         } catch (error) {
             AppTransacciones.setError(statusMsg, error.message);
@@ -2730,18 +2866,13 @@ const AppTransacciones = {
         } 
     },
 
-    // --- LÓGICA DE TIENDA (FLUJO DE 2 PASOS) ---
     iniciarCompra: function(itemId) {
         const item = AppState.tienda.items[itemId];
         const statusMsg = document.getElementById('tienda-status-msg');
         const buyBtn = document.getElementById(`buy-btn-${itemId}`);
         
-        // --- Corrección de Flujo: Deshabilitar temporalmente el botón ---
         if (buyBtn) {
-            buyBtn.classList.remove('bg-white', 'hover:bg-amber-50', 'text-amber-600', 'border-amber-600');
-            buyBtn.classList.add('bg-slate-100', 'text-slate-600', 'border-slate-300', 'cursor-not-allowed', 'shadow-none');
-            buyBtn.disabled = true;
-            buyBtn.querySelector('.btn-text').textContent = "Cargando...";
+            AppTransacciones.setLoadingState(buyBtn, buyBtn.querySelector('.btn-text'), true, 'Cargando...');
         }
         
         statusMsg.textContent = "";
@@ -2752,13 +2883,14 @@ const AppTransacciones = {
             AppTransacciones.setError(statusMsg, "El artículo está agotado.");
         } else if (item.ExpiracionFecha && new Date(item.ExpiracionFecha).getTime() < Date.now()) {
             AppTransacciones.setError(statusMsg, "Este artículo ha expirado.");
+        } else if (!AppState.tienda.isStoreOpen) {
+            AppTransacciones.setError(statusMsg, "La tienda está cerrada en este momento.");
         } else {
             AppUI.showTiendaStep2(itemId);
         }
         
-        // --- Corrección de Flujo: Restablecer el botón inmediatamente después de la validación ---
         setTimeout(() => {
-             if (buyBtn) AppUI.updateTiendaButtonStates(); // Esta función restablece el estado si es necesario.
+             if (buyBtn) AppUI.updateTiendaButtonStates(); 
         }, 50);
     },
 
@@ -2818,24 +2950,22 @@ const AppTransacciones = {
                 itemId: itemId
             };
 
-            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
+            const result = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.API_URL, {
                 method: 'POST',
                 body: JSON.stringify(payload),
             });
 
-            const result = await response.json();
-
-            if (result.success === true) {
-                AppTransacciones.setSuccess(statusMsg, result.message || "¡Compra exitosa!");
-                
-                document.getElementById('tienda-clave-p2p-step2').value = "";
-                AppUI.showTiendaStep1();
-                
-                AppData.cargarDatos(false); 
-
-            } else {
+            if (!result.success) {
                 throw new Error(result.message || "Error desconocido de la API.");
             }
+            
+            AppUI.showSuccessSummary('tienda-modal', {
+                ...result,
+                costo_base: item.PrecioBase,
+                itbis: result.costo_total - item.PrecioBase,
+            }, 'tienda');
+            
+            AppData.cargarDatos(false); 
 
         } catch (error) {
             AppTransacciones.setError(statusMsg, error.message);
@@ -2892,27 +3022,24 @@ const AppTransacciones = {
         try {
             const payload = {
                 accion: 'admin_crear_item_tienda',
-                clave: AppConfig.CLAVE_MAESTRA,
+                clave: AppConfig.CLAVE_MAESTRA, // ADMIN FIX: Clave Maestra enviada
                 item: item
             };
 
-            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.TRANSACCION_API_URL, {
+            const result = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.TRANSACCION_API_URL, {
                 method: 'POST',
                 body: JSON.stringify(payload),
             });
 
-            const result = await response.json();
-
-            if (result.success === true) {
-                AppTransacciones.setSuccess(statusMsg, result.message || "¡Artículo guardado con éxito!");
-                AppUI.clearTiendaAdminForm();
-                await AppData.cargarDatos(false);
-                AppUI.renderTiendaItems();
-                
-            } else {
+            if (!result.success) {
                 throw new Error(result.message || "Error al guardar el artículo.");
             }
-
+            
+            AppTransacciones.setSuccess(statusMsg, result.message || "¡Artículo guardado con éxito!");
+            AppUI.clearTiendaAdminForm();
+            await AppData.cargarDatos(false);
+            AppUI.renderTiendaItems();
+            
         } catch (error) {
             AppTransacciones.setError(statusMsg, error.message);
         } finally {
@@ -2930,26 +3057,23 @@ const AppTransacciones = {
         try {
             const payload = {
                 accion: 'admin_eliminar_item_tienda',
-                clave: AppConfig.CLAVE_MAESTRA,
+                clave: AppConfig.CLAVE_MAESTRA, // ADMIN FIX: Clave Maestra enviada
                 itemId: itemId
             };
 
-            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.TRANSACCION_API_URL, {
+            const result = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.TRANSACCION_API_URL, {
                 method: 'POST',
                 body: JSON.stringify(payload),
             });
 
-            const result = await response.json();
-
-            if (result.success === true) {
-                AppTransacciones.setSuccess(statusMsg, result.message || "¡Artículo eliminado con éxito!");
-                await AppData.cargarDatos(false);
-                AppUI.renderTiendaItems();
-                
-            } else {
+            if (!result.success) {
                 throw new Error(result.message || "Error al eliminar el artículo.");
             }
-
+            
+            AppTransacciones.setSuccess(statusMsg, result.message || "¡Artículo eliminado con éxito!");
+            await AppData.cargarDatos(false);
+            AppUI.renderTiendaItems();
+            
         } catch (error) {
             AppTransacciones.setError(statusMsg, error.message);
             AppData.cargarDatos(false); 
@@ -2967,23 +3091,21 @@ const AppTransacciones = {
         try {
             const payload = {
                 accion: 'admin_toggle_store',
-                clave: AppConfig.CLAVE_MAESTRA,
+                clave: AppConfig.CLAVE_MAESTRA, // ADMIN FIX: Clave Maestra enviada
                 status: status
             };
 
-            const response = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.TRANSACCION_API_URL, {
+            const result = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.TRANSACCION_API_URL, {
                 method: 'POST',
                 body: JSON.stringify(payload),
             });
 
-            const result = await response.json();
-
-            if (result.success === true) {
-                AppTransacciones.setSuccess(statusMsg, result.message || "¡Estado de la tienda actualizado!");
-                AppData.cargarDatos(false);
-            } else {
+            if (!result.success) {
                 throw new Error(result.message || "Error al cambiar estado.");
             }
+            
+            AppTransacciones.setSuccess(statusMsg, result.message || "¡Estado de la tienda actualizado!");
+            AppData.cargarDatos(false);
 
         } catch (error) {
             AppTransacciones.setError(statusMsg, error.message);
@@ -2994,20 +3116,46 @@ const AppTransacciones = {
         }
     },
 
-    // --- Utilidades de Fetch y Estado ---
-
+    // BLINDAJE 2: Función de Fetch que maneja errores de HTML/Fetch
     fetchWithExponentialBackoff: async function(url, options, maxRetries = 5, initialDelay = 1000) {
         for (let attempt = 0; attempt < maxRetries; attempt++) {
             try {
                 const response = await fetch(url, options);
-                if (response.status !== 429) {
-                    return response;
+                
+                // Si la respuesta no es 200/OK, o si es 429, retry
+                if (!response.ok || response.status === 429) {
+                     // Intenta leer el texto para ver si es un error legible o HTML
+                    const text = await response.text();
+                    
+                    try {
+                        const json = JSON.parse(text);
+                        // Si es JSON, pero reporta un error (success: false), lo devolvemos para ser manejado.
+                        if (json.error || json.success === false) return json;
+                        // Si es JSON y está ok, lo devolvemos.
+                        if (json.success === true) return json;
+                        
+                    } catch (e) {
+                         // Falló el parseo: Es probable que sea HTML de error.
+                         // Lanzamos un error genérico para que intente el reintento o falle graciosamente.
+                         console.error("Fetch Error: Respuesta no es JSON y falló la conexión o el backend.", text.substring(0, 100));
+                         throw new Error(`Error de comunicación: La API devolvió un formato inesperado.`);
+                    }
+                    
+                } else {
+                    // Respuesta 200 OK y no 429
+                    const text = await response.text();
+                    try {
+                        // Si llegó aquí, es casi seguro que es JSON válido
+                        return JSON.parse(text);
+                    } catch (e) {
+                         console.error("Fetch Error: Falló el parseo final de JSON.", text.substring(0, 100));
+                         throw new Error(`Error de sintaxis de datos: Contacte al administrador.`);
+                    }
                 }
             } catch (error) {
                 if (attempt === maxRetries - 1) throw error;
             }
             const delay = initialDelay * Math.pow(2, attempt) + Math.random() * 1000;
-            // No loguear retries
             await new Promise(resolve => setTimeout(resolve, delay));
         }
         throw new Error('Failed to fetch after multiple retries.');
@@ -3033,36 +3181,32 @@ const AppTransacciones = {
     
     setLoading: function(statusMsgEl, message) {
         if (statusMsgEl) {
-            // Acción 2.3: Clase de altura fija
             statusMsgEl.textContent = message;
-            statusMsgEl.className = "text-sm text-center font-medium color-dorado-main h-10 flex items-center justify-center";
+            statusMsgEl.className = "text-sm text-center font-medium color-dorado-main status-msg-fixed-height";
         }
     },
 
     setSuccess: function(statusMsgEl, message) {
         if (statusMsgEl) {
-            // Acción 2.3: Clase de altura fija
             statusMsgEl.textContent = message;
-            statusMsgEl.className = "text-sm text-center font-medium color-dorado-main h-10 flex items-center justify-center";
+            statusMsgEl.className = "text-sm text-center font-medium text-green-600 status-msg-fixed-height";
         }
     },
 
     setError: function(statusMsgEl, message, colorClass = 'text-red-600') {
         if (statusMsgEl) {
-            // Acción 2.3: Clase de altura fija
-            statusMsgEl.textContent = `Error: ${message}`;
-            statusMsgEl.className = `text-sm text-center font-medium ${colorClass} h-10 flex items-center justify-center`;
+            // Manejar mensajes largos para que el modal no salte
+            const displayMessage = message.includes("Backend Error:") ? "Error de comunicación con el Banco. Consulte el detalle en consola." : message;
+            statusMsgEl.textContent = `Error: ${displayMessage}`;
+            statusMsgEl.className = `text-sm text-center font-medium ${colorClass} status-msg-fixed-height`;
+            console.error("Error Transacción:", message);
         }
     }
 };
 
 // --- CONTENIDO ESTATICOS (Términos, Privacidad) ---
-// CORRECCIÓN: Eliminación de la clase mt-6 del primer subtítulo en ambos contenidos.
-
 const AppContent = {
-    // Contenido actualizado y profesional para Términos y Condiciones
     terminosYCondiciones: `
-        
         <strong class="text-lg font-semibold text-slate-800 mb-2 block">I. Alcance y Principios</strong>
         <p>Los presentes Términos y Condiciones rigen el uso de todos los servicios de banca virtual proporcionados por el Banco del Pincel Dorado (BPD). La utilización de cualquiera de estos servicios implica la aceptación total de estas disposiciones y del Reglamento General.</p>
         <ul class="list-disc list-inside ml-4 space-y-1 text-sm">
@@ -3100,7 +3244,6 @@ const AppContent = {
         <p>La violación de esta normativa resultará en medidas disciplinarias determinadas por el BPD, que pueden incluir la congelación temporal o permanente de la cuenta, y la reversión de transacciones.</p>
     `,
     
-    // Contenido actualizado y profesional para Acuerdo de Privacidad
     acuerdoDePrivacidad: `
         
         <strong class="text-lg font-semibold text-slate-800 mb-2 block">I. Compromiso de la Entidad</strong>
@@ -3153,7 +3296,6 @@ window.AppUI.showLegalModal = AppUI.showLegalModal;
 window.onload = function() {
     AppUI.init();
     
-    // Inyección de estilos de slider (para cross-browser progress fill)
     const setupSliderFill = () => {
         const inputs = document.querySelectorAll('input[type="range"]');
         inputs.forEach(input => {
@@ -3163,24 +3305,19 @@ window.onload = function() {
         });
     };
     
-    // Inicializar carrusel hero
     AppUI.goToHeroSlide(0); 
 
-    // Inicializar listeners del carrusel después de un breve retraso para asegurar que JS y HTML estén listos
     setTimeout(() => {
         setupSliderFill();
         document.getElementById('transacciones-combinadas-modal').addEventListener('click', (e) => {
-             // Listener para tabs dentro del modal combinado
              if (e.target.classList.contains('tab-btn') && e.target.closest('#transacciones-combinadas-modal')) {
                  AppUI.changeTransaccionesCombinadasTab(e.target.dataset.tab);
              }
-             // Listener para cerrar en backdrop
              if (e.target.id === 'transacciones-combinadas-modal') {
                  AppUI.hideModal('transacciones-combinadas-modal');
              }
         });
 
-        // Asegurar que el relleno de los sliders se aplica al abrir el modal
         document.getElementById('transacciones-combinadas-modal').addEventListener('click', (e) => {
             if (e.target.classList.contains('tab-btn')) {
                  setTimeout(setupSliderFill, 10);
