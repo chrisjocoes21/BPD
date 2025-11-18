@@ -305,3 +305,87 @@ body {
     height: 40px; 
     min-width: 120px;
 }
+
+/* =================================================================== */
+/* NUEVOS ESTILOS SOLICITADOS (Tarjetas Compactas, Estabilidad y Tarjeta Personal)  */
+/* =================================================================== */
+
+/* Estabilidad: Altura fija para mensajes de estado y error en modales de transacción */
+.status-msg-fixed-height {
+    /* Se usa en script.js con h-10/40px. Esto asegura que el mensaje siempre ocupa el mismo espacio. */
+    height: 40px; 
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1rem;
+    font-weight: 500;
+}
+
+/* Base para Tarjetas de Bonos y Tienda (Compactación) */
+.compact-card {
+    /* Reducimos el padding interno para compactar verticalmente y horizontalmente */
+    @apply p-2; 
+}
+.compact-card .title-text {
+    /* Fuente más pequeña */
+    @apply text-sm font-semibold;
+}
+.compact-card .small-text {
+    /* Fuente más pequeña para descripciones */
+    @apply text-xs;
+}
+.compact-card .price-text {
+     /* Precio sigue siendo grande pero con menos margen */
+     @apply text-xl font-bold;
+}
+.compact-card .buy-btn {
+    /* Botón más compacto */
+    @apply px-3 py-1 text-xs;
+}
+
+/* === CORRECCIÓN: TARJETA DE ALUMNO LIGHT (BANCARIA) === */
+.personal-student-card {
+    /* Fondo blanco limpio con un degradado muy sutil dorado en la parte superior o borde */
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0; /* slate-200 */
+    border-top: 4px solid #d97706; /* amber-600 - detalle bancario */
+    color: #1f2937; /* slate-800 */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.personal-student-card .stat-box {
+    /* Cajas de estadísticas limpias */
+    background-color: #f8fafc; /* slate-50 */
+    border: 1px solid #cbd5e1; /* slate-300 */
+    @apply p-3 rounded-lg flex flex-col justify-center shadow-sm transition-shadow;
+    min-height: 70px; /* Un poco más compacto */
+}
+.personal-student-card .stat-box:hover {
+    background-color: #f1f5f9; /* slate-100 */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.personal-student-card .stat-label {
+    /* Etiqueta pequeña y gris */
+    @apply text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1;
+}
+
+.personal-student-card .stat-value {
+    /* Valor principal grande y oscuro */
+    @apply text-xl font-bold text-slate-800;
+}
+
+/* Estilos para el Reporte de Confirmación/Recibo */
+.confirmation-report-card {
+    @apply bg-white border border-slate-200 p-8 rounded-xl shadow-2xl w-full max-w-lg mx-auto;
+    animation: fadeIn 0.5s ease-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.report-divider {
+    @apply border-b border-dashed border-slate-300 my-3;
+}
