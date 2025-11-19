@@ -424,3 +424,35 @@ body {
 .report-divider {
     @apply border-b border-dashed border-slate-300 my-3;
 }
+
+/* =================================================================== */
+/* ANIMACIÓN ENLACE PORTAFOLIO (DIDAC-CLICK) */
+/* =================================================================== */
+
+@keyframes goldPulseSlow {
+    0%, 100% {
+        color: #94a3b8; /* slate-400 (Gris original) */
+        text-shadow: none;
+    }
+    50% {
+        color: #d97706; /* amber-600 (Dorado BPD) */
+        text-shadow: 0 0 12px rgba(217, 119, 6, 0.4); /* Resplandor suave */
+        transform: scale(1.02); /* Ligerísimo aumento de tamaño */
+    }
+}
+
+.gold-pulse-link {
+    display: inline-block;
+    text-decoration: none;
+    animation: goldPulseSlow 3s ease-in-out infinite;
+    transition: all 0.3s ease;
+}
+
+.gold-pulse-link:hover {
+    /* Al pasar el mouse, se queda dorado fijo y subraya */
+    animation: none;
+    color: #d97706;
+    text-shadow: 0 0 15px rgba(217, 119, 6, 0.6);
+    text-decoration: underline;
+    transform: scale(1.05);
+}
