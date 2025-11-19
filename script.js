@@ -1,8 +1,9 @@
 // --- CONFIGURACIÓN ---
 const AppConfig = {
     // Asegúrate de que esta URL sea la correcta del despliegue de tu Apps Script
+    // Nota: Se usa una URL diferente para las transacciones múltiples de ADMIN
     API_URL: 'https://script.google.com/macros/s/AKfycbyhPHZuRmC7_t9z20W4h-VPqVFk0z6qKFG_W-YXMgnth4BMRgi8ibAfjeOtIeR5OrFPXw/exec',
-    TRANSACCION_API_URL: 'https://script.google.com/macros/s/AKfycbyhPHZuRmC7_t9z20W4h-VPqVFk0z6qKFG_W-YXMgnth4BMRgi8ibAfjeOtIeR5OrFPXw/exec',
+    TRANSACCION_API_URL: 'https://script.google.com/macros/s/AKfycbyhPHZuRmC7_t9z20W4h-VPqVFk0z6qKFG_W-YXMgnth4BMRgi8ibAfjeOtIeR5OrFPXw/exec', // Usar URL correcta para Admin
     CLAVE_MAESTRA: 'PinceladasM25-26',
     SPREADSHEET_URL: 'https://docs.google.com/spreadsheets/d/1GArB7I19uGum6awiRN6qK8HtmTWGcaPGWhOzGCdhbcs/edit?usp=sharing',
     INITIAL_RETRY_DELAY: 1000,
@@ -11,7 +12,7 @@ const AppConfig = {
     CACHE_DURATION: 300000,
     
     APP_STATUS: 'RC', 
-    APP_VERSION: 'v32.1 (Fix Bonos)', 
+    APP_VERSION: 'v32.4 (Shimmer/Compact Card)', 
     
     IMPUESTO_P2P_TASA: 0.01,        
     IMPUESTO_DEPOSITO_TASA: 0.0,    
@@ -131,11 +132,11 @@ const AppData = {
             AppState.retryDelay = AppConfig.INITIAL_RETRY_DELAY;
         }
 
+        // Se mantiene el indicador de estado si la carga no es la inicial
         if (!AppState.datosActuales) {
-            AppUI.showLoading(); 
-        } else {
             AppUI.setConnectionStatus('loading', 'Cargando...');
         }
+
 
         try {
             if (!navigator.onLine) {
@@ -183,6 +184,7 @@ const AppData = {
             }
         } finally {
             AppState.actualizacionEnProceso = false;
+            // Se llama a hideLoading siempre en finally para asegurar la transición de UI
             AppUI.hideLoading(); 
         }
     },
@@ -399,10 +401,155 @@ const AppUI = {
 
         AppUI.mostrarVersionApp();
         
+        // Lógica para cerrar la sidebar en móvil
+        document.getElementById('sidebar-overlay').addEventListener('click', AppUI.toggleSidebar);
+        document.getElementById('close-sidebar-btn').addEventListener('click', AppUI.toggleSidebar);
+        
+        // Inicia la carga de datos
         AppData.cargarDatos(false);
         setInterval(() => AppData.cargarDatos(false), 30000); 
         AppUI.updateCountdown();
         setInterval(AppUI.updateCountdown, 1000);
+    },
+    
+    // MODIFICADA: Implementación de la corrección del "salto" de carga.
+    hideLoading: function() {
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const appContainer = document.getElementById('app-container');
+
+        if (loadingOverlay.classList.contains('opacity-0')) {
+             // Ya está oculto, solo asegurarse de que el contenedor principal sea visible
+             appContainer.classList.remove('hidden', 'opacity-0');
+             return;
+        }
+
+        // 1. Iniciar transición (fade-out del overlay)
+        loadingOverlay.classList.add('opacity-0');
+        
+        // 2. Mostrar contenedor principal (fade-in)
+        appContainer.classList.remove('hidden');
+        // Usar setTimeout para aplicar opacity-100 después de que la clase 'hidden' se haya eliminado, 
+        // permitiendo que la transición CSS de opacity-0 a opacity-100 funcione.
+        setTimeout(() => {
+            appContainer.classList.remove('opacity-0');
+        }, 10); 
+
+
+        // 3. Ocultar físicamente el overlay después de la transición (500ms)
+        setTimeout(() => {
+            loadingOverlay.style.display = 'none';
+            loadingOverlay.classList.add('pointer-events-none');
+        }, 500); 
+    },
+
+    // --- Tarjeta de Alumno Rediseñada (Estilo Bancario Compacto) ---
+    showStudentModal: function(nombreGrupo, nombreUsuario, rank) {
+        const student = AppState.datosAdicionales.allStudents.find(u => u.nombre === nombreUsuario);
+        
+        if (!student) return;
+
+        const modalContent = document.getElementById('student-modal-content');
+        const totalPinceles = student.pinceles || 0;
+        
+        const prestamoActivo = AppState.datosAdicionales.prestamosActivos.find(p => p.alumno === student.nombre);
+        const depositoActivo = AppState.datosAdicionales.depositosActivos.find(d => d.alumno === student.nombre);
+
+        // Calcular Capital Invertido
+        const totalInvertido = AppState.datosAdicionales.depositosActivos
+            .filter(deposito => (deposito.alumno || '').trim() === (student.nombre || '').trim() && deposito.estado.startsWith('Activo'))
+            .reduce((sum, deposito) => sum + (Number(deposito.monto) || 0), 0);
+
+        // Generar Iniciales para el Avatar
+        const iniciales = student.nombre.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+
+        // Badge de Estado de Cuenta
+        const isSolvente = totalPinceles >= 0;
+        const estadoCuentaBadge = isSolvente 
+            ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Solvente</span>`
+            : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">En Descubierto</span>`;
+
+        // Generar HTML de productos activos (Préstamos/Depósitos)
+        let productsHtml = '';
+        if (prestamoActivo) {
+             productsHtml += `
+                <div class="flex items-center p-3 bg-red-50 rounded-lg border border-red-100 mb-2 shadow-sm">
+                    <div class="p-2 bg-white rounded-full text-red-500 mr-3 shadow-sm border border-red-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-red-700">Préstamo Activo</p>
+                        <p class="text-xs text-red-600">Monto pendiente de pago</p>
+                    </div>
+                </div>`;
+        }
+        if (depositoActivo) {
+            const vencimiento = new Date(depositoActivo.vencimiento);
+            const fechaString = AppFormat.formatDateSimple(vencimiento);
+            productsHtml += `
+                <div class="flex items-center p-3 bg-emerald-50 rounded-lg border border-emerald-100 mb-2 shadow-sm">
+                    <div class="p-2 bg-white rounded-full text-emerald-600 mr-3 shadow-sm border border-emerald-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-emerald-700">Inversión Activa</p>
+                        <p class="text-xs text-emerald-600">Vence: ${fechaString}</p>
+                    </div>
+                </div>`;
+        }
+
+
+        modalContent.innerHTML = `
+            <div class="personal-student-card bg-white overflow-hidden relative rounded-xl">
+                <!-- Header Decorativo (Background) -->
+                <div class="h-24 bg-gradient-to-r from-amber-500 to-amber-600 relative">
+                    <button onclick="AppUI.hideModal('student-modal')" class="modal-close-btn absolute top-2 right-2 text-white/80 hover:text-white text-2xl p-1 z-10 transition-colors">&times;</button>
+                </div>
+                
+                <!-- Contenido Principal (Superpuesto) -->
+                <div class="px-6 pb-6 -mt-12 relative">
+                    <!-- Perfil y Avatar -->
+                    <div class="flex flex-col items-center">
+                        <div class="w-24 h-24 bg-white p-1 rounded-full shadow-lg">
+                            <div class="w-full h-full bg-slate-100 rounded-full flex items-center justify-center text-2xl font-bold text-slate-400 border border-slate-200">
+                                ${iniciales}
+                            </div>
+                        </div>
+                        <h2 class="text-xl font-bold text-slate-800 mt-3 text-center leading-tight">${student.nombre}</h2>
+                        <div class="mt-2 flex items-center space-x-2">
+                            <span class="px-2 py-1 rounded-md bg-slate-100 text-xs font-semibold text-slate-600 uppercase tracking-wide border border-slate-200">${student.grupoNombre}</span>
+                            ${estadoCuentaBadge}
+                        </div>
+                    </div>
+
+                    <!-- Balance Hero -->
+                    <div class="mt-6 text-center p-5 bg-slate-50 rounded-2xl border border-slate-200 shadow-inner">
+                        <p class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Saldo Disponible</p>
+                        <p class="text-4xl font-extrabold color-dorado-main tracking-tight">${AppFormat.formatNumber(totalPinceles)} ℙ</p>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-2 gap-3 mt-4">
+                        <div class="p-3 bg-white border border-slate-200 rounded-xl shadow-sm text-center">
+                            <p class="text-xs text-slate-400 uppercase font-bold tracking-wide">Inversiones</p>
+                            <p class="text-lg font-bold text-slate-700">${AppFormat.formatNumber(totalInvertido)} ℙ</p>
+                        </div>
+                        <div class="p-3 bg-white border border-slate-200 rounded-xl shadow-sm text-center">
+                            <p class="text-xs text-slate-400 uppercase font-bold tracking-wide">Ranking Global</p>
+                            <p class="text-lg font-bold text-slate-700">#${rank}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Productos Activos -->
+                    ${productsHtml ? `<div class="mt-4 space-y-2">${productsHtml}</div>` : ''}
+
+                    <!-- Footer Simple (Sin ID) -->
+                    <div class="mt-6 text-center border-t border-slate-100 pt-4">
+                         <p class="text-xs text-slate-400 font-medium">Banco del Pincel Dorado</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        AppUI.showModal('student-modal');
     },
     
     // --- FUNCIÓN DE INFORME DE CONFIRMACIÓN (CORREGIDA) ---
@@ -417,6 +564,9 @@ const AppUI = {
             // FIX: bonos-modal (plural) usa contenedores bono- (singular) en el HTML
             formContainerId = 'bono-main-step-container';
             reportContainerId = 'bono-report-container';
+        } else if (modalId === 'tienda-modal') {
+             formContainerId = 'tienda-main-step-container';
+             reportContainerId = 'tienda-report-container';
         } else if (modalId === 'transacciones-combinadas-modal') {
             formContainerId = 'transacciones-combinadas-step-container';
             reportContainerId = 'transacciones-combinadas-report-container';
@@ -424,7 +574,7 @@ const AppUI = {
             formContainerId = 'transaccion-admin-step-container';
             reportContainerId = 'transaccion-admin-report-container';
         } else {
-            // Default para Tienda u otros que sigan la regla: modalId -> prefix
+            // Default para otros que sigan la regla: modalId -> prefix
             formContainerId = modalId.replace('-modal', '-main-step-container');
             reportContainerId = modalId.replace('-modal', '-report-container');
         }
@@ -622,7 +772,7 @@ const AppUI = {
             console.error("Error fatal: No se pudo adjuntar evento al botón de confirmación.");
         }
     },
-
+    
     // --- FUNCIONES DE MODALES FLEXIBLES (PRESTAMOS Y DEPÓSITOS) ---
     
     showTransaccionesCombinadasModal: function(initialTab = 'p2p_transfer') {
@@ -803,9 +953,7 @@ const AppUI = {
         document.getElementById('loading-overlay').classList.remove('opacity-0', 'pointer-events-none');
     },
 
-    hideLoading: function() {
-        document.getElementById('loading-overlay').classList.add('opacity-0', 'pointer-events-none');
-    },
+    // La lógica de hideLoading se sobrescribió arriba para evitar el salto inicial
 
     mostrarVersionApp: function() {
         const versionContainer = document.getElementById('app-version-container');
@@ -818,6 +966,13 @@ const AppUI = {
         if (!modal) return;
         modal.classList.remove('opacity-0', 'pointer-events-none');
         modal.querySelector('[class*="transform"]').classList.remove('scale-95');
+        
+        // FIX: Mostrar overlay de sidebar si la sidebar está abierta en móvil
+        if (modalId === 'transaccion-modal' || modalId === 'transacciones-combinadas-modal' || modalId === 'bonos-modal' || modalId === 'tienda-modal') {
+             if (AppState.isSidebarOpen) {
+                 AppUI.toggleSidebar();
+             }
+        }
     },
 
     hideModal: function(modalId) {
@@ -992,8 +1147,9 @@ const AppUI = {
         const lowerQuery = query.toLowerCase();
         let studentList = AppState.datosAdicionales.allStudents;
         
-        const ciclaAllowed = ['p2pDestino', 'prestamoAlumno', 'depositoAlumno']; 
-        if (!ciclaAllowed.includes(stateKey) && stateKey !== 'bonoAlumno' && stateKey !== 'tiendaAlumno') {
+        // La lógica para Cicla ha sido corregida
+        const ciclaAllowed = ['p2pDestino', 'prestamoAlumno', 'depositoAlumno', 'bonoAlumno', 'tiendaAlumno']; 
+        if (!ciclaAllowed.includes(stateKey)) {
             studentList = studentList.filter(s => s.grupoNombre !== 'Cicla');
         }
         
@@ -1690,8 +1846,11 @@ const AppUI = {
         const grupoContainer = document.getElementById('transaccion-lista-grupos-container');
         grupoContainer.innerHTML = ''; 
 
-        AppState.datosActuales.forEach(grupo => {
-            if (grupo.usuarios.length === 0 && grupo.nombre !== 'Cicla') return;
+        // Filtrar grupos activos (excluyendo el Cicla)
+        const gruposActivos = AppState.datosActuales.filter(g => g.nombre !== 'Cicla' && g.nombre !== 'Banco');
+
+        gruposActivos.forEach(grupo => {
+            if (grupo.usuarios.length === 0) return;
 
             const div = document.createElement('div');
             div.className = "flex items-center p-1 rounded hover:bg-slate-200";
@@ -1730,9 +1889,12 @@ const AppUI = {
             listaContainer.innerHTML = '<span class="text-sm text-slate-500 p-2">Seleccione un grupo...</span>';
             return;
         }
+        
+        // Usar los datos de AppState.datosActuales (grupos activos + Cicla)
+        const allGroups = AppState.datosActuales;
 
         selectedGroupNames.forEach(grupoNombre => {
-            const grupo = AppState.datosActuales.find(g => g.nombre === grupoNombre);
+            const grupo = allGroups.find(g => g.nombre === grupoNombre);
 
             if (grupo && grupo.usuarios && grupo.usuarios.length > 0) {
                 const headerDiv = document.createElement('div');
@@ -1743,7 +1905,12 @@ const AppUI = {
                 btnSelectAll.textContent = "Todos";
                 btnSelectAll.dataset.grupo = grupo.nombre; 
                 btnSelectAll.className = "text-xs font-medium text-amber-600 hover:text-amber-800 select-all-users-btn";
-                AppState.transaccionSelectAll[grupo.nombre] = false; 
+                // Inicializar estado de selección
+                if (AppState.transaccionSelectAll[grupo.nombre] === undefined) {
+                    AppState.transaccionSelectAll[grupo.nombre] = false;
+                }
+                btnSelectAll.textContent = AppState.transaccionSelectAll[grupo.nombre] ? "Ninguno" : "Todos";
+
                 btnSelectAll.addEventListener('click', AppUI.toggleSelectAllUsuarios);
                 
                 headerDiv.appendChild(btnSelectAll);
@@ -1762,6 +1929,11 @@ const AppUI = {
                     input.dataset.grupo = grupo.nombre; 
                     input.className = "h-4 w-4 text-amber-600 border-slate-300 rounded focus:ring-amber-600 bg-white user-checkbox";
                     input.dataset.checkboxGrupo = grupo.nombre; 
+                    
+                    // Aplicar estado de selección si ya está marcado como "Todos"
+                    if (AppState.transaccionSelectAll[grupo.nombre]) {
+                        input.checked = true;
+                    }
 
                     const label = document.createElement('label');
                     label.htmlFor = input.id;
@@ -1786,6 +1958,7 @@ const AppUI = {
         const grupoNombre = btn.dataset.grupo;
         if (!grupoNombre) return;
 
+        // Invertir el estado de selección global del grupo
         AppState.transaccionSelectAll[grupoNombre] = !AppState.transaccionSelectAll[grupoNombre];
         const isChecked = AppState.transaccionSelectAll[grupoNombre];
 
@@ -1827,13 +2000,26 @@ const AppUI = {
 
     toggleSidebar: function() {
         const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
         
         AppState.isSidebarOpen = !AppState.isSidebarOpen; 
 
         if (AppState.isSidebarOpen) {
             sidebar.classList.remove('-translate-x-full');
+            // Mostrar overlay y habilitar interacción solo en móvil
+            if (window.innerWidth < 1024) { 
+                 sidebarOverlay.classList.remove('hidden', 'opacity-0');
+                 sidebarOverlay.classList.add('opacity-100');
+            }
         } else {
             sidebar.classList.add('-translate-x-full');
+            
+            // Ocultar overlay
+            sidebarOverlay.classList.remove('opacity-100');
+            sidebarOverlay.classList.add('opacity-0');
+            setTimeout(() => {
+                 sidebarOverlay.classList.add('hidden');
+            }, 300); 
         }
         
         AppUI.resetSidebarTimer();
@@ -1845,7 +2031,8 @@ const AppUI = {
             clearTimeout(AppState.sidebarTimer);
         }
         
-        if (AppState.isSidebarOpen) {
+        // Solo aplicar el timer de cierre automático en desktop (lg)
+        if (AppState.isSidebarOpen && window.innerWidth >= 1024) {
             AppState.sidebarTimer = setTimeout(() => {
                 if (AppState.isSidebarOpen) {
                     AppUI.toggleSidebar();
@@ -2011,12 +2198,10 @@ const AppUI = {
         const depositosActivos = AppState.datosAdicionales.depositosActivos;
         
         const studentsWithCapital = allStudents.map(student => {
+            // Solo se cuenta el capital de los depósitos activos
             const totalInvertidoDepositos = depositosActivos
-                .filter(deposito => (deposito.alumno || '').trim() === (student.nombre || '').trim())
-                .reduce((sum, deposito) => {
-                    const montoNumerico = Number(deposito.monto) || 0;
-                    return sum + montoNumerico;
-                }, 0);
+                .filter(deposito => (deposito.alumno || '').trim() === (student.nombre || '').trim() && deposito.estado.startsWith('Activo'))
+                .reduce((sum, deposito) => sum + (Number(deposito.monto) || 0), 0);
             
             const capitalTotal = student.pinceles + totalInvertidoDepositos;
 
@@ -2164,70 +2349,6 @@ const AppUI = {
 
         document.getElementById('home-stats-container').classList.add('hidden');
         document.getElementById('home-modules-grid').classList.add('hidden');
-    },
-
-    // CORRECCIÓN: Tarjeta de alumno rediseñada (Light/Bancaria) sin Clave P2P.
-    showStudentModal: function(nombreGrupo, nombreUsuario, rank) {
-        const student = AppState.datosAdicionales.allStudents.find(u => u.nombre === nombreUsuario);
-        
-        if (!student) return;
-
-        const modalContent = document.getElementById('student-modal-content');
-        const totalPinceles = student.pinceles || 0;
-        
-        const prestamoActivo = AppState.datosAdicionales.prestamosActivos.find(p => p.alumno === student.nombre);
-        const depositoActivo = AppState.datosAdicionales.depositosActivos.find(d => d.alumno === student.nombre);
-
-        // Calcular Capital Invertido
-        const totalInvertido = AppState.datosAdicionales.depositosActivos
-            .filter(deposito => (deposito.alumno || '').trim() === (student.nombre || '').trim() && deposito.estado.startsWith('Activo'))
-            .reduce((sum, deposito) => sum + (Number(deposito.monto) || 0), 0);
-
-        // Crear una estadística con el nuevo formato CSS
-        const createStat = (label, value, valueClass = 'text-slate-800') => `
-            <div class="stat-box">
-                <div class="stat-label">${label}</div>
-                <div class="stat-value ${valueClass} truncate">${value}</div>
-            </div>
-        `;
-
-        let extraHtml = '';
-        if (prestamoActivo) {
-            // Diseño Light/Bancario
-            extraHtml += `<p class="text-sm font-bold text-red-600 text-center mt-3 p-2 bg-red-50 rounded-lg border border-red-200">⚠️ Préstamo Activo</p>`;
-        }
-        if (depositoActivo) {
-            const vencimiento = new Date(depositoActivo.vencimiento);
-            const fechaString = AppFormat.formatDateSimple(vencimiento);
-            // Diseño Light/Bancario
-            extraHtml += `<p class="text-sm font-bold text-green-600 text-center mt-3 p-2 bg-green-50 rounded-lg border border-green-200">🏦 Depósito Activo (Vence: ${fechaString})</p>`;
-        }
-        
-        modalContent.innerHTML = `
-            <div class="personal-student-card p-6 relative">
-                <div class="flex justify-between items-start mb-6 pr-12">
-                    <div>
-                        <h2 class="text-2xl font-bold text-slate-800">${student.nombre}</h2>
-                        <p class="text-sm font-medium text-slate-500">${student.grupoNombre}</p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    ${createStat('Saldo Líquido', `${AppFormat.formatNumber(totalPinceles)} ℙ`, 'color-dorado-main')}
-                    ${createStat('Capital Invertido', `${AppFormat.formatNumber(totalInvertido)} ℙ`)}
-                    
-                    ${createStat('Estado de Cuenta', totalPinceles >= 0 ? 'Solvente' : 'Agotado', totalPinceles >= 0 ? 'text-green-600' : 'text-red-600')}
-                    ${createStat('Rank Personal', `${rank}º`)}
-                </div>
-                
-                ${extraHtml}
-                
-                <p class="text-xs text-slate-400 mt-4 text-center">Banco del Pincel Dorado | ${student.grupoOriginal ? `Original: ${student.grupoOriginal}` : 'ID: N/A'}</p>
-                
-                <button onclick="AppUI.hideModal('student-modal')" class="modal-close-btn absolute top-2 right-2 text-slate-400 hover:color-dorado-main text-2xl p-1">&times;</button>
-            </div>
-        `;
-        AppUI.showModal('student-modal');
     },
     
     updateCountdown: function() {
@@ -2661,7 +2782,8 @@ const AppTransacciones = {
         const clickedBtn = listContainer.querySelector(`[data-bono-clave="${bonoClave}"]`);
         
         if (clickedBtn) {
-            AppTransacciones.setLoadingState(clickedBtn, clickedBtn.querySelector('.buy-btn'), true, 'Cargando...');
+            // Se asume que el botón tiene un span.btn-text dentro para el estado de carga
+            AppTransacciones.setLoadingState(clickedBtn, clickedBtn.querySelector('.btn-text'), true, 'Cargando...');
         }
 
         if (!bono) {
@@ -2675,8 +2797,10 @@ const AppTransacciones = {
         }
 
         if (clickedBtn) {
+            // Restablecer el estado de carga del botón después de un breve retraso
             setTimeout(() => {
-                AppTransacciones.setLoadingState(clickedBtn, clickedBtn.querySelector('.buy-btn'), false, 'Canjear');
+                AppTransacciones.setLoadingState(clickedBtn, clickedBtn.querySelector('.btn-text'), false, 'Canjear');
+                // Si la validación falló después del retraso, el botón debe quedar deshabilitado.
                 if (bono.usos_actuales >= bono.usos_totales || (bono.expiracion_fecha && new Date(bono.expiracion_fecha).getTime() < Date.now())) {
                     clickedBtn.disabled = true;
                     clickedBtn.classList.add('bg-slate-100', 'text-slate-600', 'border-slate-300', 'cursor-not-allowed', 'shadow-none');
@@ -3274,9 +3398,11 @@ const AppContent = {
 
 function escapeHTML(str) {
     if (typeof str !== 'string') return str;
+    // Escapar comillas simples para ser usado en atributos onclick
     return str.replace(/'/g, "\\'").replace(/"/g, "&quot;");
 }
 
+// Exportar funciones a la ventana global para que los eventos onclick en el HTML las encuentren
 window.AppUI = AppUI;
 window.AppFormat = AppFormat;
 window.AppTransacciones = AppTransacciones;
@@ -3296,6 +3422,7 @@ window.AppUI.showLegalModal = AppUI.showLegalModal;
 window.onload = function() {
     AppUI.init();
     
+    // Configuración de la animación de relleno del slider
     const setupSliderFill = () => {
         const inputs = document.querySelectorAll('input[type="range"]');
         inputs.forEach(input => {
@@ -3305,19 +3432,26 @@ window.onload = function() {
         });
     };
     
+    // Inicializa el carrusel al primer slide
     AppUI.goToHeroSlide(0); 
 
     setTimeout(() => {
+        // Asegurar que los sliders se inicialicen y los listeners de pestañas funcionen después de la carga inicial
         setupSliderFill();
+        
+        // Listener delegado para el modal combinado (para pestañas y cerrar al hacer clic en fondo)
         document.getElementById('transacciones-combinadas-modal').addEventListener('click', (e) => {
+             // 1. Manejo de cambio de pestaña
              if (e.target.classList.contains('tab-btn') && e.target.closest('#transacciones-combinadas-modal')) {
                  AppUI.changeTransaccionesCombinadasTab(e.target.dataset.tab);
              }
+             // 2. Manejo de cierre al hacer click en el fondo (ya está en init, pero se mantiene la lógica defensiva)
              if (e.target.id === 'transacciones-combinadas-modal') {
                  AppUI.hideModal('transacciones-combinadas-modal');
              }
         });
 
+        // Vuelve a aplicar el relleno del slider si la pestaña cambia DENTRO del modal combinado
         document.getElementById('transacciones-combinadas-modal').addEventListener('click', (e) => {
             if (e.target.classList.contains('tab-btn')) {
                  setTimeout(setupSliderFill, 10);
@@ -3325,5 +3459,11 @@ window.onload = function() {
         });
         
     }, 500); 
+    
+    // Inicia la animación shimmer y los puntos modernos al cargar el script
+    document.querySelectorAll('.loading-shimmer-text, .loading-dot').forEach(el => {
+        // La animación está pausada por CSS, la iniciamos aquí.
+        el.style.animationPlayState = 'running';
+    });
 
 };
