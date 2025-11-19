@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- BPD v31.0 (Compactación, Estabilidad y Carga Rápida) - Implementa: 
-    1. Carga unificada de datos (API.txt y script.js).
-    2. Modales con altura fija y contenedores de estado para evitar saltos.
-    3. Texto "La tienda se abre en:" más oscuro.
-    4. Estructura preparada para el "Informe de Confirmación" en transacciones.
-    5. Mejora general del responsive.
+<!-- BPD v32.4 (Carga Instantánea, Animación Shimmer & Tarjeta Compacta) - Implementa: 
+    1. Overlay visible por defecto (sin opacity-0) para eliminar salto.
+    2. Estructura de animación Shimmer para el título.
+    3. Nuevo indicador de carga de puntos (modernizado).
+    4. Contenedor principal oculto al inicio.
+    5. Estructura del Modal de Alumno actualizada a diseño compacto.
 -->
 <html lang="es" class="h-full bg-slate-50 overflow-hidden">
 <head>
@@ -14,11 +14,11 @@
     <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Carga de Fuente Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏦</text></svg>">
 
-    <!-- Archivo de estilos personalizados (Mantenido separado) -->
+    <!-- Archivo de estilos personalizados -->
     <link rel="stylesheet" href="style.css">
     
     <style>
@@ -124,17 +124,41 @@
             /* Reduce padding y ajusta la fuente para compactación horizontal */
             @apply p-2;
         }
-
-        /* AJUSTE: Estilo de tarjeta personal moderna (Usado en el modal de alumno) */
-        .personal-student-card {
-            background-image: linear-gradient(135deg, #1f2937 0%, #374151 50%, #4b5563 100%);
-            color: white;
-        }
-        
     </style>
 </head>
-<body class="h-full overflow-hidden text-slate-800"> 
-    <div id="app-container" class="flex h-full">
+<body class="h-full overflow-hidden text-slate-800">
+    
+    <!-- 
+      OVERLAY DE CARGA (CORREGIDO PARA NO SALTAR)
+      - display: flex para visibilidad inmediata.
+      - opacity: 1 para que cubra la pantalla.
+    -->
+    <div id="loading-overlay" class="fixed inset-0 bg-white flex items-center justify-center z-[10000] transition-opacity duration-500" style="opacity: 1; display: flex;">
+        <div class="text-center">
+            <!-- Título con efecto Shimmer -->
+            <h1 class="text-5xl font-extrabold color-dorado-main mb-2 tracking-tight loading-shimmer-text">
+                Banco del Pincel Dorado
+            </h1>
+            <!-- Eslogan -->
+            <p class="text-lg text-slate-700 mb-8 font-medium">
+                "Donde el esfuerzo académico tiene su recompensa"
+            </p>
+            <!-- Puntos de Carga Modernizados -->
+            <div class="flex justify-center items-center space-x-2">
+                <!-- Se usa la clase 'loading-dot' para la animación moderna en CSS -->
+                <span class="w-3 h-3 bg-amber-600 rounded-full loading-dot" style="animation-delay: 0s;"></span>
+                <span class="w-3 h-3 bg-amber-600 rounded-full loading-dot" style="animation-delay: 0.2s;"></span>
+                <span class="w-3 h-3 bg-amber-600 rounded-full loading-dot" style="animation-delay: 0.4s;"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 
+      CONTENEDOR PRINCIPAL (OCULTO INICIALMENTE)
+      - hidden para que el navegador no lo dibuje hasta que se quite la clase.
+      - opacity-0 para el fade-in controlado por JS.
+    -->
+    <div id="app-container" class="flex h-full opacity-0 transition-opacity duration-500 hidden">
         
         <!-- Overlay para cerrar la sidebar en móvil -->
         <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/20 z-30 hidden transition-opacity opacity-0 lg:hidden"></div>
@@ -270,7 +294,7 @@
                                         <p class="text-xl md:text-2xl opacity-90">
                                             "Donde el esfuerzo académico tiene su recompensa"
                                         </p>
-                                        <ul class="space-y-1 text-sm md:text-lg font-medium opacity-90 list-disc list-inside text-left mt-3">
+                                        <ul class="list-disc list-inside space-y-1 text-sm md:text-lg font-medium opacity-90 text-left mt-3">
                                             <li>Gestiona tu liquidez (Préstamos y Depósitos).</li>
                                             <li>Transfiere valor y paga servicios entre compañeros.</li>
                                             <li>Canjea recompensas por logros y buen comportamiento.</li>
@@ -436,23 +460,6 @@
                 | 
                 <a id="privacidad-btn" onclick="AppUI.showLegalModal('privacidad')" class="hover:text-amber-600 cursor-pointer mx-2">Acuerdo de Privacidad</a>
                 <p class="mt-1 text-slate-400">© 2025 Banco del Pincel Dorado | Desarrollado por Didac-Click Group.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Overlay de Carga - Sin cambios -->
-    <div id="loading-overlay" class="fixed inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-[10000] transition-opacity duration-300 opacity-0 pointer-events-none">
-        <div class="text-center">
-            <h1 class="text-5xl font-bold color-dorado-main mb-2">
-                Banco del Pincel Dorado
-            </h1>
-            <p class="text-lg text-slate-800 mb-6">
-                "Donde el esfuerzo académico tiene su recompensa"
-            </p>
-            <div class="flex justify-center items-center space-x-2">
-                <span class="w-3 h-3 bg-amber-600 rounded-full animate-pulse-dot" style="animation-delay: 0s;"></span>
-                <span class="w-3 h-3 bg-amber-600 rounded-full animate-pulse-dot" style="animation-delay: 0.2s;"></span>
-                <span class="w-3 h-3 bg-amber-600 rounded-full animate-pulse-dot" style="animation-delay: 0.4s;"></span>
             </div>
         </div>
     </div>
@@ -1120,10 +1127,10 @@
         </div>
     </div>
 
-    <!-- Modal de Alumno (Personalizado y Moderno) -->
+    <!-- MODAL DE ALUMNO (PERSONALIZADO Y COMPACTO) -->
     <div id="student-modal" class="fixed inset-0 bg-slate-900/75 flex items-center justify-center z-[1002] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <!-- AJUSTE: Ancho más compacto (max-w-md para parecer una tarjeta) -->
-        <div id="student-modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-md transform scale-95 transition-transform duration-300 border-2 border-amber-600 overflow-hidden">
+        <!-- AJUSTE: Ancho más compacto (max-w-sm) para el nuevo diseño -->
+        <div id="student-modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-sm transform scale-95 transition-transform duration-300 overflow-hidden">
             <!-- Contenido dinámico inyectado por JS (con el nuevo diseño de tarjeta personal) -->
         </div>
     </div>
