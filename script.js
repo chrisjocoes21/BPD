@@ -12,7 +12,7 @@ const AppConfig = {
     CACHE_DURATION: 300000,
     
     APP_STATUS: 'RC', 
-    APP_VERSION: 'v32.4 (Shimmer/Compact Card)', 
+    APP_VERSION: 'v32.4', 
     
     IMPUESTO_P2P_TASA: 0.01,        
     IMPUESTO_DEPOSITO_TASA: 0.0,    
