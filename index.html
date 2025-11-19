@@ -329,7 +329,7 @@
                                     </div>
                                     <!-- Botones de navegación -->
                                     <div class="flex justify-between mt-6 flex-shrink-0">
-                                        <button onclick="AppUI.goToHeroSlide(0)" class="hero-nav-btn flex-shrink-0 text-sm font-medium rounded-lg bg-white border border-slate-300 text-slate-600 hover:bg-slate-100 transition-colors">
+                                        <button onclick="AppUI.goToHeroSlide(1)" class="hero-nav-btn flex-shrink-0 text-sm font-medium rounded-lg bg-white border border-slate-300 text-slate-600 hover:bg-slate-100 transition-colors">
                                             &#8249; Inicio
                                         </button>
                                         <button onclick="AppUI.goToHeroSlide(2)" class="hero-nav-btn flex-shrink-0 text-sm font-medium rounded-lg bg-white border border-amber-600 text-amber-600 hover:bg-amber-50 transition-colors">
@@ -459,7 +459,13 @@
                 <a id="terminos-btn" onclick="AppUI.showLegalModal('terminos')" class="hover:text-amber-600 cursor-pointer mx-2">Términos y Condiciones</a> 
                 | 
                 <a id="privacidad-btn" onclick="AppUI.showLegalModal('privacidad')" class="hover:text-amber-600 cursor-pointer mx-2">Acuerdo de Privacidad</a>
-                <p class="mt-1 text-slate-400">© 2025 Banco del Pincel Dorado | Desarrollado por Didac-Click Group.</p>
+                
+                <!-- ENLACE AL PORTAFOLIO CON ANIMACIÓN DORADA -->
+                <div class="mt-2">
+                    <a href="https://chrisjocoes21.github.io/PORTAFOLIO/" target="_blank" class="gold-pulse-link font-medium">
+                        © 2025 Banco del Pincel Dorado | Desarrollado por Didac-Click Group.
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -980,7 +986,7 @@
     
     <!-- MODAL DE BONOS -->
     <div id="bonos-modal" class="fixed inset-0 bg-slate-900/75 flex items-center justify-center z-[1001] p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <div id="bonos-modal-dialog" class="bg-white rounded-lg shadow-xl full-width-modal-dialog transform scale-95 transition-transform duration-300 overflow-hidden border-2 border-amber-600">
+        <div class="bg-white rounded-lg shadow-xl full-width-modal-dialog transform scale-95 transition-transform duration-300 overflow-hidden border-2 border-amber-600">
             <div class="bg-slate-50 border-b border-slate-200">
                 <div class="flex justify-between items-center p-4">
                     <h2 class="text-lg font-semibold color-dorado-main">Canjear Bono</h2>
