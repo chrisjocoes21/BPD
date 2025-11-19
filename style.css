@@ -15,14 +15,56 @@ body {
     animation: shake 0.5s;
 }
 
-/* Animación de puntos de carga (para el indicador de estado) */
+/* =================================================================== */
+/* NUEVAS ANIMACIONES DE CARGA (MODERNO) */
+/* =================================================================== */
+
+/* 1. ANIMACIÓN DE SHIMMER (BRILLO DORADO HORIZONTAL) */
+/* Se aplica a .loading-shimmer-text */
+.loading-shimmer-text {
+    /* Base para el efecto: Recortar el degradado al texto */
+    background: linear-gradient(90deg, #d97706, #fcd34d, #d97706);
+    background-size: 200% 100%;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    
+    /* Animación del movimiento del degradado (el brillo) */
+    animation: shimmer-animation 2.5s infinite linear;
+}
+
+@keyframes shimmer-animation {
+    /* Empieza con el brillo fuera a la derecha (200% = el doble del ancho) */
+    0% { background-position: 100% 0; }
+    /* Se mueve de derecha a izquierda */
+    50% { background-position: -100% 0; }
+    /* Vuelve a su posición inicial para el loop */
+    100% { background-position: 100% 0; }
+}
+
+/* 2. ANIMACIÓN DE PUNTOS DE CARGA (MODERNA - Bounce Wave) */
+.loading-dot {
+    /* La animación es 'bounce' */
+    animation: dot-bounce 1s infinite alternate;
+}
+
+@keyframes dot-bounce {
+    0% {
+        transform: translateY(0);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translateY(-8px); /* Sube 8px */
+        opacity: 0.3;
+    }
+}
+
+/* Nota: Los delays se aplican en el HTML inline */
+
+/* Animación de puntos de carga (para el indicador de estado pequeño en el header) */
 @keyframes pulse-dot-animation {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.3; /* Hacemos el pulso más sutil */
-    }
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
 }
 .animate-pulse-dot {
     animation: pulse-dot-animation 1.4s infinite ease-in-out;
@@ -307,7 +349,7 @@ body {
 }
 
 /* =================================================================== */
-/* NUEVOS ESTILOS SOLICITADOS (Tarjetas Compactas, Estabilidad y Tarjeta Personal)  */
+/* ESTILOS DE UI (Tarjetas Compactas y Tarjeta Personal)  */
 /* =================================================================== */
 
 /* Estabilidad: Altura fija para mensajes de estado y error en modales de transacción */
@@ -344,38 +386,31 @@ body {
     @apply px-3 py-1 text-xs;
 }
 
-/* === CORRECCIÓN: TARJETA DE ALUMNO LIGHT (BANCARIA) === */
+/* === TARJETA DE ALUMNO (NUEVO DISEÑO COMPACTO) === */
 .personal-student-card {
-    /* Fondo blanco limpio con un degradado muy sutil dorado en la parte superior o borde */
+    /* Mantenemos el estilo de borde para el modal content para la tarjeta */
     background-color: #ffffff;
-    border: 1px solid #e2e8f0; /* slate-200 */
-    border-top: 4px solid #d97706; /* amber-600 - detalle bancario */
-    color: #1f2937; /* slate-800 */
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    color: #1f2937; 
+    /* Quitamos el overflow hidden para el modal, lo maneja el modal-content */
+    @apply rounded-xl shadow-2xl;
 }
 
-.personal-student-card .stat-box {
-    /* Cajas de estadísticas limpias */
-    background-color: #f8fafc; /* slate-50 */
-    border: 1px solid #cbd5e1; /* slate-300 */
-    @apply p-3 rounded-lg flex flex-col justify-center shadow-sm transition-shadow;
-    min-height: 70px; /* Un poco más compacto */
+/* Estilos de las secciones dentro de la tarjeta compacta (definidas para el nuevo HTML) */
+.card-section-compact {
+    @apply p-4 border-l-4 border-amber-600 bg-white;
 }
-.personal-student-card .stat-box:hover {
-    background-color: #f1f5f9; /* slate-100 */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+.card-stats-grid {
+     @apply grid grid-cols-2 gap-3 mt-3;
 }
-
-.personal-student-card .stat-label {
-    /* Etiqueta pequeña y gris */
-    @apply text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1;
+.stat-box-compact {
+    @apply p-3 bg-slate-50 border border-slate-200 rounded-lg shadow-inner text-center;
 }
-
-.personal-student-card .stat-value {
-    /* Valor principal grande y oscuro */
-    @apply text-xl font-bold text-slate-800;
+.stat-label-compact {
+    @apply text-xs text-slate-500 uppercase font-bold tracking-wide;
 }
-
+.stat-value-compact {
+    @apply text-lg font-extrabold text-slate-800;
+}
 /* Estilos para el Reporte de Confirmación/Recibo */
 .confirmation-report-card {
     @apply bg-white border border-slate-200 p-8 rounded-xl shadow-2xl w-full max-w-lg mx-auto;
