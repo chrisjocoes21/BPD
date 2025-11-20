@@ -52,7 +52,15 @@ const AppState = {
     selectedGrupo: null, 
     isSidebarOpen: false, 
     sidebarTimer: null, 
-    transaccionSelectAll: {}, 
+    
+    // ===================================================================
+    // FIX: Variables de estado para preservar la selección de Transacción Múltiple
+    // ===================================================================
+    transaccionSelectedGroups: new Set(), // Almacena nombres de grupos seleccionados
+    transaccionSelectedUsers: new Set(),  // Almacena nombres de usuarios seleccionados
+    transaccionSelectAll: {},             // Almacena el estado del botón "Todos/Ninguno" por grupo
+    // ===================================================================
+    
     lastKnownGroupsHash: '',
     
     currentSearch: {
@@ -239,6 +247,8 @@ const AppData = {
             activeGroups.push(ciclaGroup);
         }
 
+        AppState.datosActuales = activeGroups; // Almacenar antes de renderizar
+        
         AppUI.actualizarSidebar(activeGroups);
         
         if (AppState.selectedGrupo) {
@@ -259,7 +269,13 @@ const AppData = {
         const isBonoModalOpen = document.getElementById('bonos-modal').classList.contains('opacity-0') === false;
         const isTiendaModalOpen = document.getElementById('tienda-modal').classList.contains('opacity-0') === false;
         const isTransaccionesCombinadasOpen = document.getElementById('transacciones-combinadas-modal').classList.contains('opacity-0') === false;
-        const isReportVisible = document.getElementById('transacciones-combinadas-report-container')?.classList.contains('hidden') === false;
+        const isAdminModalOpen = document.getElementById('transaccion-modal').classList.contains('opacity-0') === false;
+
+        // Se usa una bandera para saber si el reporte de éxito está visible, lo cual no debe regenerar los formularios
+        const isReportVisible = document.getElementById('transacciones-combinadas-report-container')?.classList.contains('hidden') === false ||
+                                document.getElementById('bono-report-container')?.classList.contains('hidden') === false ||
+                                document.getElementById('tienda-report-container')?.classList.contains('hidden') === false ||
+                                document.getElementById('transaccion-admin-report-container')?.classList.contains('hidden') === false;
         
         // Si los modales están abiertos y el reporte NO está visible, forzar el renderizado de la lista
         if (isBonoModalOpen && !isReportVisible) AppUI.populateBonoList();
@@ -272,21 +288,22 @@ const AppData = {
         }
         
         // Actualización de Modales de Admin
-        if (document.getElementById('transaccion-modal').classList.contains('opacity-0') === false) {
+        if (isAdminModalOpen && !isReportVisible) {
             const activeTab = document.querySelector('#transaccion-modal .tab-btn.active-tab');
             const tabId = activeTab ? activeTab.dataset.tab : '';
             
-            if (tabId === 'bonos_admin') {
+            if (tabId === 'transaccion') {
+                 // FIX: Esto es CRÍTICO, llama a las funciones de renderizado que PRESERVAN el estado
+                 AppUI.populateGruposTransaccion();
+                 AppUI.populateUsuariosTransaccion();
+            } else if (tabId === 'bonos_admin') {
                 AppUI.populateBonoAdminList();
             } else if (tabId === 'tienda_gestion' || tabId === 'tienda_inventario') {
                 AppUI.populateTiendaAdminList();
                 AppUI.updateTiendaAdminStatusLabel();
-            } else if (tabId === 'transaccion') {
-                 AppUI.populateGruposTransaccion();
-            }
+            } 
         }
 
-        AppState.datosActuales = activeGroups;
     }
 };
 
@@ -990,6 +1007,10 @@ const AppUI = {
             document.getElementById('transaccion-cantidad-input').value = "";
             document.getElementById('transaccion-calculo-impuesto').textContent = ""; 
             AppState.transaccionSelectAll = {}; 
+            // FIX: Limpiar el nuevo estado de transacciones al cerrar el modal
+            AppState.transaccionSelectedGroups.clear();
+            AppState.transaccionSelectedUsers.clear();
+            
             AppTransacciones.setLoadingState(document.getElementById('transaccion-submit-btn'), document.getElementById('transaccion-btn-text'), false, 'Realizar Transacción');
             AppUI.clearBonoAdminForm();
             document.getElementById('bono-admin-status-msg').textContent = "";
@@ -1074,7 +1095,9 @@ const AppUI = {
         
         if (tabId === 'transaccion') {
             if (AppState.datosActuales) {
+                // FIX: Llama al renderizado que preserva el estado
                 AppUI.populateGruposTransaccion();
+                AppUI.populateUsuariosTransaccion();
             } else {
                 document.getElementById('transaccion-lista-grupos-container').innerHTML = '<span class="text-sm text-slate-500 p-2">Cargando datos base...</span>';
                 document.getElementById('transaccion-lista-usuarios-container').innerHTML = '<span class="text-sm text-slate-500 p-2">Espere...</span>';
@@ -1844,6 +1867,13 @@ const AppUI = {
 
     populateGruposTransaccion: function() {
         const grupoContainer = document.getElementById('transaccion-lista-grupos-container');
+        
+        // --- FIX: Capturar el estado de selección de grupos actual (sobrevive a refrescos) ---
+        const currentSelectedGroups = Array.from(grupoContainer.querySelectorAll('input[type="checkbox"]:checked'))
+            .map(cb => cb.value);
+        AppState.transaccionSelectedGroups = new Set(currentSelectedGroups);
+        // --- FIN FIX ---
+        
         grupoContainer.innerHTML = ''; 
 
         // Filtrar grupos activos (excluyendo el Cicla)
@@ -1861,6 +1891,12 @@ const AppUI = {
             input.value = grupo.nombre;
             input.className = "h-4 w-4 text-amber-600 border-slate-300 rounded focus:ring-amber-600 bg-white group-checkbox";
             input.addEventListener('change', AppUI.populateUsuariosTransaccion);
+            
+            // --- FIX: Restaurar la selección de grupos ---
+            if (AppState.transaccionSelectedGroups.has(grupo.nombre)) {
+                input.checked = true;
+            }
+            // --- FIN FIX ---
 
             const label = document.createElement('label');
             label.htmlFor = input.id;
@@ -1872,8 +1908,9 @@ const AppUI = {
             grupoContainer.appendChild(div);
         });
 
-        document.getElementById('transaccion-lista-usuarios-container').innerHTML = '<span class="text-sm text-slate-500 p-2">Seleccione un grupo...</span>';
-        AppState.transaccionSelectAll = {}; 
+        
+        // Lógica para repoblar usuarios inmediatamente si hay grupos seleccionados
+        AppUI.populateUsuariosTransaccion();
         
         document.getElementById('tesoreria-saldo-transaccion').textContent = `(Fondos disponibles: ${AppFormat.formatNumber(AppState.datosAdicionales.saldoTesoreria)} ℙ)`;
     },
@@ -1883,10 +1920,20 @@ const AppUI = {
         const selectedGroupNames = Array.from(checkedGroups).map(cb => cb.value);
         
         const listaContainer = document.getElementById('transaccion-lista-usuarios-container');
+        
+        // --- FIX: Capturar el estado de selección de usuarios actual ---
+        const currentSelectedUsers = Array.from(listaContainer.querySelectorAll('input[type="checkbox"]:checked'))
+            .map(cb => cb.value);
+        AppState.transaccionSelectedUsers = new Set(currentSelectedUsers);
+        // --- FIN FIX ---
+
         listaContainer.innerHTML = ''; 
 
         if (selectedGroupNames.length === 0) {
             listaContainer.innerHTML = '<span class="text-sm text-slate-500 p-2">Seleccione un grupo...</span>';
+            // Al deseleccionar todos los grupos, limpiar el set de usuarios
+            AppState.transaccionSelectedUsers.clear();
+            AppState.transaccionSelectAll = {};
             return;
         }
         
@@ -1902,15 +1949,10 @@ const AppUI = {
                 headerDiv.innerHTML = `<span class="text-sm font-semibold text-slate-700">${grupo.nombre}</span>`;
                 
                 const btnSelectAll = document.createElement('button');
-                btnSelectAll.textContent = "Todos";
+                btnSelectAll.textContent = AppState.transaccionSelectAll[grupo.nombre] ? "Ninguno" : "Todos";
                 btnSelectAll.dataset.grupo = grupo.nombre; 
                 btnSelectAll.className = "text-xs font-medium text-amber-600 hover:text-amber-800 select-all-users-btn";
-                // Inicializar estado de selección
-                if (AppState.transaccionSelectAll[grupo.nombre] === undefined) {
-                    AppState.transaccionSelectAll[grupo.nombre] = false;
-                }
-                btnSelectAll.textContent = AppState.transaccionSelectAll[grupo.nombre] ? "Ninguno" : "Todos";
-
+                
                 btnSelectAll.addEventListener('click', AppUI.toggleSelectAllUsuarios);
                 
                 headerDiv.appendChild(btnSelectAll);
@@ -1930,10 +1972,23 @@ const AppUI = {
                     input.className = "h-4 w-4 text-amber-600 border-slate-300 rounded focus:ring-amber-600 bg-white user-checkbox";
                     input.dataset.checkboxGrupo = grupo.nombre; 
                     
-                    // Aplicar estado de selección si ya está marcado como "Todos"
-                    if (AppState.transaccionSelectAll[grupo.nombre]) {
+                    // --- FIX: Restaurar la selección de usuarios y actualizar Set en vivo ---
+                    if (AppState.transaccionSelectedUsers.has(usuario.nombre)) {
                         input.checked = true;
                     }
+
+                    input.addEventListener('change', (e) => {
+                         if (e.target.checked) {
+                             AppState.transaccionSelectedUsers.add(usuario.nombre);
+                         } else {
+                             AppState.transaccionSelectedUsers.delete(usuario.nombre);
+                             // Si un usuario se desmarca manualmente, desactiva el SelectAll para ese grupo
+                             AppState.transaccionSelectAll[grupo.nombre] = false;
+                             const selectAllBtn = listaContainer.querySelector(`.select-all-users-btn[data-grupo="${grupo.nombre}"]`);
+                             if (selectAllBtn) selectAllBtn.textContent = "Todos";
+                         }
+                    });
+                    // --- FIN FIX ---
 
                     const label = document.createElement('label');
                     label.htmlFor = input.id;
@@ -1964,10 +2019,24 @@ const AppUI = {
 
         const checkboxes = document.querySelectorAll(`#transaccion-lista-usuarios-container input[data-checkbox-grupo="${grupoNombre}"]`);
         
+        const grupoData = AppState.datosActuales.find(g => g.nombre === grupoNombre);
+
         checkboxes.forEach(cb => {
             cb.checked = isChecked;
         });
 
+        // --- FIX: Sincronizar AppState.transaccionSelectedUsers ---
+        if (grupoData && grupoData.usuarios) {
+            grupoData.usuarios.forEach(usuario => {
+                if (isChecked) {
+                    AppState.transaccionSelectedUsers.add(usuario.nombre);
+                } else {
+                    AppState.transaccionSelectedUsers.delete(usuario.nombre);
+                }
+            });
+        }
+        // --- FIN FIX ---
+        
         btn.textContent = isChecked ? "Ninguno" : "Todos";
     },
 
@@ -2647,20 +2716,27 @@ const AppTransacciones = {
             errorValidacion = "La cantidad debe ser un número distinto de cero.";
         }
 
-        const groupedSelections = {};
-        const checkedUsers = document.querySelectorAll('#transaccion-lista-usuarios-container input[type="checkbox"]:checked');
+        // --- FIX: Obtener usuarios seleccionados desde el estado ---
+        const selectedUsersArray = Array.from(AppState.transaccionSelectedUsers);
+        const checkedUsersCount = selectedUsersArray.length;
+        // --- FIN FIX ---
         
-        if (!errorValidacion && checkedUsers.length === 0) {
-            errorValidacion = "Debe seleccionar al menos un usuario.";
-        } else {
-             checkedUsers.forEach(cb => {
-                const nombre = cb.value;
-                const grupo = cb.dataset.grupo; 
+        const groupedSelections = {};
+        
+        // Re-agrupar los usuarios seleccionados por su grupo
+        selectedUsersArray.forEach(nombre => {
+            const student = AppState.datosAdicionales.allStudents.find(s => s.nombre === nombre);
+            if (student) {
+                const grupo = student.grupoNombre;
                 if (!groupedSelections[grupo]) {
                     groupedSelections[grupo] = [];
                 }
                 groupedSelections[grupo].push(nombre);
-            });
+            }
+        });
+        
+        if (!errorValidacion && checkedUsersCount === 0) {
+            errorValidacion = "Debe seleccionar al menos un usuario.";
         }
         
         const transacciones = Object.keys(groupedSelections).map(grupo => {
@@ -2673,7 +2749,7 @@ const AppTransacciones = {
         }
 
         AppTransacciones.setLoadingState(submitBtn, btnText, true, 'Procesando...');
-        AppTransacciones.setLoading(statusMsg, `Procesando ${checkedUsers.length} transacción(es)...`);
+        AppTransacciones.setLoading(statusMsg, `Procesando ${checkedUsersCount} transacción(es)...`);
         
         try {
             const payload = {
@@ -2696,6 +2772,12 @@ const AppTransacciones = {
             
             cantidadInput.value = "";
             document.getElementById('transaccion-calculo-impuesto').textContent = "";
+            
+            // --- FIX: Limpiar el estado de selección después de una transacción exitosa ---
+            AppState.transaccionSelectedGroups.clear();
+            AppState.transaccionSelectedUsers.clear();
+            AppState.transaccionSelectAll = {};
+            // --- FIN FIX ---
             
             AppData.cargarDatos(false); 
             AppUI.populateGruposTransaccion(); 
