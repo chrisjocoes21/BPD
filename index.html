@@ -518,38 +518,50 @@
                 <!-- Contenedor que alterna entre Formulario y Reporte de Confirmación -->
                 <div id="transacciones-combinadas-step-container" class="h-full overflow-y-auto space-y-4 no-scrollbar"> 
                 
-                    <!-- PESTAÑA 1: TRANSFERENCIA P2P -->
+                    <!-- PESTAÑA 1: TRANSFERENCIA P2P (MODIFICADA PARA HORIZONTAL) -->
                     <div id="tab-p2p_transfer" class="tab-content"> 
-                        <div class="grid grid-cols-1 gap-6 max-w-lg mx-auto">
-                             <h3 class="text-base font-semibold text-slate-800">Transferencia de Fondos entre Cuentas</h3>
+                        <!-- Contenedor modificado: ya no usa max-w-lg, usa grid-cols-2 en desktop -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 w-full">
+                             <h3 class="text-base font-semibold text-slate-800 md:col-span-2">Transferencia de Fondos entre Cuentas</h3>
                              
-                             <div class="relative">
-                                <label for="p2p-search-origen" class="block text-sm font-medium text-slate-700 mb-1">Tu Nombre (Remitente)</label>
-                                <input type="text" id="p2p-search-origen" placeholder="Busca tu nombre..." class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:bg-amber-50/50">
-                                <div id="p2p-origen-results" class="search-results-container hidden absolute z-20 w-full bg-white border border-slate-300 rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto"></div>
-                            </div>
-                            
-                            <div>
-                                <label for="p2p-clave" class="block text-sm font-medium text-slate-700 mb-1">Tu Clave P2P</label>
-                                <input type="password" id="p2p-clave" placeholder="Ingresa tu clave de 5 dígitos" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:bg-amber-50/50">
-                            </div>
-                            
-                            <div class="relative">
-                                <label for="p2p-search-destino" class="block text-sm font-medium text-slate-700 mb-1">Enviar a (Destinatario)</label>
-                                <input type="text" id="p2p-search-destino" placeholder="Busca el nombre del destinatario..." class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:bg-amber-50/50">
-                                <div id="p2p-destino-results" class="search-results-container hidden absolute z-10 w-full bg-white border border-slate-300 rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto"></div>
-                            </div>
-                            
-                            <div>
-                                <label for="p2p-cantidad" class="block text-sm font-medium text-slate-700 mb-1">Cantidad a Enviar</label>
-                                <input type="number" id="p2p-cantidad" placeholder="Ej: 1000" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:bg-amber-50/50">
-                                <div id="p2p-calculo-impuesto" class="text-xs text-center text-slate-700 mt-1 h-5"></div>
-                            </div>
+                             <!-- Columna Izquierda: Remitente y Clave P2P -->
+                             <div class="space-y-6">
+                                 <!-- Tu Nombre (Remitente) -->
+                                 <div class="relative">
+                                    <label for="p2p-search-origen" class="block text-sm font-medium text-slate-700 mb-1">Tu Nombre (Remitente)</label>
+                                    <input type="text" id="p2p-search-origen" placeholder="Busca tu nombre..." class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:bg-amber-50/50">
+                                    <div id="p2p-origen-results" class="search-results-container hidden absolute z-20 w-full bg-white border border-slate-300 rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto"></div>
+                                </div>
+                                
+                                <!-- Tu Clave P2P -->
+                                <div>
+                                    <label for="p2p-clave" class="block text-sm font-medium text-slate-700 mb-1">Tu Clave P2P</label>
+                                    <input type="password" id="p2p-clave" placeholder="Ingresa tu clave de 5 dígitos" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:bg-amber-50/50">
+                                </div>
+                             </div>
+                             
+                             <!-- Columna Derecha: Destinatario y Cantidad -->
+                             <div class="space-y-6">
+                                 <!-- Enviar a (Destinatario) -->
+                                 <div class="relative">
+                                    <label for="p2p-search-destino" class="block text-sm font-medium text-slate-700 mb-1">Enviar a (Destinatario)</label>
+                                    <input type="text" id="p2p-search-destino" placeholder="Busca el nombre del destinatario..." class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:bg-amber-50/50">
+                                    <div id="p2p-destino-results" class="search-results-container hidden absolute z-10 w-full bg-white border border-slate-300 rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto"></div>
+                                </div>
+                                
+                                <!-- Cantidad a Enviar -->
+                                <div>
+                                    <label for="p2p-cantidad" class="block text-sm font-medium text-slate-700 mb-1">Cantidad a Enviar</label>
+                                    <input type="number" id="p2p-cantidad" placeholder="Ej: 1000" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:bg-amber-50/50">
+                                    <div id="p2p-calculo-impuesto" class="text-xs text-center text-slate-700 mt-1 h-5"></div>
+                                </div>
+                             </div>
                         </div>
                         
                         <!-- AJUSTE: Altura fija h-10 para el mensaje de estado de P2P -->
                         <div id="p2p-status-msg" class="text-sm text-center font-medium px-6 pt-4 status-msg-fixed-height"></div>
                         
+                        <!-- Botón de Acción, centrado y debajo de las dos columnas -->
                         <div class="mt-4 flex justify-center">
                             <button id="p2p-submit-btn" class="px-8 py-2 bg-white border border-amber-600 text-amber-600 text-sm font-medium rounded-lg hover:bg-amber-50 transition-colors shadow-sm min-w-[200px]">
                                 <span id="p2p-btn-text">Realizar Transferencia</span>
