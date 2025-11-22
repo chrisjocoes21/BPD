@@ -93,17 +93,25 @@ const AppState = {
 const AppAuth = {
     verificarClave: function() {
         const claveInput = document.getElementById('clave-input');
+        
+        // CORRECCIÓN: Eliminar las clases de error/shake previas
+        claveInput.classList.remove('shake', 'border-red-500');
+
         if (claveInput.value === AppConfig.CLAVE_MAESTRA) {
             AppUI.hideModal('gestion-modal');
             AppUI.showTransaccionModal('transaccion'); 
             claveInput.value = '';
-            claveInput.classList.remove('shake', 'border-red-500');
+            
         } else {
-            claveInput.classList.add('shake', 'border-red-500'); 
+            // APLICAR NUEVA CLASE: .shake ahora aplica solo el efecto visual de color
+            claveInput.classList.add('shake'); 
+            // CLASE ELIMINADA: Ya no se añade border-red-500 para dejar que .shake (dorado) haga el trabajo
+            
             claveInput.focus();
             setTimeout(() => {
+                // Eliminar el efecto visual después de un breve periodo
                 claveInput.classList.remove('shake');
-            }, 500);
+            }, 1000); // 1 segundo de duración del efecto visual
         }
     }
 };
@@ -822,6 +830,10 @@ const AppUI = {
             document.getElementById('p2p-clave').value = "";
             document.getElementById('p2p-cantidad').value = "";
             AppUI.updateP2PCalculoImpuesto();
+            
+            // CORRECCIÓN: Limpiar el efecto visual de la clave al cambiar de pestaña
+            document.getElementById('p2p-clave').classList.remove('shake'); 
+            
             document.getElementById('p2p-clave').focus();
         } else if (tabId === 'prestamo_flex') {
             AppUI.resetFlexibleForm('prestamo');
@@ -990,6 +1002,11 @@ const AppUI = {
                  AppUI.toggleSidebar();
              }
         }
+        
+        // CORRECCIÓN: Limpiar clase .shake al abrir el modal de gestión para resetear el estado
+        if (modalId === 'gestion-modal') {
+             document.getElementById('clave-input').classList.remove('shake');
+        }
     },
 
     hideModal: function(modalId) {
@@ -1027,6 +1044,10 @@ const AppUI = {
             document.getElementById('p2p-clave').value = "";
             document.getElementById('p2p-cantidad').value = "";
             document.getElementById('p2p-calculo-impuesto').textContent = "";
+            
+            // CORRECCIÓN: Limpiar la clase .shake en la clave P2P al cerrar el modal de transacciones
+            document.getElementById('p2p-clave').classList.remove('shake'); 
+            
             AppTransacciones.setLoadingState(document.getElementById('p2p-submit-btn'), document.getElementById('p2p-btn-text'), false, 'Realizar Transferencia');
             
             AppUI.resetFlexibleForm('prestamo');
@@ -1049,6 +1070,7 @@ const AppUI = {
         
         if (modalId === 'gestion-modal') {
              document.getElementById('clave-input').value = "";
+             // CORRECCIÓN: Eliminar ambas clases para asegurar que se borre el estilo de alerta
              document.getElementById('clave-input').classList.remove('shake', 'border-red-500');
         }
         
@@ -1062,6 +1084,9 @@ const AppUI = {
         AppUI.resetSearchInput(`${type}Alumno`);
         document.getElementById(`${type}-clave-p2p`).value = "";
         
+        // CORRECCIÓN: Limpiar la clase .shake de las claves P2P en préstamos/depósitos
+        document.getElementById(`${type}-clave-p2p`).classList.remove('shake');
+
         const montoInput = document.getElementById(`${type}-monto-input`);
         const plazoInput = document.getElementById(`${type}-plazo-input`);
         
@@ -1142,6 +1167,9 @@ const AppUI = {
             if (results) {
                  AppUI.handleStudentSearch(query, inputId, resultsId, stateKey, onSelectCallback);
             }
+            
+            // CORRECCIÓN: Limpiar clase .shake de campos de búsqueda al escribir
+            input.classList.remove('shake');
         });
         
         if (results) {
@@ -1155,6 +1183,8 @@ const AppUI = {
                  if (input.value) {
                      AppUI.handleStudentSearch(input.value, inputId, resultsId, stateKey, onSelectCallback);
                  }
+                 // CORRECCIÓN: Limpiar clase .shake de campos de búsqueda al hacer focus
+                 input.classList.remove('shake');
             });
         }
     },
@@ -1197,6 +1227,9 @@ const AppUI = {
                     AppState.currentSearch[stateKey].info = student;
                     resultsContainer.classList.add('hidden');
                     onSelectCallback(student);
+                    
+                    // CORRECCIÓN: Limpiar clase .shake del input al seleccionar un resultado
+                    input.classList.remove('shake');
                 };
                 resultsContainer.appendChild(div);
             });
@@ -1223,6 +1256,8 @@ const AppUI = {
             const input = document.getElementById(inputId);
             if (input) {
                 input.value = "";
+                // CORRECCIÓN: Limpiar clase .shake al resetear el input
+                input.classList.remove('shake');
                 const resultsId = input.dataset.resultsId;
                 const results = document.getElementById(resultsId || `${inputId}-results`);
                 if (results) results.classList.add('hidden');
@@ -1326,6 +1361,9 @@ const AppUI = {
         const cantidadInput = document.getElementById('p2p-cantidad');
         const calculoMsg = document.getElementById('p2p-calculo-impuesto');
         const cantidad = parseInt(cantidadInput.value, 10);
+        
+        // CORRECCIÓN: Limpiar clase .shake del input de cantidad al escribir
+        cantidadInput.classList.remove('shake');
 
         if (isNaN(cantidad) || cantidad <= 0) {
             calculoMsg.textContent = "";
@@ -1354,6 +1392,10 @@ const AppUI = {
         document.getElementById('bono-status-msg').textContent = "";
         document.getElementById('bono-step2-status-msg').textContent = "";
         document.getElementById('bono-clave-p2p-step2').value = "";
+        
+        // CORRECCIÓN: Limpiar clase .shake de la clave P2P de bonos al volver al paso 1
+        document.getElementById('bono-clave-p2p-step2').classList.remove('shake');
+        
         AppUI.resetSearchInput('bonoAlumno');
         AppTransacciones.setLoadingState(document.getElementById('bono-submit-step2-btn'), document.getElementById('bono-btn-text-step2'), false, 'Confirmar Canje');
     },
@@ -1542,6 +1584,10 @@ const AppUI = {
         document.getElementById('tienda-status-msg').textContent = "";
         document.getElementById('tienda-step2-status-msg').textContent = "";
         document.getElementById('tienda-clave-p2p-step2').value = "";
+        
+        // CORRECCIÓN: Limpiar clase .shake de la clave P2P de tienda al volver al paso 1
+        document.getElementById('tienda-clave-p2p-step2').classList.remove('shake');
+        
         document.getElementById('tienda-search-alumno-step2').value = AppState.currentSearch.tiendaAlumno.info?.nombre || '';
         AppTransacciones.setLoadingState(document.getElementById('tienda-submit-step2-btn'), document.getElementById('tienda-btn-text-step2'), false, 'Confirmar Compra');
         
@@ -2573,9 +2619,10 @@ const AppTransacciones = {
         const btn = document.getElementById('prestamo-submit-btn');
         const statusMsg = document.getElementById('prestamo-status-msg');
         const btnText = document.getElementById('prestamo-btn-text');
+        const claveInput = document.getElementById('prestamo-clave-p2p');
 
         const alumnoNombre = document.getElementById('prestamo-search-alumno').value.trim();
-        const claveP2P = document.getElementById('prestamo-clave-p2p').value;
+        const claveP2P = claveInput.value;
         const montoSolicitado = parseInt(document.getElementById('prestamo-monto-input').value);
         const plazoSolicitado = parseInt(document.getElementById('prestamo-plazo-input').value);
 
@@ -2585,8 +2632,10 @@ const AppTransacciones = {
         
         if (!student || student.nombre !== alumnoNombre) {
             errorValidacion = 'Debe seleccionar su nombre de la lista de búsqueda.';
+            document.getElementById('prestamo-search-alumno').classList.add('shake');
         } else if (!claveP2P || claveP2P.length !== 5) {
             errorValidacion = 'La Clave P2P debe tener 5 dígitos.';
+            claveInput.classList.add('shake');
         } else if (montoSolicitado <= 0 || plazoSolicitado <= 0) {
             errorValidacion = 'El monto y el plazo deben ser válidos.';
         } else {
@@ -2594,6 +2643,14 @@ const AppTransacciones = {
             if (!elegibilidad.isEligible) errorValidacion = `No elegible: ${elegibilidad.message}`;
         }
         
+        // CORRECCIÓN: Si hay error de clave, quitamos el efecto visual después de 1 segundo
+        if (claveInput.classList.contains('shake')) {
+             setTimeout(() => claveInput.classList.remove('shake'), 1000);
+        }
+        if (document.getElementById('prestamo-search-alumno').classList.contains('shake')) {
+             setTimeout(() => document.getElementById('prestamo-search-alumno').classList.remove('shake'), 1000);
+        }
+
 
         if (errorValidacion) {
             AppTransacciones.setError(statusMsg, errorValidacion);
@@ -2640,9 +2697,11 @@ const AppTransacciones = {
         const btn = document.getElementById('deposito-submit-btn');
         const statusMsg = document.getElementById('deposito-status-msg');
         const btnText = document.getElementById('deposito-btn-text');
+        const claveInput = document.getElementById('deposito-clave-p2p');
+
 
         const alumnoNombre = document.getElementById('deposito-search-alumno').value.trim();
-        const claveP2P = document.getElementById('deposito-clave-p2p').value;
+        const claveP2P = claveInput.value;
         const montoADepositar = parseInt(document.getElementById('deposito-monto-input').value);
         const plazoEnDias = parseInt(document.getElementById('deposito-plazo-input').value);
 
@@ -2652,8 +2711,10 @@ const AppTransacciones = {
         
         if (!student || student.nombre !== alumnoNombre) {
             errorValidacion = 'Debe seleccionar su nombre de la lista de búsqueda.';
+            document.getElementById('deposito-search-alumno').classList.add('shake');
         } else if (!claveP2P || claveP2P.length !== 5) {
             errorValidacion = 'La Clave P2P debe tener 5 dígitos.';
+            claveInput.classList.add('shake');
         } else if (montoADepositar <= 0 || plazoEnDias <= 0) {
             errorValidacion = 'El monto y el plazo deben ser válidos.';
         } else {
@@ -2661,6 +2722,14 @@ const AppTransacciones = {
             if (!elegibilidad.isEligible) errorValidacion = `No elegible: ${elegibilidad.message}`;
         }
         
+        // CORRECCIÓN: Si hay error de clave, quitamos el efecto visual después de 1 segundo
+        if (claveInput.classList.contains('shake')) {
+             setTimeout(() => claveInput.classList.remove('shake'), 1000);
+        }
+        if (document.getElementById('deposito-search-alumno').classList.contains('shake')) {
+             setTimeout(() => document.getElementById('deposito-search-alumno').classList.remove('shake'), 1000);
+        }
+
 
         if (errorValidacion) {
             AppTransacciones.setError(statusMsg, errorValidacion);
@@ -2714,7 +2783,13 @@ const AppTransacciones = {
         let errorValidacion = "";
         if (isNaN(pinceles) || pinceles === 0) {
             errorValidacion = "La cantidad debe ser un número distinto de cero.";
+            cantidadInput.classList.add('shake');
+        } else {
+             cantidadInput.classList.remove('shake');
         }
+        
+        setTimeout(() => cantidadInput.classList.remove('shake'), 1000);
+
 
         // --- FIX: Obtener usuarios seleccionados desde el estado ---
         const selectedUsersArray = Array.from(AppState.transaccionSelectedUsers);
@@ -2795,26 +2870,56 @@ const AppTransacciones = {
         const submitBtn = document.getElementById('p2p-submit-btn');
         const btnText = document.getElementById('p2p-btn-text');
         
+        const origenInput = document.getElementById('p2p-search-origen');
+        const claveInput = document.getElementById('p2p-clave');
+        const destinoInput = document.getElementById('p2p-search-destino');
+        const cantidadInput = document.getElementById('p2p-cantidad');
+
         const nombreOrigen = AppState.currentSearch.p2pOrigen.selected;
         const nombreDestino = AppState.currentSearch.p2pDestino.selected;
-        const claveP2P = document.getElementById('p2p-clave').value;
-        const cantidad = parseInt(document.getElementById('p2p-cantidad').value, 10);
+        const claveP2P = claveInput.value;
+        const cantidad = parseInt(cantidadInput.value, 10);
         
         const estudianteOrigen = AppState.currentSearch.p2pOrigen.info;
 
         let errorValidacion = "";
+        
+        // Limpiar estilos de error previos
+        origenInput.classList.remove('shake');
+        claveInput.classList.remove('shake');
+        destinoInput.classList.remove('shake');
+        cantidadInput.classList.remove('shake');
+        
         if (!nombreOrigen) {
             errorValidacion = "Debe seleccionar su nombre (Remitente) de la lista.";
-        } else if (!claveP2P) {
+            origenInput.classList.add('shake');
+        } 
+        if (!claveP2P) {
             errorValidacion = "Debe ingresar su Clave P2P.";
-        } else if (!nombreDestino) {
+            claveInput.classList.add('shake');
+        } 
+        if (!nombreDestino) {
             errorValidacion = "Debe seleccionar un Destinatario de la lista.";
-        } else if (isNaN(cantidad) || cantidad <= 0) {
+            destinoInput.classList.add('shake');
+        } 
+        if (isNaN(cantidad) || cantidad <= 0) {
             errorValidacion = "La cantidad debe ser un número positivo.";
+            cantidadInput.classList.add('shake');
         } else if (nombreOrigen === nombreDestino) {
             errorValidacion = "No puedes enviarte pinceles a ti mismo.";
+            origenInput.classList.add('shake');
+            destinoInput.classList.add('shake');
         }
         
+        // CORRECCIÓN: Remover las clases shake después de 1 segundo
+        setTimeout(() => {
+            origenInput.classList.remove('shake');
+            claveInput.classList.remove('shake');
+            destinoInput.classList.remove('shake');
+            cantidadInput.classList.remove('shake');
+        }, 1000);
+
+
         if (errorValidacion) {
             AppTransacciones.setError(statusMsg, errorValidacion);
             return;
@@ -2895,11 +3000,12 @@ const AppTransacciones = {
         const statusMsg = document.getElementById('bono-step2-status-msg');
         const submitBtn = document.getElementById('bono-submit-step2-btn');
         const btnText = document.getElementById('bono-btn-text-step2');
+        const claveInput = document.getElementById('bono-clave-p2p-step2');
         
         AppTransacciones.setLoadingState(submitBtn, btnText, true, 'Canjeando...');
 
         const alumnoNombre = document.getElementById('bono-search-alumno-step2').value.trim();
-        const claveP2P = document.getElementById('bono-clave-p2p-step2').value;
+        const claveP2P = claveInput.value;
         const claveBono = document.getElementById('bono-clave-input-step2').value.toUpperCase();
 
         const bono = AppState.bonos.disponibles.find(b => b.clave === claveBono);
@@ -2907,10 +3013,17 @@ const AppTransacciones = {
 
 
         let errorValidacion = "";
+        
+        // Limpiar estilos de error previos
+        claveInput.classList.remove('shake');
+        document.getElementById('bono-search-alumno-step2').classList.remove('shake');
+
         if (!alumnoNombre || !student || student.nombre !== alumnoNombre) {
             errorValidacion = "Alumno no encontrado. Por favor, seleccione su nombre de la lista.";
+            document.getElementById('bono-search-alumno-step2').classList.add('shake');
         } else if (!claveP2P) {
             errorValidacion = "Debe ingresar su Clave P2P.";
+            claveInput.classList.add('shake');
         } else if (!claveBono || !bono) {
             errorValidacion = "Error interno: Bono no seleccionado.";
         } else {
@@ -2923,6 +3036,14 @@ const AppTransacciones = {
             if (bono.expiracion_fecha && new Date(bono.expiracion_fecha).getTime() < Date.now()) {
                  errorValidacion = "Este bono ha expirado.";
             }
+        }
+        
+        // CORRECCIÓN: Si hay error de clave/alumno, quitamos el efecto visual después de 1 segundo
+        if (claveInput.classList.contains('shake')) {
+             setTimeout(() => claveInput.classList.remove('shake'), 1000);
+        }
+        if (document.getElementById('bono-search-alumno-step2').classList.contains('shake')) {
+             setTimeout(() => document.getElementById('bono-search-alumno-step2').classList.remove('shake'), 1000);
         }
         
         if (errorValidacion) {
@@ -2970,10 +3091,10 @@ const AppTransacciones = {
         const statusMsg = document.getElementById('bono-admin-status-msg');
         const submitBtn = document.getElementById('bono-admin-submit-btn');
         
-        const clave = document.getElementById('bono-admin-clave-input').value.toUpperCase();
-        const nombre = document.getElementById('bono-admin-nombre-input').value;
-        const recompensa = parseInt(document.getElementById('bono-admin-recompensa-input').value, 10);
-        const usos_totales = parseInt(document.getElementById('bono-admin-usos-input').value, 10);
+        const clave = document.getElementById('bono-admin-clave-input');
+        const nombre = document.getElementById('bono-admin-nombre-input');
+        const recompensa = document.getElementById('bono-admin-recompensa-input');
+        const usos_totales = document.getElementById('bono-admin-usos-input');
         
         const duracionHoras = parseInt(document.getElementById('bono-admin-expiracion-input').value, 10);
         
@@ -2987,33 +3108,53 @@ const AppTransacciones = {
         }
 
         let errorValidacion = "";
-        if (!clave) {
+        
+        // Limpiar estilos de error previos
+        clave.classList.remove('shake');
+        nombre.classList.remove('shake');
+        recompensa.classList.remove('shake');
+        usos_totales.classList.remove('shake');
+        
+        if (!clave.value) {
             errorValidacion = "La 'Clave' es obligatoria.";
-        } else if (!nombre) {
+            clave.classList.add('shake');
+        } else if (!nombre.value) {
             errorValidacion = "El 'Nombre' es obligatorio.";
-        } else if (isNaN(recompensa) || recompensa <= 0) {
+            nombre.classList.add('shake');
+        } else if (isNaN(parseInt(recompensa.value)) || parseInt(recompensa.value) <= 0) {
             errorValidacion = "La 'Recompensa' debe ser un número positivo.";
-        } else if (isNaN(usos_totales) || usos_totales < 0) {
+            recompensa.classList.add('shake');
+        } else if (isNaN(parseInt(usos_totales.value)) || parseInt(usos_totales.value) < 0) {
             errorValidacion = "Los 'Usos Totales' deben ser un número (0 o más).";
+            usos_totales.classList.add('shake');
         }
         
+        // CORRECCIÓN: Quitar el efecto visual después de 1 segundo
+        setTimeout(() => {
+            clave.classList.remove('shake');
+            nombre.classList.remove('shake');
+            recompensa.classList.remove('shake');
+            usos_totales.classList.remove('shake');
+        }, 1000);
+
+
         if (errorValidacion) {
             AppTransacciones.setError(statusMsg, errorValidacion);
             return;
         }
 
         AppTransacciones.setLoadingState(submitBtn, null, true, 'Guardando...');
-        AppTransacciones.setLoading(statusMsg, `Guardando bono ${clave}...`);
+        AppTransacciones.setLoading(statusMsg, `Guardando bono ${clave.value}...`);
 
         try {
             const payload = {
                 accion: 'admin_crear_bono',
                 clave: AppConfig.CLAVE_MAESTRA, // ADMIN FIX: Clave Maestra enviada
                 bono: {
-                    clave: clave,
-                    nombre: nombre,
-                    recompensa: recompensa,
-                    usos_totales: usos_totales,
+                    clave: clave.value.toUpperCase(),
+                    nombre: nombre.value,
+                    recompensa: parseInt(recompensa.value, 10),
+                    usos_totales: parseInt(usos_totales.value, 10),
                     grupos_permitidos: grupos_permitidos,
                     expiracion_fecha: expiracion_fecha
                 }
@@ -3104,23 +3245,31 @@ const AppTransacciones = {
         const statusMsg = document.getElementById('tienda-step2-status-msg'); 
         const submitBtn = document.getElementById('tienda-submit-step2-btn');
         const btnText = document.getElementById('tienda-btn-text-step2');
+        const claveInput = document.getElementById('tienda-clave-p2p-step2');
         
         AppTransacciones.setLoadingState(submitBtn, btnText, true, 'Comprando...');
 
         const itemId = AppState.tienda.selectedItem;
         const alumnoNombre = document.getElementById('tienda-search-alumno-step2').value.trim();
-        const claveP2P = document.getElementById('tienda-clave-p2p-step2').value;
+        const claveP2P = claveInput.value;
 
         const item = AppState.tienda.items[itemId];
         const student = AppState.datosAdicionales.allStudents.find(s => s.nombre === alumnoNombre);
 
         let errorValidacion = "";
+        
+        // Limpiar estilos de error previos
+        claveInput.classList.remove('shake');
+        document.getElementById('tienda-search-alumno-step2').classList.remove('shake');
+
         if (!itemId || !item) {
             errorValidacion = "Error interno: Artículo no seleccionado.";
         } else if (!alumnoNombre || !student || student.nombre !== alumnoNombre) {
             errorValidacion = "Alumno no encontrado. Por favor, seleccione su nombre de la lista.";
+            document.getElementById('tienda-search-alumno-step2').classList.add('shake');
         } else if (!claveP2P) {
             errorValidacion = "Debe ingresar su Clave P2P.";
+            claveInput.classList.add('shake');
         } else {
             const costoFinal = Math.round(item.PrecioBase * (1 + AppConfig.TASA_ITBIS));
             if (student.pinceles < costoFinal) {
@@ -3138,6 +3287,14 @@ const AppTransacciones = {
                     errorValidacion = "Este artículo ha expirado.";
                 }
             }
+        }
+        
+        // CORRECCIÓN: Si hay error de clave/alumno, quitamos el efecto visual después de 1 segundo
+        if (claveInput.classList.contains('shake')) {
+             setTimeout(() => claveInput.classList.remove('shake'), 1000);
+        }
+        if (document.getElementById('tienda-search-alumno-step2').classList.contains('shake')) {
+             setTimeout(() => document.getElementById('tienda-search-alumno-step2').classList.remove('shake'), 1000);
         }
         
         if (errorValidacion) {
@@ -3194,29 +3351,54 @@ const AppTransacciones = {
             const expiryDate = new Date(Date.now() + duracionHoras * 60 * 60 * 1000);
             expiracion_fecha = AppFormat.toLocalISOString(expiryDate);
         }
-
+        
+        const itemIdInput = document.getElementById('tienda-admin-itemid-input');
+        const nombreInput = document.getElementById('tienda-admin-nombre-input');
+        const precioInput = document.getElementById('tienda-admin-precio-input');
+        const stockInput = document.getElementById('tienda-admin-stock-input');
+        
         const item = {
-            ItemID: document.getElementById('tienda-admin-itemid-input').value.trim(),
-            Nombre: document.getElementById('tienda-admin-nombre-input').value.trim(),
+            ItemID: itemIdInput.value.trim(),
+            Nombre: nombreInput.value.trim(),
             Descripcion: document.getElementById('tienda-admin-desc-input').value.trim(),
             Tipo: document.getElementById('tienda-admin-tipo-input').value.trim(),
-            PrecioBase: parseInt(document.getElementById('tienda-admin-precio-input').value, 10),
-            Stock: parseInt(document.getElementById('tienda-admin-stock-input').value, 10),
+            PrecioBase: parseInt(precioInput.value, 10),
+            Stock: parseInt(stockInput.value, 10),
             GruposPermitidos: grupos_permitidos, 
             ExpiracionFecha: expiracion_fecha 
         };
         
         let errorValidacion = "";
+        
+        // Limpiar estilos de error previos
+        itemIdInput.classList.remove('shake');
+        nombreInput.classList.remove('shake');
+        precioInput.classList.remove('shake');
+        stockInput.classList.remove('shake');
+
         if (!item.ItemID) {
             errorValidacion = "El 'ItemID' es obligatorio.";
+            itemIdInput.classList.add('shake');
         } else if (!item.Nombre) {
             errorValidacion = "El 'Nombre' es obligatorio.";
+            nombreInput.classList.add('shake');
         } else if (isNaN(item.PrecioBase) || item.PrecioBase <= 0) {
             errorValidacion = "El 'Precio Base' debe ser un número positivo.";
+            precioInput.classList.add('shake');
         } else if (isNaN(item.Stock) || item.Stock < 0) {
             errorValidacion = "El 'Stock' debe ser un número (0 o más).";
+            stockInput.classList.add('shake');
         }
         
+        // CORRECCIÓN: Quitar el efecto visual después de 1 segundo
+        setTimeout(() => {
+            itemIdInput.classList.remove('shake');
+            nombreInput.classList.remove('shake');
+            precioInput.classList.remove('shake');
+            stockInput.classList.remove('shake');
+        }, 1000);
+
+
         if (errorValidacion) {
             AppTransacciones.setError(statusMsg, errorValidacion);
             return;
