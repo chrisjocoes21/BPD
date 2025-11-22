@@ -5,14 +5,20 @@ body {
     color: #1f2937; /* text-gray-800 */
 }
 
-/* Animación de Shake para el modal de clave */
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
-    20%, 40%, 60%, 80% { transform: translateX(10px); }
-}
+/* =================================================================== */
+/* REEMPLAZO DE ANIMACIÓN DE ERROR (SOLO COLOR, SIN MOVIMIENTO) */
+/* =================================================================== */
+/* Redefinimos .shake para que ya no mueva el input.
+   Ahora aplica un estado de "Alerta Dorada" estático.
+   Usamos !important para asegurar que sobrescriba cualquier clase de borde rojo (border-red-500) 
+   que pueda estar añadiendo el JS actual.
+*/
 .shake {
-    animation: shake 0.5s;
+    animation: none; /* Eliminamos el movimiento */
+    border-color: #d97706 !important; /* amber-600 */
+    background-color: #fffbeb !important; /* amber-50 */
+    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2) !important; /* Anillo de enfoque suave dorado */
+    transition: all 0.3s ease; /* Transición suave del color */
 }
 
 /* =================================================================== */
