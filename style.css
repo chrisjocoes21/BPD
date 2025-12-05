@@ -22,11 +22,11 @@ body {
 }
 
 /* =================================================================== */
-/* NUEVAS ANIMACIONES DE CARGA (MODERNO) */
+/* NUEVAS ANIMACIONES DE CARGA (MODERNO) - FIX DE SHIMMER */
 /* =================================================================== */
 
 /* 1. ANIMACIÓN DE SHIMMER (BRILLO DORADO HORIZONTAL) */
-/* Se aplica a .loading-shimmer-text */
+/* FIX: Se ajustan los keyframes para que el efecto de barrido sea visible */
 .loading-shimmer-text {
     /* Base para el efecto: Recortar el degradado al texto */
     background: linear-gradient(90deg, #d97706, #fcd34d, #d97706);
@@ -40,12 +40,9 @@ body {
 }
 
 @keyframes shimmer-animation {
-    /* Empieza con el brillo fuera a la derecha (200% = el doble del ancho) */
-    0% { background-position: 100% 0; }
-    /* Se mueve de derecha a izquierda */
-    50% { background-position: -100% 0; }
-    /* Vuelve a su posición inicial para el loop */
-    100% { background-position: 100% 0; }
+    /* Mueve el fondo del degradado de derecha a izquierda, simulando el brillo */
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
 /* 2. ANIMACIÓN DE PUNTOS DE CARGA (MODERNA - Bounce Wave) */
@@ -64,8 +61,6 @@ body {
         opacity: 0.3;
     }
 }
-
-/* Nota: Los delays se aplican en el HTML inline */
 
 /* Animación de puntos de carga (para el indicador de estado pequeño en el header) */
 @keyframes pulse-dot-animation {
