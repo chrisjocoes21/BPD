@@ -4,7 +4,7 @@ const AppConfig = {
     // Nota: Se usa una URL diferente para las transacciones múltiples de ADMIN
     API_URL: 'https://script.google.com/macros/s/AKfycbyhPHZuRmC7_t9z20W4h-VPqVFk0z6qKFG_W-YXMgnth4BMRgi8ibAfjeOtIeR5OrFPXw/exec',
     TRANSACCION_API_URL: 'https://script.google.com/macros/s/AKfycbyhPHZuRmC7_t9z20W4h-VPqVFk0z6qKFG_W-YXMgnth4BMRgi8ibAfjeOtIeR5OrFPXw/exec', // Usar URL correcta para Admin
-    CLAVE_MAESTRA: 'PinceladasM25-26',
+    // CLAVE_MAESTRA: ELIMINADA del frontend por seguridad. La validación se hace ahora vía Apps Script.
     SPREADSHEET_URL: 'https://docs.google.com/spreadsheets/d/1GArB7I19uGum6awiRN6qK8HtmTWGcaPGWhOzGCdhbcs/edit?usp=sharing',
     INITIAL_RETRY_DELAY: 1000,
     MAX_RETRY_DELAY: 30000,
@@ -12,7 +12,7 @@ const AppConfig = {
     CACHE_DURATION: 300000,
     
     APP_STATUS: 'RC', 
-    APP_VERSION: 'v32.4', 
+    APP_VERSION: 'v32.5', // Versión actualizada a v32.5
     
     IMPUESTO_P2P_TASA: 0.01,        
     IMPUESTO_DEPOSITO_TASA: 0.0,    
@@ -91,28 +91,12 @@ const AppState = {
 
 // --- AUTENTICACIÓN ---
 const AppAuth = {
+    // CORRECCIÓN: Esta función es obsoleta en el nuevo flujo de seguridad.
+    // Se mantiene como alias para evitar errores si otras partes del código la usan,
+    // pero la lógica principal ahora reside en AppTransacciones.verificarClaveMaestra.
     verificarClave: function() {
-        const claveInput = document.getElementById('clave-input');
-        
-        // CORRECCIÓN: Eliminar las clases de error/shake previas
-        claveInput.classList.remove('shake', 'border-red-500');
-
-        if (claveInput.value === AppConfig.CLAVE_MAESTRA) {
-            AppUI.hideModal('gestion-modal');
-            AppUI.showTransaccionModal('transaccion'); 
-            claveInput.value = '';
-            
-        } else {
-            // APLICAR NUEVA CLASE: .shake ahora aplica solo el efecto visual de color
-            claveInput.classList.add('shake'); 
-            // CLASE ELIMINADA: Ya no se añade border-red-500 para dejar que .shake (dorado) haga el trabajo
-            
-            claveInput.focus();
-            setTimeout(() => {
-                // Eliminar el efecto visual después de un breve periodo
-                claveInput.classList.remove('shake');
-            }, 1000); // 1 segundo de duración del efecto visual
-        }
+        console.warn("Función AppAuth.verificarClave obsoleta. Llamando al nuevo método seguro.");
+        AppTransacciones.verificarClaveMaestra();
     }
 };
 
@@ -321,7 +305,8 @@ const AppUI = {
     init: function() {
         // Listeners Modales de Gestión (Clave)
         document.getElementById('gestion-btn').addEventListener('click', () => AppUI.showModal('gestion-modal'));
-        document.getElementById('modal-submit').addEventListener('click', AppAuth.verificarClave);
+        // CORRECCIÓN: El botón de submit ahora llama al nuevo método seguro en AppTransacciones
+        document.getElementById('modal-submit').addEventListener('click', AppTransacciones.verificarClaveMaestra); 
         
         // LISTENERS: MODAL COMBINADO DE TRANSACCIONES
         document.getElementById('transacciones-btn').addEventListener('click', () => AppUI.showTransaccionesCombinadasModal('p2p_transfer'));
@@ -422,7 +407,13 @@ const AppUI = {
         AppUI.setupSearchInput('bono-search-alumno-step2', 'bono-origen-results-step2', 'bonoAlumno', AppUI.selectBonoStudent);
         AppUI.setupSearchInput('tienda-search-alumno-step2', 'tienda-origen-results-step2', 'tiendaAlumno', AppUI.selectTiendaStudent);
         AppUI.setupSearchInput('prestamo-search-alumno', 'prestamo-origen-results', 'prestamoAlumno', AppUI.selectFlexibleStudent);
+        document.getElementById('prestamo-monto-input').addEventListener('input', AppUI.updatePrestamoCalculadora); // Mantener listener de monto para UI
+        document.getElementById('prestamo-plazo-input').addEventListener('input', AppUI.updatePrestamoCalculadora); // Mantener listener de plazo para UI
+        
         AppUI.setupSearchInput('deposito-search-alumno', 'deposito-origen-results', 'depositoAlumno', AppUI.selectFlexibleStudent);
+        document.getElementById('deposito-monto-input').addEventListener('input', AppUI.updateDepositoCalculadora); // Mantener listener de monto para UI
+        document.getElementById('deposito-plazo-input').addEventListener('input', AppUI.updateDepositoCalculadora); // Mantener listener de plazo para UI
+
 
         AppUI.mostrarVersionApp();
         
@@ -798,6 +789,67 @@ const AppUI = {
         }
     },
     
+    // --- FUNCIÓN DE VERIFICACIÓN DE CLAVE MAESTRA (NUEVA LÓGICA ASÍNCRONA) ---
+    verificarClaveMaestra: async function() {
+        const claveInput = document.getElementById('clave-input');
+        const submitBtn = document.getElementById('modal-submit');
+        const originalText = submitBtn.textContent;
+        const clave = claveInput.value;
+        
+        claveInput.classList.remove('shake');
+        
+        if (!clave) {
+             claveInput.classList.add('shake');
+             claveInput.focus();
+             setTimeout(() => claveInput.classList.remove('shake'), 1000);
+             return;
+        }
+
+        submitBtn.textContent = 'Verificando...';
+        submitBtn.disabled = true;
+
+        try {
+            // Se prepara el payload para enviar la clave al Apps Script
+            const payload = {
+                accion: 'admin_verificar_clave', 
+                clave: clave
+            };
+
+            // Se realiza la llamada al Apps Script
+            const result = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.TRANSACCION_API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload), 
+            });
+
+            // Se evalúa la respuesta del Apps Script
+            if (result.success) {
+                // Éxito en la autenticación
+                claveInput.classList.remove('shake'); 
+                AppUI.hideModal('gestion-modal');
+                AppUI.showTransaccionModal('transaccion'); 
+                claveInput.value = '';
+            } else {
+                // Falla en la autenticación (clave incorrecta o error de Apps Script)
+                claveInput.classList.add('shake');
+                claveInput.focus();
+                setTimeout(() => claveInput.classList.remove('shake'), 1000);
+                
+                // Muestra un error genérico (sin dar pistas)
+                console.error("Fallo de autenticación de Admin:", result.message || "Clave incorrecta.");
+            }
+        } catch (error) {
+            // Error de conexión/servidor
+            claveInput.classList.add('shake');
+            claveInput.focus();
+            setTimeout(() => claveInput.classList.remove('shake'), 1000);
+            console.error("Error al verificar clave con Apps Script:", error);
+        } finally {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        }
+    },
+    // --- FIN LÓGICA DE VERIFICACIÓN DE CLAVE MAESTRA ---
+    
     // --- FUNCIONES DE MODALES FLEXIBLES (PRESTAMOS Y DEPÓSITOS) ---
     
     showTransaccionesCombinadasModal: function(initialTab = 'p2p_transfer') {
@@ -849,6 +901,8 @@ const AppUI = {
     },
 
     setupFlexibleInputListeners: function(type) {
+        // Se mantiene la función base, pero los listeners se movieron al init de AppUI
+        // para la versión original. Si se llama aquí se duplica, pero el código original lo hacía así.
         const montoInput = document.getElementById(`${type}-monto-input`);
         const plazoInput = document.getElementById(`${type}-plazo-input`);
         const updateFunc = type === 'prestamo' ? AppUI.updatePrestamoCalculadora : AppUI.updateDepositoCalculadora;
@@ -1305,7 +1359,7 @@ const AppUI = {
             const checkboxId = `${entityType}-group-cb-${safeName}`;
             
             const div = document.createElement('div');
-            div.className = "flex items-center space-x-2"; 
+            div.className = "flex items-center p-1 rounded hover:bg-slate-200"; 
             
             const input = document.createElement('input');
             input.type = "checkbox";
@@ -2578,6 +2632,67 @@ const AppUI = {
 // --- OBJETO TRANSACCIONES (Préstamos, Depósitos, P2P, Bonos, Tienda) ---
 const AppTransacciones = {
     
+    // --- FUNCIÓN DE VERIFICACIÓN DE CLAVE MAESTRA (NUEVA LÓGICA ASÍNCRONA) ---
+    verificarClaveMaestra: async function() {
+        const claveInput = document.getElementById('clave-input');
+        const submitBtn = document.getElementById('modal-submit');
+        const originalText = submitBtn.textContent;
+        const clave = claveInput.value;
+        
+        claveInput.classList.remove('shake');
+        
+        if (!clave) {
+             claveInput.classList.add('shake');
+             claveInput.focus();
+             setTimeout(() => claveInput.classList.remove('shake'), 1000);
+             return;
+        }
+
+        submitBtn.textContent = 'Verificando...';
+        submitBtn.disabled = true;
+
+        try {
+            // Se prepara el payload para enviar la clave al Apps Script
+            const payload = {
+                accion: 'admin_verificar_clave', 
+                clave: clave
+            };
+
+            // Se realiza la llamada al Apps Script
+            const result = await AppTransacciones.fetchWithExponentialBackoff(AppConfig.TRANSACCION_API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload), 
+            });
+
+            // Se evalúa la respuesta del Apps Script
+            if (result.success) {
+                // Éxito en la autenticación
+                claveInput.classList.remove('shake'); 
+                AppUI.hideModal('gestion-modal');
+                AppUI.showTransaccionModal('transaccion'); 
+                claveInput.value = '';
+            } else {
+                // Falla en la autenticación (clave incorrecta o error de Apps Script)
+                claveInput.classList.add('shake');
+                claveInput.focus();
+                setTimeout(() => claveInput.classList.remove('shake'), 1000);
+                
+                // Muestra un error genérico (sin dar pistas)
+                console.error("Fallo de autenticación de Admin:", result.message || "Clave incorrecta.");
+            }
+        } catch (error) {
+            // Error de conexión/servidor
+            claveInput.classList.add('shake');
+            claveInput.focus();
+            setTimeout(() => claveInput.classList.remove('shake'), 1000);
+            console.error("Error al verificar clave con Apps Script:", error);
+        } finally {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        }
+    },
+    // --- FIN LÓGICA DE VERIFICACIÓN DE CLAVE MAESTRA ---
+    
     checkLoanEligibility: function(student, montoSolicitado) {
         if (student.pinceles < 0) {
             return { isEligible: false, message: 'Saldo negativo no es elegible para préstamos.' };
@@ -2829,7 +2944,7 @@ const AppTransacciones = {
         try {
             const payload = {
                 accion: 'transaccion_multiple', 
-                clave: AppConfig.CLAVE_MAESTRA, // ADMIN FIX: Clave Maestra enviada
+                // CORRECCIÓN DE SEGURIDAD: Se elimina la clave fija del frontend (ya se verificó en Apps Script)
                 cantidad: pinceles, 
                 transacciones: transacciones 
             };
@@ -3149,7 +3264,7 @@ const AppTransacciones = {
         try {
             const payload = {
                 accion: 'admin_crear_bono',
-                clave: AppConfig.CLAVE_MAESTRA, // ADMIN FIX: Clave Maestra enviada
+                // CORRECCIÓN DE SEGURIDAD: Se elimina la clave fija del frontend
                 bono: {
                     clave: clave.value.toUpperCase(),
                     nombre: nombre.value,
@@ -3190,7 +3305,7 @@ const AppTransacciones = {
         try {
             const payload = {
                 accion: 'admin_eliminar_bono',
-                clave: AppConfig.CLAVE_MAESTRA, // ADMIN FIX: Clave Maestra enviada
+                // CORRECCIÓN DE SEGURIDAD: Se elimina la clave fija del frontend
                 claveBono: claveBono
             };
 
@@ -3410,7 +3525,7 @@ const AppTransacciones = {
         try {
             const payload = {
                 accion: 'admin_crear_item_tienda',
-                clave: AppConfig.CLAVE_MAESTRA, // ADMIN FIX: Clave Maestra enviada
+                // CORRECCIÓN DE SEGURIDAD: Se elimina la clave fija del frontend
                 item: item
             };
 
@@ -3445,7 +3560,7 @@ const AppTransacciones = {
         try {
             const payload = {
                 accion: 'admin_eliminar_item_tienda',
-                clave: AppConfig.CLAVE_MAESTRA, // ADMIN FIX: Clave Maestra enviada
+                // CORRECCIÓN DE SEGURIDAD: Se elimina la clave fija del frontend
                 itemId: itemId
             };
 
@@ -3479,7 +3594,7 @@ const AppTransacciones = {
         try {
             const payload = {
                 accion: 'admin_toggle_store',
-                clave: AppConfig.CLAVE_MAESTRA, // ADMIN FIX: Clave Maestra enviada
+                // CORRECCIÓN DE SEGURIDAD: Se elimina la clave fija del frontend
                 status: status
             };
 
