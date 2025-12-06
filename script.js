@@ -10,7 +10,7 @@ const AppConfig = {
     CACHE_DURATION: 300000,
     
     APP_STATUS: 'RC', 
-    APP_VERSION: 'v32.7 (Visual Harmony)', // Versión actualizada con estandarización visual
+    APP_VERSION: 'v32.7 (Ctrl + U)', // Versión actualizada con estandarización visual
     
     IMPUESTO_P2P_TASA: 0.01,        
     IMPUESTO_DEPOSITO_TASA: 0.0,    
