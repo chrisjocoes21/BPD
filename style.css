@@ -6,6 +6,17 @@ body {
 }
 
 /* =================================================================== */
+/* NUEVOS ESTILOS: Estabilidad Numérica (Tabular) */
+/* =================================================================== */
+/* Esto asegura que todos los dígitos (1, 8, 0, etc.) ocupen el mismo ancho, 
+   previniendo el "salto" visual en el contador. */
+.font-tabular-nums {
+    font-feature-settings: 'tnum';
+    font-variant-numeric: tabular-nums;
+}
+
+
+/* =================================================================== */
 /* REEMPLAZO DE ANIMACIÓN DE ERROR (SOLO COLOR, SIN MOVIMIENTO) */
 /* =================================================================== */
 /* Redefinimos .shake para que ya no mueva el input.
@@ -26,7 +37,7 @@ body {
 /* =================================================================== */
 
 /* 1. ANIMACIÓN DE SHIMMER (BRILLO DORADO HORIZONTAL) */
-/* FIX: Se ajustan los keyframes para que el efecto de barrido sea visible */
+/* Se aplica a .loading-shimmer-text */
 .loading-shimmer-text {
     /* Base para el efecto: Recortar el degradado al texto */
     background: linear-gradient(90deg, #d97706, #fcd34d, #d97706);
@@ -37,11 +48,13 @@ body {
     
     /* Animación del movimiento del degradado (el brillo) */
     animation: shimmer-animation 2.5s infinite linear;
+    animation-play-state: running; /* Aseguramos que la animación corra */
 }
 
 @keyframes shimmer-animation {
-    /* Mueve el fondo del degradado de derecha a izquierda, simulando el brillo */
+    /* Empieza con el brillo fuera a la izquierda */
     0% { background-position: 200% 0; }
+    /* Se mueve de izquierda a derecha y vuelve a empezar */
     100% { background-position: -200% 0; }
 }
 
@@ -49,6 +62,7 @@ body {
 .loading-dot {
     /* La animación es 'bounce' */
     animation: dot-bounce 1s infinite alternate;
+    animation-play-state: running; /* Aseguramos que la animación corra */
 }
 
 @keyframes dot-bounce {
@@ -368,23 +382,26 @@ body {
 /* Base para Tarjetas de Bonos y Tienda (Compactación) */
 .compact-card {
     /* Reducimos el padding interno para compactar verticalmente y horizontalmente */
-    @apply p-2; 
+    padding: 0.75rem; /* p-3 */
 }
 .compact-card .title-text {
     /* Fuente más pequeña */
-    @apply text-sm font-semibold;
+    font-size: 0.875rem; /* text-sm */
+    font-weight: 600; /* font-semibold */
 }
 .compact-card .small-text {
     /* Fuente más pequeña para descripciones */
-    @apply text-xs;
+    font-size: 0.75rem; /* text-xs */
 }
 .compact-card .price-text {
      /* Precio sigue siendo grande pero con menos margen */
-     @apply text-xl font-bold;
+     font-size: 1.25rem; /* text-xl */
+     font-weight: 700; /* font-bold */
 }
 .compact-card .buy-btn {
     /* Botón más compacto */
-    @apply px-3 py-1 text-xs;
+    padding: 0.25rem 0.75rem; /* px-3 py-1 */
+    font-size: 0.75rem; /* text-xs */
 }
 
 /* === TARJETA DE ALUMNO (NUEVO DISEÑO COMPACTO) === */
@@ -393,28 +410,53 @@ body {
     background-color: #ffffff;
     color: #1f2937; 
     /* Quitamos el overflow hidden para el modal, lo maneja el modal-content */
-    @apply rounded-xl shadow-2xl;
+    border-radius: 0.75rem; /* rounded-xl */
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); /* shadow-2xl */
 }
 
 /* Estilos de las secciones dentro de la tarjeta compacta (definidas para el nuevo HTML) */
 .card-section-compact {
-    @apply p-4 border-l-4 border-amber-600 bg-white;
+    padding: 1rem; /* p-4 */
+    border-left: 4px solid #d97706; /* border-l-4 border-amber-600 */
+    background-color: #ffffff;
 }
 .card-stats-grid {
-     @apply grid grid-cols-2 gap-3 mt-3;
+     display: grid;
+     grid-template-columns: repeat(2, minmax(0, 1fr));
+     gap: 0.75rem; /* gap-3 */
+     margin-top: 0.75rem; /* mt-3 */
 }
 .stat-box-compact {
-    @apply p-3 bg-slate-50 border border-slate-200 rounded-lg shadow-inner text-center;
+    padding: 0.75rem; /* p-3 */
+    background-color: #f8fafc; /* bg-slate-50 */
+    border: 1px solid #e2e8f0; /* border border-slate-200 */
+    border-radius: 0.5rem; /* rounded-lg */
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); /* shadow-inner */
+    text-align: center;
 }
 .stat-label-compact {
-    @apply text-xs text-slate-500 uppercase font-bold tracking-wide;
+    font-size: 0.75rem; /* text-xs */
+    color: #64748b; /* text-slate-500 */
+    text-transform: uppercase;
+    font-weight: 700; /* font-bold */
+    letter-spacing: 0.05em; /* tracking-wide */
 }
 .stat-value-compact {
-    @apply text-lg font-extrabold text-slate-800;
+    font-size: 1.125rem; /* text-lg */
+    font-weight: 800; /* font-extrabold */
+    color: #1e293b; /* text-slate-800 */
 }
 /* Estilos para el Reporte de Confirmación/Recibo */
 .confirmation-report-card {
-    @apply bg-white border border-slate-200 p-8 rounded-xl shadow-2xl w-full max-w-lg mx-auto;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0; /* border border-slate-200 */
+    padding: 2rem; /* p-8 */
+    border-radius: 0.75rem; /* rounded-xl */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); /* shadow-2xl */
+    width: 100%;
+    max-width: 32rem; /* max-w-lg */
+    margin-left: auto;
+    margin-right: auto;
     animation: fadeIn 0.5s ease-out;
 }
 @keyframes fadeIn {
@@ -423,7 +465,9 @@ body {
 }
 
 .report-divider {
-    @apply border-b border-dashed border-slate-300 my-3;
+    border-bottom: 1px dashed #cbd5e1; /* border-b border-dashed border-slate-300 */
+    margin-top: 0.75rem; /* my-3 */
+    margin-bottom: 0.75rem;
 }
 
 /* =================================================================== */
